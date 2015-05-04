@@ -1,0 +1,75 @@
+common_sources = Split("""
+    board.cpp
+    common.cpp
+    egtb.cpp
+    eval_suicide.cpp
+    fen.cpp
+    movegen.cpp
+    movegen_normal.cpp
+    movegen_suicide.cpp
+    slider_attacks.cpp
+    transpos.cpp
+    zobrist.cpp
+""")
+nakshatra_sources = Split("""
+    book.cpp
+    cmd_interpreter.cpp
+    eval_normal.cpp
+    executor.cpp
+    iterative_deepener.cpp
+    move_order.cpp
+    player.cpp
+    pn_search.cpp
+    san.cpp
+    search_algorithm.cpp
+""")
+egtb_sources = Split("""
+    egtb_gen.cpp
+    egtb_util.cpp
+""")
+test_sources = Glob('*_test.cpp')
+
+# Build environments.
+env = Environment(CCFLAGS = '-std=c++0x -O3 -flto',
+                  CPPPATH = '.',
+                  LINKFLAGS = '-O3 -flto',
+                  LIBS = ['pthread', 'rt'])
+test_env = Environment(CCFLAGS = '-std=c++0x',
+                       CPPPATH = '.',
+                       LIBS = ['gtest', 'gtest_main', 'pthread', 'rt'])
+
+# Build object files.
+obj_common = env.Object(common_sources)
+obj_nakshatra = env.Object(nakshatra_sources)
+obj_egtb = env.Object(egtb_sources)
+obj_tests = test_env.Object(test_sources)
+
+# Build binaries.
+nakshatra = env.Program(target = 'nakshatra',
+                        source = ['nakshatra.cpp'] +
+                                 obj_nakshatra +
+                                 obj_common)
+
+pns_solver = env.Program(target = 'pns_solver',
+                         source = ['pns_solver.cpp'] +
+                                  obj_nakshatra +
+                                  obj_common)
+
+movegen_perf = env.Program(target = 'movegen_perf',
+                           source = ['movegen_perf.cpp'] +
+                                    obj_nakshatra +
+                                    obj_common)
+
+magic_bits = env.Program(target = 'magic_bits',
+                         source = ['magic_bits.cpp'])
+
+for egtb_file in ['egtb_gen_main.cpp', 'egtb_validator.cpp',
+                  'egtb_player.cpp', 'egtb_index_gen.cpp']:
+  env.Program(target = egtb_file[:-4],  # strip '.cpp'
+              source = [egtb_file] + obj_egtb + obj_common)
+
+unit_tests = test_env.Program(target = 'unit_tests',
+                              source = obj_tests +
+                                       obj_nakshatra +
+                                       obj_common +
+                                       obj_egtb)
