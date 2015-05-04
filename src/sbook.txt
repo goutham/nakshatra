@@ -1,0 +1,71 @@
+(e3
+  (c5
+    (Bd3
+      (a5 Bxh7 Rxh7 h3 Rxh3 Rxh3 Ra6 b4)
+      (g6 Bxg6 fxg6 c3 g5)
+    )
+    (Bc4
+      (Nh6 Bxf7 Kxf7 b4 cxb4)
+      (d5 Bxd5 Qxd5 Qg4 Qxg2)
+    )
+  )
+  (g5
+    (Ba6 Nxa6
+      (Qh5 Bg7 Qxh7 Bxb2 Bxb2 Rxh7 Bf6 exf6 h4 Rxh4 Rxh4 gxh4 f4 h3 Nxh3)
+      (b4 Nxb4 Nf3 Nxa2 Nxg5 Nxc1 Qxc1 h6 Rxa7 Rxa7 Nxf7 Kxf7 Qb2 b5)
+    )
+    (Qh5
+      (Bg7 Qxh7 Bxb2 Bxb2 Rxh7 Bf6 exf6 h4 Rxh4 Rxh4 gxh4 Ba6 Nxa6 f4 c5)
+      (b5 Bxb5 Bh6 Bxd7 Qxd7 Qxg5 Bxg5)
+    )
+  )
+  (b5^ Bxb5
+    (Ba6
+      (Bxd7 Nxd7 d3 Bxd3 Qxd3 g6 Qxg6 fxg6 c4 Qb8 b4 Qxb4)
+      (Bxa6 Nxa6 h3 Nb8 Qg4)
+    )
+    (e6 Bxd7 Bxd7 Na3 Bxa3 bxa3 c6 a4 Qh4 Qg4 Qxg4)
+  )
+  (b6^
+    (Ba6 Nxa6 Qh5 c5 Qxh7 Rxh7 h3 Rxh3 Rxh3 c4 b4 cxb3 cxb3 Nh6)
+    (Qh5 Bb7 Qxh7 Bxg2 Bxg2 Rxh7 Bxa8 Rxh2 Rxh2 d5 Bxd5)
+  )
+)
+(c4
+  (Nh6
+    (c5 d6 cxd6 exd6 g4)
+    (Na3 Nf5)
+  )
+  (Nc6
+    (c5 Na5 c6 bxc6 Qa4 g6)
+    (d4 Nxd4 Qxd4 b5 cxb5 g5 Bxg5)
+  )
+  (e6^
+    (c5 Bxc5 Nh3 Bxf2 Kxf2 Qh4 g4 Qxh3 Bxh3 Ne7 Bf1 Rf8)
+    (b4 Bxb4 c5 Bxc5 Qb3)
+  )
+  (c5^
+    (b4 cxb4 Ba3 bxa3 Nxa3 b5 cxb5 Ba6 bxa6 Nxa6 Rb1 Qb6 Rxb6)
+    (Qa4 Qa5 Qxa5 a6 Qxa6)
+  )
+)
+(Nh3^
+  (g5 Nxg5 Bg7 Nxh7 Bxb2 Bxb2 Rxh7 Bd4 Rxh2 Bxa7 Rxa7 Rxh2 Rxa2 Rxa2 Nh6 Rxh6 c6 Rxc6 Nxc6 Ra6 bxa6 Nc3 Na7 Qc1)
+  (Na6^ Ng5 Nb4 Nxh7 Nxa2 Rxa2)
+)
+(g3^
+  (Nh6 b3 g6 Nh3 g5)
+  (c5^ Nh3 c4 d3 cxd3)
+)
+(Na3^
+  (e6 b3 Bxa3 Bxa3 Qh4 Bd6)
+  (g6 Nb1 Nh6 b3 Ng4)
+)
+(g4^
+  (g6 Nh3 b6 Ng5)
+  (g5 c4 c6 b3 f5)
+)
+(b3^
+  (e6 b4 Bxb4 Nh3 Bxd2 Nxd2 Nc6 Ng5)
+  (c5 b4 cxb4 Ba3 bxa3 Nxa3 g6 Nb5 Qa5)
+)
