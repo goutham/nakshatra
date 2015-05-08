@@ -16,10 +16,10 @@ namespace {
 namespace pv {
 const int KING = 10;
 const int QUEEN = 3;
-const int ROOK = 5;
-const int BISHOP = -2;
-const int KNIGHT = 1;
-const int PAWN = -1;
+const int ROOK = 7;
+const int BISHOP = 2;
+const int KNIGHT = 3;
+const int PAWN = 3;
 }  // namespace pv
 
 // Weight for mobility.
