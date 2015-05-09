@@ -27,7 +27,7 @@ egtb_sources = Split("""
     egtb_gen.cpp
     egtb_util.cpp
 """)
-test_sources = Glob('*_test.cpp')
+test_sources = Glob('tests/*_test.cpp')
 
 # Build environments.
 env = Environment(CCFLAGS = '-std=c++0x -O3 -flto',
