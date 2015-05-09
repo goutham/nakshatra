@@ -83,7 +83,8 @@ void Book::LoadBook(Board* board,
       ++i;
     } else if (isalnum(contents.at(i))) {
       std::string move_san;
-      while (i < contents.size() && isalnum(contents.at(i))) {
+      while (i < contents.size() &&
+             (isalnum(contents.at(i)) || contents.at(i) == '-')) {
         move_san.push_back(contents.at(i));
         ++i;
       }

@@ -119,5 +119,5 @@ Move SANToMove(const string& move_san,
       return move;
     }
   }
-  assert(false);
+  throw std::runtime_error("Unknown move " + move_san);
 }
