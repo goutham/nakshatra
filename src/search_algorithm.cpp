@@ -53,6 +53,7 @@ int SearchAlgorithm::NegaScout(int max_depth,
   NodeType node_type = FAIL_LOW_NODE;
   int b = beta;
   for (int index = 0; index < move_array.size(); ++index) {
+    ++search_stats->nodes_searched;
     const Move& move = move_array.get(index);
     board_->MakeMove(move);
 
@@ -76,27 +77,25 @@ int SearchAlgorithm::NegaScout(int max_depth,
       value = -NegaScout(max_depth - 1, -b, -alpha, search_stats);
     }
 
+    // Re-search with wider window if null window fails high.
+    if (value >= b && value < beta && index > 0 && max_depth > 1) {
+      ++search_stats->nodes_researched;
+      value = -NegaScout(max_depth - 1, -beta, -alpha, search_stats);
+    }
+
     board_->UnmakeLastMove();
-    ++search_stats->nodes_searched;
+
     if (value > alpha) {
       best_move = move;
       node_type = EXACT_NODE;
       alpha = value;
     }
+
     if (alpha >= beta) {
       node_type = FAIL_HIGH_NODE;
       break;
     }
-    if (alpha >= b) {  // null window fail high
-      board_->MakeMove(move);
-      alpha = -NegaScout(max_depth - 1, -beta, -alpha, search_stats);
-      board_->UnmakeLastMove();
-      ++search_stats->nodes_researched;
-      if (alpha >= beta) {
-        node_type = FAIL_HIGH_NODE;
-        break;
-      }
-    }
+
     b = alpha + 1;
   }
 
