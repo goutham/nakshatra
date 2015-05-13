@@ -90,13 +90,13 @@ Move Player::Search(const SearchParams& search_params,
   ids_params.thinking_output = search_params.thinking_output;
 
   if (extensions_->pn_search &&
-      time_for_move_centis > 300 &&
+      time_for_move_centis > 50 &&
       movegen::CountMoves(board_->SideToMove(), *board_) > 1) {
     assert (extensions_->pns_timer);
 
     // Allocate 15% of total time for PNS.
     extensions_->pns_timer->Reset();
-    extensions_->pns_timer->Run(time_for_move_centis * 0.15);
+    extensions_->pns_timer->Run(time_for_move_centis * 0.05);
 
     StopWatch pn_stop_watch;
     pn_stop_watch.Start();
