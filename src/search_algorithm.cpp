@@ -87,7 +87,7 @@ int SearchAlgorithm::NegaScout(int max_depth,
       node_type = FAIL_HIGH_NODE;
       break;
     }
-    if (alpha >= b) {  // null window fail high
+    if (index > 0 && max_depth > 1 && alpha >= b) {  // null window fail high
       board_->MakeMove(move);
       alpha = -NegaScout(max_depth - 1, -beta, -alpha, search_stats);
       board_->UnmakeLastMove();
