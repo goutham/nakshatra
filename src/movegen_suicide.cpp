@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "board.h"
 #include "common.h"
 #include "move.h"
@@ -8,6 +6,9 @@
 #include "movegen_suicide.h"
 #include "piece.h"
 #include "u64_op.h"
+
+#include <algorithm>
+#include <array>
 
 namespace movegen {
 

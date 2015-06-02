@@ -1,6 +1,3 @@
-// To test private stuff in class Board. Should be OK in a unit test.
-#define private public
-
 #include "board.h"
 #include "common.h"
 #include "move.h"

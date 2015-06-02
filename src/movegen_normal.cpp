@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <cstdlib>
-
 #include "board.h"
 #include "common.h"
 #include "movegen.h"
@@ -8,6 +5,10 @@
 #include "piece.h"
 #include "move.h"
 #include "u64_op.h"
+
+#include <algorithm>
+#include <array>
+#include <cstdlib>
 
 namespace movegen {
 
