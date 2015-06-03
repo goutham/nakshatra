@@ -14,7 +14,6 @@ using std::vector;
 class ExecutorTest : public testing::Test {
  public:
   ExecutorTest() {
-    movegen::InitializeIfNeeded();
   }
 };
 

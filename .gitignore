@@ -1,3 +1,2 @@
 /src/*.o
-/src/*.magic
 /src/tests/*.o

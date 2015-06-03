@@ -28,7 +28,6 @@ int main(int argc, char** argv) {
 
   srand(time(NULL));
 
-  movegen::InitializeIfNeeded();
   Executor executor(kNakshatra);
 
   string cmd_string;

@@ -35,8 +35,6 @@ int64_t Perft(MoveGenerator* movegen, Board* board, unsigned int depth) {
 int main(int argc, char **argv) {
   assert(argc == 3);
 
-  movegen::InitializeIfNeeded();
-
   unsigned int depth = 0;
   Board* board = NULL;
   MoveGenerator* movegen = NULL;

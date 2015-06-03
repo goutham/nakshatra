@@ -15,7 +15,6 @@
 class SearchAlgorithmTest : public testing::Test {
  public:
   SearchAlgorithmTest() {
-    movegen::InitializeIfNeeded();
   }
 };
 

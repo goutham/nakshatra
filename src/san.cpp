@@ -12,8 +12,6 @@
 using std::string;
 
 string SAN(const Board& board, const Move& move) {
-  movegen::InitializeIfNeeded();
-
   const Piece piece = board.PieceAt(move.from_index());
 
   // Castling.
@@ -106,8 +104,6 @@ string SAN(const Board& board, const Move& move) {
 Move SANToMove(const string& move_san,
                const Board& board,
                movegen::MoveGenerator* movegen) {
-  movegen::InitializeIfNeeded();
-
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);
   for (int i = 0; i < move_array.size(); ++i) {

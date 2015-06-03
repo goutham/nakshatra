@@ -21,8 +21,6 @@
 int main(int argc, const char** argv) {
   srand(time(NULL));
 
-  movegen::InitializeIfNeeded();
-
   Board board(SUICIDE);
   movegen::MoveGeneratorSuicide movegen(board);
   EGTB egtb("2p.bin.egtb", board);

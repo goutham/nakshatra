@@ -73,6 +73,10 @@ constexpr int CharToDigit(const char c) {
              : throw std::logic_error("Expected char between '0' and '9'");
 }
 
+constexpr bool IsOnBoard(const int row, const int col) {
+  return row >= 0 && row <= 7 && col >= 0 && col <= 7;
+}
+
 std::vector<std::string> SplitString(const std::string& s, char delim);
 int StringToInt(const std::string& s);
 std::string LongToString(long l);

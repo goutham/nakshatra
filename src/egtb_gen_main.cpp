@@ -88,7 +88,6 @@ void CreateTwoPiecesEGTB(Side winning_side,
 
 
 int main() {
-  movegen::InitializeIfNeeded();
   EGTBStore store, store2;
   CreateTwoPiecesEGTB(Side::BLACK, Side::WHITE, &store);
   CreateTwoPiecesEGTB(Side::WHITE, Side::BLACK, &store2);

@@ -15,7 +15,6 @@ using std::string;
 class BoardTest : public testing::Test {
  public:
   BoardTest() {
-    movegen::InitializeIfNeeded();
   }
 };
 

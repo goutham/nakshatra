@@ -29,9 +29,6 @@ class MoveGenerator {
   MoveGenerator() {}
 };
 
-// Must be called before using move generation functionality.
-void InitializeIfNeeded();
-
 // Populates the move_array with all possible moves from given index to various
 // squares on the board given by set bits in the bitboard.
 void BitBoardToMoveList(const int index,

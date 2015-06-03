@@ -61,9 +61,6 @@ movegen_perf = env.Program(target = 'movegen_perf',
                                     obj_nakshatra +
                                     obj_common)
 
-magic_bits = env.Program(target = 'magic_bits',
-                         source = ['magic_bits.cpp'])
-
 for egtb_file in ['egtb_gen_main.cpp', 'egtb_validator.cpp',
                   'egtb_player.cpp', 'egtb_index_gen.cpp']:
   env.Program(target = egtb_file[:-4],  # strip '.cpp'

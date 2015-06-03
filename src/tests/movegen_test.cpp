@@ -15,7 +15,6 @@ using std::string;
 class MoveGeneratorTest : public testing::Test {
  public:
   MoveGeneratorTest() {
-    movegen::InitializeIfNeeded();
   }
 };
 

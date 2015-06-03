@@ -6,6 +6,7 @@
 #include "slider_attacks.h"
 #include "u64_op.h"
 
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <utility>
@@ -13,23 +14,15 @@
 
 namespace {
 
-bool initialized = false;
-
-U64 knight_attacks_[64];
-U64 king_attacks_[64];
-SliderAttacks slider_attacks_;
-
-U64 SetBit(int row, int col) {
-  if (row > 7 || row < 0 || col > 7 || col < 0) {
-    return 0ULL;
-  }
-  return 1ULL << (row * 8 + col);
+constexpr U64 SetBit(int row, int col) {
+  return IsOnBoard(row, col) ? (1ULL << INDX(row, col)) : 0ULL;
 }
 
-void CreateKnightAttacks() {
+const std::array<U64, 64> knight_attacks_ = []() {
+  std::array<U64, 64> knight_attacks;
   for (int i = 0; i < 8; ++i) {
     for (int j = 0; j < 8; ++j) {
-      knight_attacks_[i * 8 + j] = (SetBit(i - 1, j - 2) |
+      knight_attacks[INDX(i, j)] = (SetBit(i - 1, j - 2) |
                                     SetBit(i + 1, j - 2) |
                                     SetBit(i + 2, j - 1) |
                                     SetBit(i + 2, j + 1) |
@@ -39,12 +32,14 @@ void CreateKnightAttacks() {
                                     SetBit(i - 2, j - 1));
     }
   }
-}
+  return knight_attacks;
+}();
 
-void CreateKingAttacks() {
+const std::array<U64, 64> king_attacks_ = []() {
+  std::array<U64, 64> king_attacks;
   for (int i = 0; i < 8; ++i) {
     for (int j = 0; j < 8; ++j) {
-      king_attacks_[i * 8 + j] = (SetBit(i - 1, j - 1) |
+      king_attacks[INDX(i, j)] = (SetBit(i - 1, j - 1) |
                                   SetBit(i, j - 1) |
                                   SetBit(i + 1, j - 1) |
                                   SetBit(i + 1, j) |
@@ -54,21 +49,12 @@ void CreateKingAttacks() {
                                   SetBit(i - 1, j));
     }
   }
-}
+  return king_attacks;
+}();
 
 }  // namespace
 
 namespace movegen {
-
-void InitializeIfNeeded() {
-  if (initialized) {
-    return;
-  }
-  slider_attacks_.Initialize();
-  CreateKnightAttacks();
-  CreateKingAttacks();
-  initialized = true;
-}
 
 void BitBoardToMoveList(const int index,
                         const U64 bitboard,
@@ -107,7 +93,7 @@ U64 ComputeAttackMap(const Board& board, const Side attacker_side) {
 U64 Attacks(Piece piece, const int index, const Board& board) {
   switch (PieceType(piece)) {
     case BISHOP:
-      return slider_attacks_.BishopAttacks(board.BitBoard(), index);
+      return slider_attacks::BishopAttacks(board.BitBoard(), index);
 
     case KING:
       return king_attacks_[index];
@@ -116,10 +102,10 @@ U64 Attacks(Piece piece, const int index, const Board& board) {
       return knight_attacks_[index];
 
     case QUEEN:
-      return slider_attacks_.QueenAttacks(board.BitBoard(), index);
+      return slider_attacks::QueenAttacks(board.BitBoard(), index);
 
     case ROOK:
-      return slider_attacks_.RookAttacks(board.BitBoard(), index);
+      return slider_attacks::RookAttacks(board.BitBoard(), index);
   }
   throw std::runtime_error("Unknown piece type");
 }
