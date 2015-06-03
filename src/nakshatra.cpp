@@ -2,7 +2,6 @@
 #include "common.h"
 #include "executor.h"
 #include "movegen.h"
-#include "zobrist.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -30,7 +29,6 @@ int main(int argc, char** argv) {
   srand(time(NULL));
 
   movegen::InitializeIfNeeded();
-  zobrist::InitializeIfNeeded();
   Executor executor(kNakshatra);
 
   string cmd_string;

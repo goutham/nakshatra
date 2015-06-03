@@ -7,7 +7,6 @@
 #include "search_algorithm.h"
 #include "stats.h"
 #include "transpos.h"
-#include "zobrist.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -17,7 +16,6 @@ class SearchAlgorithmTest : public testing::Test {
  public:
   SearchAlgorithmTest() {
     movegen::InitializeIfNeeded();
-    zobrist::InitializeIfNeeded();
   }
 };
 

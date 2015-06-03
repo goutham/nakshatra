@@ -5,7 +5,6 @@
 #include "movegen_normal.h"
 #include "movegen_suicide.h"
 #include "stopwatch.h"
-#include "zobrist.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -37,7 +36,6 @@ int main(int argc, char **argv) {
   assert(argc == 3);
 
   movegen::InitializeIfNeeded();
-  zobrist::InitializeIfNeeded();
 
   unsigned int depth = 0;
   Board* board = NULL;

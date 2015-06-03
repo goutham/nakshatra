@@ -9,7 +9,6 @@
 #include "movegen_suicide.h"
 #include "pn_search.h"
 #include "stats.h"
-#include "zobrist.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -23,7 +22,6 @@ int main(int argc, const char** argv) {
   srand(time(NULL));
 
   movegen::InitializeIfNeeded();
-  zobrist::InitializeIfNeeded();
 
   Board board(SUICIDE);
   movegen::MoveGeneratorSuicide movegen(board);

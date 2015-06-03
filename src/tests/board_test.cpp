@@ -5,7 +5,6 @@
 #include "movegen_suicide.h"
 #include "piece.h"
 #include "san.h"
-#include "zobrist.h"
 
 #include <gtest/gtest.h>
 
@@ -17,7 +16,6 @@ class BoardTest : public testing::Test {
  public:
   BoardTest() {
     movegen::InitializeIfNeeded();
-    zobrist::InitializeIfNeeded();
   }
 };
 

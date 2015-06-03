@@ -5,7 +5,6 @@
 #include "movegen.h"
 #include "u64_op.h"
 #include "san.h"
-#include "zobrist.h"
 
 #include <string>
 #include <cstdlib>
@@ -14,7 +13,6 @@ using std::string;
 
 string SAN(const Board& board, const Move& move) {
   movegen::InitializeIfNeeded();
-  zobrist::InitializeIfNeeded();
 
   const Piece piece = board.PieceAt(move.from_index());
 
@@ -109,7 +107,6 @@ Move SANToMove(const string& move_san,
                const Board& board,
                movegen::MoveGenerator* movegen) {
   movegen::InitializeIfNeeded();
-  zobrist::InitializeIfNeeded();
 
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);

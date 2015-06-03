@@ -2,7 +2,6 @@
 #include "movegen.h"
 #include "movegen_suicide.h"
 #include "movegen_normal.h"
-#include "zobrist.h"
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -17,7 +16,6 @@ class MoveGeneratorTest : public testing::Test {
  public:
   MoveGeneratorTest() {
     movegen::InitializeIfNeeded();
-    zobrist::InitializeIfNeeded();
   }
 };
 

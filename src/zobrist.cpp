@@ -2,17 +2,15 @@
 #include "piece.h"
 #include "zobrist.h"
 
+#include <array>
 #include <iostream>
 #include <cstdlib>
 
 namespace {
 
-bool initialized = false;
-
-U64 zobrist_[PIECE_MAX][COLOR_MAX][SQUARE_MAX];
-U64 ep_[SQUARE_MAX];
-U64 castling_[16];
-U64 turn_;
+constexpr int PIECE_MAX = 7;
+constexpr int COLOR_MAX = 3;
+constexpr int SQUARE_MAX = 64;
 
 U64 RandU64() {
   U64 r = rand();
@@ -20,6 +18,39 @@ U64 RandU64() {
   r |= rand();
   return r;
 }
+
+template <typename T, int A, int B, int C>
+using Array3d = std::array<std::array<std::array<T, C>, B>, A>;
+
+const Array3d<U64, PIECE_MAX, COLOR_MAX, SQUARE_MAX> zobrist_ = []() {
+  Array3d<U64, PIECE_MAX, COLOR_MAX, SQUARE_MAX> zobrist;
+  for (int i = 0; i < PIECE_MAX; ++i) {
+    for (int j = 0; j < COLOR_MAX; ++j) {
+      for (int k = 0; k < SQUARE_MAX; ++k) {
+        zobrist[i][j][k] = RandU64();
+      }
+    }
+  }
+  return zobrist;
+}();
+
+const std::array<U64, SQUARE_MAX> ep_ = []() {
+  std::array<U64, SQUARE_MAX> ep;
+  for (int i = 0; i < SQUARE_MAX; ++i) {
+    ep[i] = RandU64();
+  }
+  return ep;
+}();
+
+const std::array<U64, 16> castling_ = []() {
+  std::array<U64, 16> castling;
+  for (int i = 0; i < 16; ++i) {
+    castling[i] = RandU64();
+  }
+  return castling;
+}();
+
+const U64 turn_ = RandU64();
 
 }  // namespace
 
@@ -43,28 +74,6 @@ U64 Castling(unsigned index) {
 
 U64 Castling(unsigned char castle) {
   return castling_[castle];
-}
-
-void InitializeIfNeeded() {
-  if (initialized) {
-    return;
-  }
-
-  turn_ = RandU64();
-  for (int i = 0; i < SQUARE_MAX; ++i) {
-    ep_[i] = RandU64();
-  }
-  for (int i = 0; i < 16; ++i) {
-    castling_[i] = RandU64();
-  }
-  for (int i = 0; i < PIECE_MAX; ++i) {
-    for (int j = 0; j < COLOR_MAX; ++j) {
-      for (int k = 0; k < SQUARE_MAX; ++k) {
-        zobrist_[i][j][k] = RandU64();
-      }
-    }
-  }
-  initialized = true;
 }
 
 void PrintZobrist() {

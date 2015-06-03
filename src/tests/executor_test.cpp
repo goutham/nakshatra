@@ -2,7 +2,6 @@
 #include "board.h"
 #include "executor.h"
 #include "movegen.h"
-#include "zobrist.h"
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -15,7 +14,6 @@ using std::vector;
 class ExecutorTest : public testing::Test {
  public:
   ExecutorTest() {
-    zobrist::InitializeIfNeeded();
     movegen::InitializeIfNeeded();
   }
 };

@@ -4,13 +4,7 @@
 #include "common.h"
 #include "piece.h"
 
-#define PIECE_MAX 7
-#define COLOR_MAX 3
-#define SQUARE_MAX 64
-
 namespace zobrist {
-
-void InitializeIfNeeded();
 
 void PrintZobrist();
 
