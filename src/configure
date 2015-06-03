@@ -1,7 +1,6 @@
 #!/bin/bash
 
 scons
-./magic_bits
 ./egtb_gen_main
 ./egtb_index_gen
 ./unit_tests
