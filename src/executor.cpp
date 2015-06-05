@@ -58,7 +58,6 @@ void Executor::ReBuildPlayer() {
 
 bool Executor::Execute(const string& command_str,
                        vector<string>* response) {
-  using namespace cmd_interpreter;
   Command command = Interpret(command_str);
   switch (command.cmd_name) {
     case NEW:
@@ -162,13 +161,13 @@ bool Executor::Execute(const string& command_str,
 
     case MOVELIST:
       {
-        movegen::MoveGenerator* movegen;
+        MoveGenerator* movegen;
         switch (variant_) {
           case NORMAL:
-            movegen = new movegen::MoveGeneratorNormal(player_->GetBoard());
+            movegen = new MoveGeneratorNormal(player_->GetBoard());
             break;
           case SUICIDE:
-            movegen = new movegen::MoveGeneratorSuicide(*player_->GetBoard());
+            movegen = new MoveGeneratorSuicide(*player_->GetBoard());
             break;
         }
         MoveArray move_array;

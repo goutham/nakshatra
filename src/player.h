@@ -10,11 +10,8 @@
 #include <sys/time.h>
 
 class EGTB;
-struct Extensions;
-
-namespace search {
-
 class IterativeDeepener;
+struct Extensions;
 
 struct SearchParams {
   SearchParams() : thinking_output(false) {}
@@ -44,7 +41,5 @@ class Player {
   EGTB* egtb_;
   Extensions* extensions_;
 };
-
-}  // namespace search
 
 #endif

@@ -36,7 +36,7 @@ struct BuildOptions {
   // during pondering where we need a new Player instance to ponder over a
   // different board position but reuse the existing transposition table. If
   // this variable is NULL, a new transposition table is built.
-  search::TranspositionTable* transpos;
+  TranspositionTable* transpos;
 };
 
 class PlayerBuilder {
@@ -69,11 +69,10 @@ class PlayerBuilder {
 
   virtual void BuildTranspositionTable() {
     // ~16M entries.
-    transpos_.reset(new search::TranspositionTable(1U << 23));
+    transpos_.reset(new TranspositionTable(1U << 23));
   }
 
-  virtual void InjectExternalTranspositionTable(
-      search::TranspositionTable* transpos) {
+  virtual void InjectExternalTranspositionTable(TranspositionTable* transpos) {
     transpos_.reset(transpos);
     external_transpos_ = true;
   }
@@ -87,13 +86,12 @@ class PlayerBuilder {
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
     assert(extensions_ != nullptr);
-    search_algorithm_.reset(
-        new search::SearchAlgorithm(board_.get(),
-                                    movegen_.get(),
-                                    eval_.get(),
-                                    timer_.get(),
-                                    transpos_.get(),
-                                    extensions_.get()));
+    search_algorithm_.reset(new SearchAlgorithm(board_.get(),
+                                                movegen_.get(),
+                                                eval_.get(),
+                                                timer_.get(),
+                                                transpos_.get(),
+                                                extensions_.get()));
   }
   virtual void BuildIterativeDeepener() {
     assert(board_ != nullptr);
@@ -102,13 +100,12 @@ class PlayerBuilder {
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
     assert(extensions_ != nullptr);
-    iterative_deepener_.reset(
-        new search::IterativeDeepener(board_.get(),
-                                      movegen_.get(),
-                                      search_algorithm_.get(),
-                                      timer_.get(),
-                                      transpos_.get(),
-                                      extensions_.get()));
+    iterative_deepener_.reset(new IterativeDeepener(board_.get(),
+                                                    movegen_.get(),
+                                                    search_algorithm_.get(),
+                                                    timer_.get(),
+                                                    transpos_.get(),
+                                                    extensions_.get()));
   }
 
   // BuildExtensions only allocates memory for the extensions_ object. The
@@ -127,11 +124,11 @@ class PlayerBuilder {
   virtual void BuildBook() = 0;
   virtual void BuildPlayer() = 0;
 
-  virtual search::Player* GetPlayer() const {
+  virtual Player* GetPlayer() const {
     return player_.get();
   }
 
-  virtual movegen::MoveGenerator* GetMoveGenerator() const {
+  virtual MoveGenerator* GetMoveGenerator() const {
     return movegen_.get();
   }
 
@@ -139,26 +136,26 @@ class PlayerBuilder {
     return egtb_.get();
   }
 
-  virtual eval::Evaluator* GetEvaluator() const {
+  virtual Evaluator* GetEvaluator() const {
     return eval_.get();
   }
 
-  virtual search::TranspositionTable* GetTranspos() const {
+  virtual TranspositionTable* GetTranspos() const {
     return transpos_.get();
   }
 
  protected:
   const std::map<std::string, std::string> config_map_;
   std::unique_ptr<Board> board_;
-  std::unique_ptr<movegen::MoveGenerator> movegen_;
-  std::unique_ptr<search::SearchAlgorithm> search_algorithm_;
-  std::unique_ptr<search::IterativeDeepener> iterative_deepener_;
-  std::unique_ptr<eval::Evaluator> eval_;
-  std::unique_ptr<search::TranspositionTable> transpos_;
+  std::unique_ptr<MoveGenerator> movegen_;
+  std::unique_ptr<SearchAlgorithm> search_algorithm_;
+  std::unique_ptr<IterativeDeepener> iterative_deepener_;
+  std::unique_ptr<Evaluator> eval_;
+  std::unique_ptr<TranspositionTable> transpos_;
   std::unique_ptr<Timer> timer_;
   std::unique_ptr<Book> book_;
   std::unique_ptr<Extensions> extensions_;
-  std::unique_ptr<search::Player> player_;
+  std::unique_ptr<Player> player_;
   std::unique_ptr<EGTB> egtb_;
   bool external_transpos_;
 };
@@ -175,7 +172,7 @@ class NormalPlayerBuilder : public PlayerBuilder {
 
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
-    movegen_.reset(new movegen::MoveGeneratorNormal(board_.get()));
+    movegen_.reset(new MoveGeneratorNormal(board_.get()));
   }
 
   void BuildEGTB() override {
@@ -184,7 +181,7 @@ class NormalPlayerBuilder : public PlayerBuilder {
   void BuildEvaluator() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
-    eval_.reset(new eval::EvalNormal(board_.get(), movegen_.get()));
+    eval_.reset(new EvalNormal(board_.get(), movegen_.get()));
   }
 
   void BuildBook() override {
@@ -194,7 +191,7 @@ class NormalPlayerBuilder : public PlayerBuilder {
   void AddExtensions() override {
     assert(extensions_ != nullptr);
     assert(board_ != nullptr);
-    extensions_->move_orderer = new search::CapturesFirstOrderer(board_.get());
+    extensions_->move_orderer = new CapturesFirstOrderer(board_.get());
   }
 
   void BuildPlayer() override {
@@ -202,12 +199,12 @@ class NormalPlayerBuilder : public PlayerBuilder {
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
     // For Normal player, extensions_ could be NULL as of now.
-    player_.reset(new search::Player(book_.get(),
-                                     board_.get(),
-                                     iterative_deepener_.get(),
-                                     timer_.get(),
-                                     egtb_.get(),
-                                     extensions_.get()));
+    player_.reset(new Player(book_.get(),
+                             board_.get(),
+                             iterative_deepener_.get(),
+                             timer_.get(),
+                             egtb_.get(),
+                             extensions_.get()));
   }
 };
 
@@ -223,7 +220,7 @@ class SuicidePlayerBuilder : public PlayerBuilder {
 
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
-    movegen_.reset(new movegen::MoveGeneratorSuicide(*board_.get()));
+    movegen_.reset(new MoveGeneratorSuicide(*board_.get()));
   }
 
   void BuildEGTB() override {
@@ -243,9 +240,9 @@ class SuicidePlayerBuilder : public PlayerBuilder {
   void BuildEvaluator() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
-    eval_.reset(new eval::EvalSuicide(board_.get(),
-                                      movegen_.get(),
-                                      egtb_.get()));
+    eval_.reset(new EvalSuicide(board_.get(),
+                                movegen_.get(),
+                                egtb_.get()));
   }
 
   void BuildBook() override {
@@ -257,15 +254,15 @@ class SuicidePlayerBuilder : public PlayerBuilder {
     assert(movegen_ != nullptr);
     assert(eval_ != nullptr);
     assert(extensions_ != nullptr);
-    extensions_->move_orderer = new search::MobilityOrderer(board_.get());
-    extensions_->lmr = new search::LMR(
+    extensions_->move_orderer = new MobilityOrderer(board_.get());
+    extensions_->lmr = new LMR(
         4  /* full depth moves */,
         2  /* reduction limit */,
         1  /* depth reduction factor */);
     extensions_->pns_timer = new Timer;
     static const int MAX_PNS_NODES = 10000000;
     std::cout << "# Maximum PNS nodes: " << MAX_PNS_NODES << std::endl;
-    extensions_->pn_search = new search::PNSearch(
+    extensions_->pn_search = new PNSearch(
         MAX_PNS_NODES ,
         board_.get(),
         movegen_.get(),
@@ -279,12 +276,12 @@ class SuicidePlayerBuilder : public PlayerBuilder {
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
     assert(extensions_ != nullptr);
-    player_.reset(new search::Player(book_.get(),
-                                     board_.get(),
-                                     iterative_deepener_.get(),
-                                     timer_.get(),
-                                     egtb_.get(),
-                                     extensions_.get()));
+    player_.reset(new Player(book_.get(),
+                             board_.get(),
+                             iterative_deepener_.get(),
+                             timer_.get(),
+                             egtb_.get(),
+                             extensions_.get()));
   }
 };
 
@@ -293,7 +290,7 @@ class PlayerBuilderDirector {
   PlayerBuilderDirector(PlayerBuilder* player_builder)
       : player_builder_(player_builder) {}
 
-  search::Player* Build(const BuildOptions& options) {
+  Player* Build(const BuildOptions& options) {
     if (options.transpos) {
       player_builder_->InjectExternalTranspositionTable(options.transpos);
     } else {

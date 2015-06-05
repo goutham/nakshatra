@@ -13,10 +13,6 @@
 #include <cstdlib>
 #include <iostream>
 
-using movegen::MoveGenerator;
-using movegen::MoveGeneratorNormal;
-using movegen::MoveGeneratorSuicide;
-
 int64_t Perft(MoveGenerator* movegen, Board* board, unsigned int depth) {
   if (depth == 0) {
     return 1;

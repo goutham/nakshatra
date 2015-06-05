@@ -1,8 +1,6 @@
 #ifndef LMR_H
 #define LMR_H
 
-namespace search {
-
 class LMR {
  public:
   LMR(const int full_depth_moves,
@@ -27,7 +25,5 @@ class LMR {
   const int reduction_limit_;
   const int depth_reduction_factor_;
 };
-
-}  // namespace search
 
 #endif

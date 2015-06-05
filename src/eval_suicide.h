@@ -7,17 +7,12 @@
 class Board;
 class EGTB;
 class MoveArray;
-
-namespace movegen {
 class MoveGenerator;
-}
-
-namespace eval {
 
 class EvalSuicide : public Evaluator {
  public:
   EvalSuicide(Board* board,
-              movegen::MoveGenerator* movegen,
+              MoveGenerator* movegen,
               EGTB* egtb)
       : board_(board),
         movegen_(movegen),
@@ -37,10 +32,8 @@ class EvalSuicide : public Evaluator {
   bool RivalBishopsOnOppositeColoredSquares() const;
 
   Board* board_;
-  movegen::MoveGenerator* movegen_;
+  MoveGenerator* movegen_;
   EGTB* egtb_;
 };
-
-}  // namespace eval
 
 #endif

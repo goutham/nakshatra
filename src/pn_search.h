@@ -11,17 +11,9 @@
 
 class Board;
 class EGTB;
-class Timer;
-
-namespace eval {
 class Evaluator;
-}
-
-namespace movegen {
 class MoveGenerator;
-}
-
-namespace search {
+class Timer;
 
 typedef int PNSNodeOffset;
 
@@ -88,8 +80,8 @@ class PNSearch {
   // if timer_ is null - PNSearch is not time bound.
   PNSearch(const int max_nodes,
            Board* board,
-           movegen::MoveGenerator* movegen,
-           eval::Evaluator* evaluator,
+           MoveGenerator* movegen,
+           Evaluator* evaluator,
            EGTB* egtb,
            Timer* timer) :
       max_nodes_(max_nodes),
@@ -168,15 +160,13 @@ class PNSearch {
   const int max_nodes_;
 
   Board* board_;
-  movegen::MoveGenerator* movegen_;
-  eval::Evaluator* evaluator_;
+  MoveGenerator* movegen_;
+  Evaluator* evaluator_;
   EGTB* egtb_;
   Timer* timer_;
 
   PNSNode* pns_tree_buffer_;
   PNSNodeOffset next_ = 0;
 };
-
-}  // namespace search
 
 #endif

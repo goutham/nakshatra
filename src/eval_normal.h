@@ -5,20 +5,13 @@
 #include "eval.h"
 
 class Board;
-
-namespace movegen {
 class MoveGenerator;
-}
-
-namespace eval {
 
 // Evaluates the board to come up with a score.
 class EvalNormal : public Evaluator {
  public:
-  EvalNormal(Board* board,
-             movegen::MoveGenerator* movegen)
-      : board_(board),
-        movegen_(movegen) {}
+  EvalNormal(Board* board, MoveGenerator* movegen)
+      : board_(board), movegen_(movegen) {}
 
   int Evaluate() override;
 
@@ -28,9 +21,7 @@ class EvalNormal : public Evaluator {
   int PieceValDifference() const;
 
   Board* board_;
-  movegen::MoveGenerator* movegen_;
+  MoveGenerator* movegen_;
 };
-
-}  // namespace eval
 
 #endif

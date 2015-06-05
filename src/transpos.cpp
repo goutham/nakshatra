@@ -5,8 +5,6 @@
 
 #include <iostream>
 
-namespace search {
-
 TranspositionTable::TranspositionTable(int size) :
     size_(size),
     transpos1_hits_(0U),
@@ -90,5 +88,3 @@ void TranspositionTable::LogStats() const {
          << endl;
   }
 }
-
-}  // namespace search

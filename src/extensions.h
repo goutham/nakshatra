@@ -1,19 +1,16 @@
 #ifndef EXTENSIONS_H
 #define EXTENSIONS_H
 
-class Timer;
-
-namespace search {
 class LMR;
 class MoveOrderer;
 class PNSearch;
-}
+class Timer;
 
 struct Extensions {
-  search::MoveOrderer* move_orderer = nullptr;
+  MoveOrderer* move_orderer = nullptr;
   Timer* pns_timer = nullptr;
-  search::PNSearch* pn_search = nullptr;
-  search::LMR* lmr = nullptr;
+  PNSearch* pn_search = nullptr;
+  LMR* lmr = nullptr;
 };
 
 #endif

@@ -7,7 +7,7 @@
 
 TEST(TransposTest, VerifyEntries) {
   Board board(SUICIDE, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -");
-  search::TranspositionTable t(1024);
+  TranspositionTable t(1024);
   U64 zkey = board.ZobristKey();
   EXPECT_EQ(NULL, t.Get(zkey));
 

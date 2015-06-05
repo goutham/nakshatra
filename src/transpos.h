@@ -7,8 +7,6 @@
 
 #include <cstdio>
 
-namespace search {
-
 struct TranspositionTableEntry {
   TranspositionTableEntry() : valid(false) {}
   bool valid;
@@ -64,7 +62,5 @@ class TranspositionTable {
   unsigned int transpos2_hits_;
   unsigned int transpos_misses_;
 };
-
-}  // namespace search
 
 #endif

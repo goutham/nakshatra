@@ -10,8 +10,6 @@
 #include <array>
 #include <cstdlib>
 
-namespace movegen {
-
 namespace {
 
 void AddPawnMovesToMoveList(U64 pawns, int add, MoveArray* move_array) {
@@ -258,5 +256,3 @@ bool MoveGeneratorNormal::IsValidMove(const Move& move) {
   GenerateMoves(&move_array);
   return move_array.Find(move) != -1;
 }
-
-}  // namespace movegen

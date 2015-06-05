@@ -8,8 +8,6 @@
 
 #include <stdexcept>
 
-namespace movegen {
-
 // Interface implemented by the move generators of all variants. Access to any
 // other objects (such as the Board) can be provided through the constructor of
 // the derived classes.
@@ -74,7 +72,5 @@ constexpr U64 MaskRow(const int row) {
   return (row >= 0 && row <= 7) ? (0x00000000000000FFULL << (8 * row))
                                 : throw std::logic_error("Invalid row");
 }
-
-}  // namespace movegen
 
 #endif

@@ -9,10 +9,8 @@
 #include <string>
 #include <vector>
 
-namespace search {
 class Player;
 class TranspositionTable;
-}
 
 class Executor {
  public:
@@ -53,8 +51,8 @@ class Executor {
   // Name of the computer player.
   std::string name_;
 
-  search::Player* player_;  // not owned.
-  search::SearchParams search_params_;
+  Player* player_;  // not owned.
+  SearchParams search_params_;
   std::unique_ptr<PlayerBuilder> player_builder_;
   Variant variant_;
   bool quit_ = false;

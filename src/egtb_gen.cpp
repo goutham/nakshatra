@@ -83,7 +83,7 @@ void EGTBGenerator::Generate(vector<string> all_pos_list,
       fflush(stdout);
       ++progress;
       Board board(SUICIDE, *iter);
-      movegen::MoveGeneratorSuicide movegen(board);
+      MoveGeneratorSuicide movegen(board);
       MoveArray movelist;
       movegen.GenerateMoves(&movelist);
       if (board.SideToMove() == winning_side) {
@@ -162,8 +162,8 @@ void EGTBGenerator::Generate(vector<string> final_pos_list,
   for (vector<string>::iterator iter = all_pos_list.begin();
        iter != all_pos_list.end();) {
     Board board(SUICIDE, *iter);
-    movegen::MoveGeneratorSuicide movegen(board);
-    eval::EvalSuicide eval(&board, &movegen, nullptr);
+    MoveGeneratorSuicide movegen(board);
+    EvalSuicide eval(&board, &movegen, nullptr);
     int result = eval.Result();
     if (result == WIN) {
       store->Put(*iter, 0, Move(), board.SideToMove());

@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <array>
 
-namespace movegen {
-
 namespace {
 
 void AddPawnMovesToMoveList(U64 pawns,
@@ -228,5 +226,3 @@ bool MoveGeneratorSuicide::IsValidMove(const Move& move) {
   GenerateMoves(&move_array);
   return move_array.Find(move) != -1;
 }
-
-}  // namespace movegen

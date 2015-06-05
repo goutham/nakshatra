@@ -9,15 +9,9 @@
 
 class Board;
 class Extensions;
-class Timer;
-
-namespace movegen {
 class MoveGenerator;
-}
-
-namespace search {
-
 class SearchAlgorithm;
+class Timer;
 class TranspositionTable;
 
 // Iterative deepening search parameters.
@@ -30,7 +24,7 @@ struct IDSParams {
 class IterativeDeepener {
  public:
   IterativeDeepener(Board* board,
-                    movegen::MoveGenerator* movegen,
+                    MoveGenerator* movegen,
                     SearchAlgorithm* search_algorithm,
                     Timer* timer,
                     TranspositionTable* transpos,
@@ -56,7 +50,7 @@ class IterativeDeepener {
   void ClearState();
 
   Board* board_;
-  movegen::MoveGenerator* movegen_;
+  MoveGenerator* movegen_;
   SearchAlgorithm* search_algorithm_;
   Timer* timer_;
   TranspositionTable* transpos_;
@@ -90,7 +84,5 @@ class IterativeDeepener {
 
   std::vector<IterationStat> iteration_stats_;
 };
-
-}  // namespace search
 
 #endif

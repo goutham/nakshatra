@@ -9,8 +9,6 @@
 
 class Board;
 
-namespace search {
-
 class MoveOrderer {
  public:
   virtual ~MoveOrderer() {}
@@ -44,7 +42,5 @@ class CapturesFirstOrderer : public MoveOrderer {
  private:
   Board* board_;
 };
-
-}  // namespace search
 
 #endif

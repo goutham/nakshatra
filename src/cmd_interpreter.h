@@ -6,8 +6,6 @@
 #include <string>
 #include <vector>
 
-namespace cmd_interpreter {
-
 // All supported Xboard communication protocol commands.
 enum CmdName {
   ERROR,
@@ -38,7 +36,5 @@ struct Command {
 };
 
 Command Interpret(const std::string& cmd);
-
-}  // namespace cmd_interpreter
 
 #endif

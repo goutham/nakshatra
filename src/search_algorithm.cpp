@@ -10,8 +10,6 @@
 #include "timer.h"
 #include "transpos.h"
 
-namespace search {
-
 int SearchAlgorithm::NegaScout(int max_depth,
                                int alpha,
                                int beta,
@@ -108,5 +106,3 @@ int SearchAlgorithm::NegaScout(int max_depth,
   }
   return alpha;
 }
-
-}  // namespace search

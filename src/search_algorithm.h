@@ -1,27 +1,18 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
-class Extensions;
-class Timer;
-
-namespace eval {
 class Evaluator;
-}
-
-namespace movegen {
+class Extensions;
 class MoveGenerator;
-}
-
-namespace search {
-
-struct SearchStats;
+class Timer;
 class TranspositionTable;
+struct SearchStats;
 
 class SearchAlgorithm {
  public:
   SearchAlgorithm(Board* board,
-                  movegen::MoveGenerator* movegen,
-                  eval::Evaluator* evaluator,
+                  MoveGenerator* movegen,
+                  Evaluator* evaluator,
                   Timer* timer,
                   TranspositionTable* transpos,
                   Extensions* extensions)
@@ -39,13 +30,11 @@ class SearchAlgorithm {
 
  private:
   Board* board_;
-  movegen::MoveGenerator* movegen_;
-  eval::Evaluator* evaluator_;
+  MoveGenerator* movegen_;
+  Evaluator* evaluator_;
   Timer* timer_;
   TranspositionTable* transpos_;
   Extensions* extensions_;
 };
-
-}  // namespace search
 
 #endif

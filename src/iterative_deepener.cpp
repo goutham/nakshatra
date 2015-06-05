@@ -17,8 +17,6 @@
 #include <iostream>
 #include <string>
 
-namespace search {
-
 void IterativeDeepener::Search(const IDSParams& ids_params,
                                Move* best_move,
                                int* best_move_score,
@@ -197,5 +195,3 @@ std::string IterativeDeepener::PV(const Move& root_move) {
   board_->UnmakeLastMove();  // root move
   return pv;
 }
-
-}  // namespace search

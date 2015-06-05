@@ -18,8 +18,6 @@
 #include <signal.h>
 #include <sys/time.h>
 
-namespace search {
-
 namespace {
 // Define a line with 2 points - (x1, y1) and (x2, y2). Returns the
 // y-coordinate of a third point whose x-coordinate is given - x3.
@@ -91,7 +89,7 @@ Move Player::Search(const SearchParams& search_params,
 
   if (extensions_->pn_search &&
       time_for_move_centis > 50 &&
-      movegen::CountMoves(board_->SideToMove(), *board_) > 1) {
+      CountMoves(board_->SideToMove(), *board_) > 1) {
     assert (extensions_->pns_timer);
 
     // Allocate 5% of total time for PNS.
@@ -143,5 +141,3 @@ Move Player::Search(const SearchParams& search_params,
                               &id_search_stats);
   return best_move;
 }
-
-}  // namespace search

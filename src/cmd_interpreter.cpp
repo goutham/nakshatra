@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-namespace cmd_interpreter {
-
 Command Interpret(const std::string& cmd) {
   static std::map<std::string, CmdName> cmd_map = {
     {"Error", ERROR},
@@ -42,5 +40,3 @@ Command Interpret(const std::string& cmd) {
   }
   return command;
 }
-
-}  // namespace cmd_interpreter

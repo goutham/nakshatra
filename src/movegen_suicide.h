@@ -6,8 +6,6 @@
 
 class Board;
 
-namespace movegen {
-
 // Move generator for suicide chess.
 class MoveGeneratorSuicide : public MoveGenerator {
  public:
@@ -20,7 +18,5 @@ class MoveGeneratorSuicide : public MoveGenerator {
  private:
   const Board& board_;
 };
-
-}  // namespace movegen
 
 #endif

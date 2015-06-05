@@ -50,7 +50,7 @@ string SAN(const Board& board, const Move& move) {
     int index;
     std::vector<int> indices;
     while ((index = op.NextRightMostBitIndex()) != -1) {
-      const U64 attacks = movegen::Attacks(piece, index, board);
+      const U64 attacks = Attacks(piece, index, board);
       if (attacks & dest_sq_bb) {
         indices.push_back(index);
       }
@@ -103,7 +103,7 @@ string SAN(const Board& board, const Move& move) {
 
 Move SANToMove(const string& move_san,
                const Board& board,
-               movegen::MoveGenerator* movegen) {
+               MoveGenerator* movegen) {
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);
   for (int i = 0; i < move_array.size(); ++i) {

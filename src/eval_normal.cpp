@@ -7,8 +7,6 @@
 #include "stopwatch.h"
 #include "u64_op.h"
 
-namespace eval {
-
 namespace {
 // Piece values.
 namespace pv {
@@ -64,8 +62,7 @@ int EvalNormal::Evaluate() {
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
   if (move_array.size() == 0) {
-    const U64 attack_map =
-        movegen::ComputeAttackMap(*board_, OppositeSide(side));
+    const U64 attack_map = ComputeAttackMap(*board_, OppositeSide(side));
     if (attack_map & board_->BitBoard(PieceOfSide(KING, side))) {
       return -WIN;
     } else {
@@ -76,7 +73,7 @@ int EvalNormal::Evaluate() {
   for (int i = 0; i < move_array.size(); ++i) {
     const Move& move = move_array.get(i);
     board_->MakeMove(move);
-    U64 attack_map = movegen::ComputeAttackMap(*board_, side);
+    U64 attack_map = ComputeAttackMap(*board_, side);
     if (attack_map &
         board_->BitBoard(PieceOfSide(KING, OppositeSide(side)))) {
       MoveArray opp_move_array;
@@ -129,8 +126,7 @@ int EvalNormal::Result() const {
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
   if (move_array.size() == 0) {
-    const U64 attack_map =
-        movegen::ComputeAttackMap(*board_, OppositeSide(side));
+    const U64 attack_map = ComputeAttackMap(*board_, OppositeSide(side));
     if (attack_map & board_->BitBoard(PieceOfSide(KING, side))) {
       return -WIN;
     } else {
@@ -139,5 +135,3 @@ int EvalNormal::Result() const {
   }
   return -1;
 }
-
-}  // namespace eval

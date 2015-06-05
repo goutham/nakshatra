@@ -22,22 +22,22 @@ int main(int argc, const char** argv) {
   srand(time(NULL));
 
   Board board(SUICIDE);
-  movegen::MoveGeneratorSuicide movegen(board);
+  MoveGeneratorSuicide movegen(board);
   EGTB egtb("2p.bin.egtb", board);
   egtb.Initialize();
-  eval::EvalSuicide eval(&board, &movegen, &egtb);
-  search::PNSParams pns_params;
-  pns_params.pns_type = search::PNSParams::PN2;
+  EvalSuicide eval(&board, &movegen, &egtb);
+  PNSParams pns_params;
+  pns_params.pns_type = PNSParams::PN2;
   pns_params.pn2_full_search = true;
   pns_params.save_progress = 50000;
   pns_params.log_progress = 10;
-  search::PNSearch pn_search(200000,
-                             &board,
-                             &movegen,
-                             &eval,
-                             &egtb,
-                             nullptr);
-  search::PNSResult pns_result;
+  PNSearch pn_search(200000,
+                     &board,
+                     &movegen,
+                     &eval,
+                     &egtb,
+                     nullptr);
+  PNSResult pns_result;
   pn_search.Search(pns_params, &pns_result);
   return 0;
 }

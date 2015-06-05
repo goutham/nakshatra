@@ -10,19 +10,16 @@
 #include <vector>
 
 class Board;
-
-namespace movegen {
 class MoveGenerator;
-}
 
 class Book {
  public:
   Book(Variant variant, const std::string& book_file);
+
   Move GetBookMove(const Board& board) const;
 
  private:
-  void LoadBook(Board* board,
-                movegen::MoveGenerator* movegen);
+  void LoadBook(Board* board, MoveGenerator* movegen);
 
   std::map<std::string, std::vector<Move> > book_;
   const std::string book_file_;

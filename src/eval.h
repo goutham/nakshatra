@@ -3,8 +3,6 @@
 
 class Board;
 
-namespace eval {
-
 class Evaluator {
  public:
   virtual ~Evaluator() {}
@@ -18,7 +16,5 @@ class Evaluator {
  protected:
   Evaluator() {}
 };
-
-}  // namespace eval
 
 #endif

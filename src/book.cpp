@@ -26,14 +26,14 @@ Book::Book(Variant variant, const std::string& book_file)
     case NORMAL:
     {
       Board board(NORMAL);
-      movegen::MoveGeneratorNormal movegen(&board);
+      MoveGeneratorNormal movegen(&board);
       LoadBook(&board, &movegen);
       break;
     }
     case SUICIDE:
     {
       Board board(SUICIDE);
-      movegen::MoveGeneratorSuicide movegen(board);
+      MoveGeneratorSuicide movegen(board);
       LoadBook(&board, &movegen);
       break;
     }
@@ -60,8 +60,7 @@ Move Book::GetBookMove(const Board& board) const {
   return Move();
 }
 
-void Book::LoadBook(Board* board,
-                    movegen::MoveGenerator* movegen) {
+void Book::LoadBook(Board* board, MoveGenerator* movegen) {
   std::ifstream ifs;
   ifs.open(book_file_, std::ios::in);
   std::stringstream ss;

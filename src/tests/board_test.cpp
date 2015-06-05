@@ -440,7 +440,7 @@ TEST_F(BoardTest, SANTest3) {
 
 TEST_F(BoardTest, SANToMoveTest1) {
   Board board(SUICIDE);
-  movegen::MoveGeneratorSuicide movegen(board);
+  MoveGeneratorSuicide movegen(board);
   EXPECT_EQ("e2e3", SANToMove("e3", board, &movegen).str());
   EXPECT_EQ("g2g4", SANToMove("g4", board, &movegen).str());
   EXPECT_EQ("g1f3", SANToMove("Nf3", board, &movegen).str());

@@ -23,8 +23,6 @@
 
 using std::string;
 
-namespace search {
-
 void PNSearch::Search(const PNSParams& pns_params,
                       PNSResult* pns_result) {
   PNSNode* pns_root = pns_tree_buffer_;
@@ -304,7 +302,7 @@ void PNSearch::Expand(const PNSParams& pns_params,
         child->disproof = INF_NODES;
       } else {
         child->proof = 1;
-        child->disproof = movegen::CountMoves(board_->SideToMove(), *board_);
+        child->disproof = CountMoves(board_->SideToMove(), *board_);
       }
       board_->UnmakeLastMove();
     }
@@ -359,5 +357,3 @@ void PNSearch::SaveTreeHelper(const PNSNode* pns_node, Board* board,
     board->UnmakeLastMove();
   }
 }
-
-}  // namespace search

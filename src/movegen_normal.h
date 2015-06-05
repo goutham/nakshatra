@@ -6,8 +6,6 @@
 
 class Board;
 
-namespace movegen {
-
 // Move generator for normal chess.
 class MoveGeneratorNormal : public MoveGenerator {
  public:
@@ -20,7 +18,5 @@ class MoveGeneratorNormal : public MoveGenerator {
  private:
   Board* board_;
 };
-
-}  // namespace movegen
 
 #endif

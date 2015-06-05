@@ -9,8 +9,6 @@
 
 #include <cstdlib>
 
-namespace eval {
-
 namespace {
 // Piece values.
 namespace pv {
@@ -58,7 +56,7 @@ int EvalSuicide::OpponentMobility(const MoveArray& move_array) {
   int best = INF;
   for (unsigned i = 0; i < move_array.size(); ++i) {
     board_->MakeMove(move_array.get(i));
-    unsigned num_opp_moves = movegen::CountMoves(board_->SideToMove(), *board_);
+    unsigned num_opp_moves = CountMoves(board_->SideToMove(), *board_);
     board_->UnmakeLastMove();
     if (num_opp_moves == 1) {  // Best case scenario; return immediately.
       return num_opp_moves;
@@ -162,7 +160,7 @@ int EvalSuicide::Result() const {
     return DRAW;
   }
 
-  int self_mobility = movegen::CountMoves(board_->SideToMove(), *board_);
+  int self_mobility = CountMoves(board_->SideToMove(), *board_);
 
   // If there are no pieces to move, it is the end of the game.
   if (self_mobility == 0) {
@@ -174,5 +172,3 @@ int EvalSuicide::Result() const {
   // Non-{WIN, -WIN, DRAW} value suffices.
   return UNKNOWN;
 }
-
-}  // namespace eval

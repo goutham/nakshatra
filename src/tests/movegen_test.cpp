@@ -7,9 +7,6 @@
 #include <iostream>
 #include <string>
 
-using movegen::MoveGenerator;
-using movegen::MoveGeneratorNormal;
-using movegen::MoveGeneratorSuicide;
 using std::string;
 
 class MoveGeneratorTest : public testing::Test {
@@ -404,27 +401,27 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
 
 TEST_F(MoveGeneratorTest, VerifySlidingAttackMaps) {
   Board board(SUICIDE,"R7/1P1PPP1P/N2B3R/2P1P3/PP4P1/3p1pp1/1p1ppp2/1n1qkb2 w - -");
-  U64 attack_map = movegen::Attacks(QUEEN, INDX(7, 6), board);
+  U64 attack_map = Attacks(QUEEN, INDX(7, 6), board);
   EXPECT_EQ(13826121500723249152ULL, attack_map);
 
-  attack_map = movegen::Attacks(QUEEN, INDX(3, 4), board);
+  attack_map = Attacks(QUEEN, INDX(3, 4), board);
   EXPECT_EQ(36666756130410496ULL, attack_map);
 
-  attack_map = movegen::Attacks(QUEEN, INDX(0, 0), board);
+  attack_map = Attacks(QUEEN, INDX(0, 0), board);
   EXPECT_EQ(16843522ULL, attack_map);
 
-  attack_map = movegen::Attacks(QUEEN, INDX(7, 7), board);
+  attack_map = Attacks(QUEEN, INDX(7, 7), board);
   EXPECT_EQ(9205392891436859392ULL, attack_map);
 
-  attack_map = movegen::Attacks(QUEEN, INDX(6, 2), board);
+  attack_map = Attacks(QUEEN, INDX(6, 2), board);
   EXPECT_EQ(1011636480935723008ULL, attack_map);
 
-  attack_map = movegen::Attacks(QUEEN, INDX(2, 2), board);
+  attack_map = Attacks(QUEEN, INDX(2, 2), board);
   EXPECT_EQ(86134951428ULL, attack_map);
 
-  attack_map = movegen::Attacks(ROOK, INDX(3, 5), board);
+  attack_map = Attacks(ROOK, INDX(3, 5), board);
   EXPECT_EQ(9042522644938752ULL, attack_map);
 
-  attack_map = movegen::Attacks(BISHOP, INDX(3, 5), board);
+  attack_map = Attacks(BISHOP, INDX(3, 5), board);
   EXPECT_EQ(141081090983936ULL, attack_map);
 }

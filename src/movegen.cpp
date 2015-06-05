@@ -54,8 +54,6 @@ const std::array<U64, 64> king_attacks_ = []() {
 
 }  // namespace
 
-namespace movegen {
-
 void BitBoardToMoveList(const int index,
                         const U64 bitboard,
                         MoveArray* move_array) {
@@ -90,7 +88,7 @@ U64 ComputeAttackMap(const Board& board, const Side attacker_side) {
   return attack_map;
 }
 
-U64 Attacks(Piece piece, const int index, const Board& board) {
+U64 Attacks(const Piece piece, const int index, const Board& board) {
   switch (PieceType(piece)) {
     case BISHOP:
       return slider_attacks::BishopAttacks(board.BitBoard(), index);
@@ -297,5 +295,3 @@ int CountMoves(const Side side, const Board& board) {
     return attacks_count;
   }
 }
-
-}  // namespace movegen
