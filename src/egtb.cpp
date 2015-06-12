@@ -1,7 +1,6 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "u64_op.h"
 
 #include <fstream>
 #include <iostream>

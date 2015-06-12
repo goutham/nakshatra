@@ -3,8 +3,6 @@
 #include "common.h"
 #include "move.h"
 #include "movegen.h"
-#include "movegen_normal.h"
-#include "movegen_suicide.h"
 #include "san.h"
 
 #include <cctype>

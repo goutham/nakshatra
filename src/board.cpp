@@ -220,24 +220,19 @@ bool Board::UnmakeLastMove() {
   return true;
 }
 
-bool Board::CanCastle(Piece p) const {
-  int shift = 0;
-  switch (side_to_move_) {
-    case Side::WHITE:
-      shift = 0;
-      break;
-    case Side::BLACK:
-      shift = 2;
-      break;
+bool Board::CanCastle(const Side side, const Piece piece_type) const {
+  if (side == Side::NONE || (piece_type != KING && piece_type != QUEEN)) {
+    throw std::runtime_error("Bad parameters");
   }
-  switch (p) {
-    case KING:
-      break;
-    case QUEEN:
-      shift += 1;
-      break;
-  }
+
+  const int shift = (side == Side::BLACK ? 2 : 0) +
+                    (piece_type == QUEEN ? 1 : 0);
+
   return move_stack_.Top()->castle & (1U << shift);
+}
+
+bool Board::CanCastle(Piece piece_type) const {
+  return CanCastle(side_to_move_, piece_type);
 }
 
 std::string Board::ParseIntoFEN() const {

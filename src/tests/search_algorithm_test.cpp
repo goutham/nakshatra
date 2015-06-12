@@ -3,7 +3,6 @@
 #include "eval.h"
 #include "eval_suicide.h"
 #include "movegen.h"
-#include "movegen_suicide.h"
 #include "search_algorithm.h"
 #include "stats.h"
 #include "transpos.h"

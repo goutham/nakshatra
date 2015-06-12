@@ -1,13 +1,13 @@
+#include "attacks.h"
 #include "board.h"
 #include "common.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
-#include "u64_op.h"
 #include "san.h"
 
-#include <string>
 #include <cstdlib>
+#include <string>
 
 using std::string;
 
@@ -39,22 +39,25 @@ string SAN(const Board& board, const Move& move) {
   second_part.append(Move::file_rank(move.to_index()));
 
   if (PieceType(piece) != PAWN) {
+    const U64 occupancy_bitboard = board.BitBoard();
     const U64 dest_sq_bb = (1ULL << move.to_index());
-    const U64 piece_bb = board.BitBoard(piece);
+    U64 piece_bb = board.BitBoard(piece);
 
     san.append(1, PieceToChar(PieceType(piece)));
 
     // Iterate over all the pieces of the same type and check if there are
     // multiple pieces that can occupy the destination square.
-    U64Op op(piece_bb);
-    int index;
     std::vector<int> indices;
-    while ((index = op.NextRightMostBitIndex()) != -1) {
-      const U64 attacks = Attacks(piece, index, board);
+    while (piece_bb) {
+      const int lsb_index = Lsb1(piece_bb);
+      const U64 attacks = attacks::Attacks(occupancy_bitboard, lsb_index,
+                                           piece);
       if (attacks & dest_sq_bb) {
-        indices.push_back(index);
+        indices.push_back(lsb_index);
       }
+      piece_bb ^= (1ULL << lsb_index);
     }
+
     // Disambiguate the source piece from other pieces that can move to the same
     // destination. In order of priority, we use file, then rank, then both file
     // and rank combined.

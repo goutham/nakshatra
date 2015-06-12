@@ -302,7 +302,7 @@ void PNSearch::Expand(const PNSParams& pns_params,
         child->disproof = INF_NODES;
       } else {
         child->proof = 1;
-        child->disproof = CountMoves(board_->SideToMove(), *board_);
+        child->disproof = movegen_->CountMoves();
       }
       board_->UnmakeLastMove();
     }

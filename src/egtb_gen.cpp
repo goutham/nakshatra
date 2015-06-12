@@ -5,7 +5,6 @@
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
-#include "movegen_suicide.h"
 #include "piece.h"
 
 #include <cstdio>

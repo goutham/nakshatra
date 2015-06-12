@@ -2,8 +2,6 @@
 #include "common.h"
 #include "move_array.h"
 #include "movegen.h"
-#include "movegen_normal.h"
-#include "movegen_suicide.h"
 #include "stopwatch.h"
 
 #include <cassert>

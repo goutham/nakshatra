@@ -8,6 +8,7 @@
 #include <vector>
 
 class Board;
+class MoveGenerator;
 
 class MoveOrderer {
  public:
@@ -21,14 +22,15 @@ class MoveOrderer {
 
 class MobilityOrderer : public MoveOrderer {
  public:
-  MobilityOrderer(Board* board)
-      : board_(board) {}
+  MobilityOrderer(Board* board, MoveGenerator* movegen)
+      : board_(board), movegen_(movegen) {}
   ~MobilityOrderer() override {}
 
   void Order(MoveArray* move_array) override;
 
  private:
   Board* board_;
+  MoveGenerator* movegen_;
 };
 
 class CapturesFirstOrderer : public MoveOrderer {

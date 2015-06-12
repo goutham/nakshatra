@@ -5,10 +5,8 @@ common_sources = Split("""
     eval_suicide.cpp
     fen.cpp
     movegen.cpp
-    movegen_normal.cpp
-    movegen_suicide.cpp
+    attacks.cpp
     pawns.cpp
-    slider_attacks.cpp
     transpos.cpp
     zobrist.cpp
 """)

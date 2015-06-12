@@ -1,5 +1,5 @@
+#include "attacks.h"
 #include "common.h"
-#include "slider_attacks.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -379,10 +379,43 @@ const std::array<U64, 64> bishop_offsets =
     std::move(std::get<1>(_tmp_bishop_tuple));
 const vector<U64> bishop_attack_table =
     std::move(std::get<2>(_tmp_bishop_tuple));
-}  // namespace
 
+// KING and KNIGHT attacks
 
-namespace slider_attacks {
+const std::array<U64, 64> knight_attacks_ = []() {
+  std::array<U64, 64> knight_attacks;
+  for (int i = 0; i < 8; ++i) {
+    for (int j = 0; j < 8; ++j) {
+      knight_attacks[INDX(i, j)] = (SetBit(i - 1, j - 2) |
+                                    SetBit(i + 1, j - 2) |
+                                    SetBit(i + 2, j - 1) |
+                                    SetBit(i + 2, j + 1) |
+                                    SetBit(i + 1, j + 2) |
+                                    SetBit(i - 1, j + 2) |
+                                    SetBit(i - 2, j + 1) |
+                                    SetBit(i - 2, j - 1));
+    }
+  }
+  return knight_attacks;
+}();
+
+const std::array<U64, 64> king_attacks_ = []() {
+  std::array<U64, 64> king_attacks;
+  for (int i = 0; i < 8; ++i) {
+    for (int j = 0; j < 8; ++j) {
+      king_attacks[INDX(i, j)] = (SetBit(i - 1, j - 1) |
+                                  SetBit(i, j - 1) |
+                                  SetBit(i + 1, j - 1) |
+                                  SetBit(i + 1, j) |
+                                  SetBit(i + 1, j + 1) |
+                                  SetBit(i, j + 1) |
+                                  SetBit(i - 1, j + 1) |
+                                  SetBit(i - 1, j));
+    }
+  }
+  return king_attacks;
+}();
+
 
 U64 RookAttacks(const U64 bitboard, const int index) {
   const U64 occupancy = bitboard & rook_masks[index];
@@ -404,4 +437,29 @@ U64 QueenAttacks(const U64 bitboard, const int index) {
   return RookAttacks(bitboard, index) | BishopAttacks(bitboard, index);
 }
 
-}  // namespace slider_attacks
+}  // namespace
+
+
+namespace attacks {
+
+U64 Attacks(const U64 bitboard, const int index, const Piece piece) {
+  switch (PieceType(piece)) {
+    case BISHOP:
+      return BishopAttacks(bitboard, index);
+
+    case KING:
+      return king_attacks_[index];
+
+    case KNIGHT:
+      return knight_attacks_[index];
+
+    case QUEEN:
+      return QueenAttacks(bitboard, index);
+
+    case ROOK:
+      return RookAttacks(bitboard, index);
+  }
+  throw std::runtime_error("Unknown piece type");
+}
+
+}  // namespace attacks

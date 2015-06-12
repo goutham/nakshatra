@@ -48,12 +48,14 @@ long AllocateTime(long time_centis, long otime_centis) {
 
 Player::Player(const Book* book,
                Board* board,
+               MoveGenerator* movegen,
                IterativeDeepener* iterative_deepener,
                Timer* timer,
                EGTB* egtb,
                Extensions* extensions)
   : book_(book),
     board_(board),
+    movegen_(movegen),
     iterative_deepener_(iterative_deepener),
     timer_(timer),
     egtb_(egtb),
@@ -87,9 +89,8 @@ Move Player::Search(const SearchParams& search_params,
   IDSParams ids_params;
   ids_params.thinking_output = search_params.thinking_output;
 
-  if (extensions_->pn_search &&
-      time_for_move_centis > 50 &&
-      CountMoves(board_->SideToMove(), *board_) > 1) {
+  if (extensions_->pn_search && time_for_move_centis > 50 &&
+      movegen_->CountMoves() > 1) {
     assert (extensions_->pns_timer);
 
     // Allocate 5% of total time for PNS.

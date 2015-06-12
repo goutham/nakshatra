@@ -3,7 +3,6 @@
 #include "egtb.h"
 #include "eval_suicide.h"
 #include "movegen.h"
-#include "movegen_suicide.h"
 #include "piece.h"
 #include "stopwatch.h"
 
@@ -12,12 +11,12 @@
 namespace {
 // Piece values.
 namespace pv {
-const int KING = 10;
-const int QUEEN = 3;
-const int ROOK = 7;
-const int BISHOP = 2;
-const int KNIGHT = 3;
-const int PAWN = 3;
+constexpr int KING = 10;
+constexpr int QUEEN = 3;
+constexpr int ROOK = 7;
+constexpr int BISHOP = 2;
+constexpr int KNIGHT = 3;
+constexpr int PAWN = 3;
 }  // namespace pv
 
 // Weight for mobility.
@@ -56,7 +55,7 @@ int EvalSuicide::OpponentMobility(const MoveArray& move_array) {
   int best = INF;
   for (unsigned i = 0; i < move_array.size(); ++i) {
     board_->MakeMove(move_array.get(i));
-    unsigned num_opp_moves = CountMoves(board_->SideToMove(), *board_);
+    unsigned num_opp_moves = movegen_->CountMoves();
     board_->UnmakeLastMove();
     if (num_opp_moves == 1) {  // Best case scenario; return immediately.
       return num_opp_moves;
@@ -160,7 +159,7 @@ int EvalSuicide::Result() const {
     return DRAW;
   }
 
-  int self_mobility = CountMoves(board_->SideToMove(), *board_);
+  int self_mobility = movegen_->CountMoves();
 
   // If there are no pieces to move, it is the end of the game.
   if (self_mobility == 0) {

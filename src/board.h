@@ -35,9 +35,11 @@ class Board {
     return move_stack_.Top()->ep_index;
   }
 
-  // Returns true if the current player can castle on the given ('piece' can be
-  // KING or QUEEN) side.
-  bool CanCastle(const Piece piece) const;
+  // Returns true if given side can castle on the 'piece_type' side. piece_type
+  // can be KING or QUEEN. Version without 'side' argument uses current side
+  // to move.
+  bool CanCastle(const Side side, const Piece piece_type) const;
+  bool CanCastle(const Piece piece_type) const;
 
   // Returns the piece at given row and column or given index on the board.
   Piece PieceAt(const int row, const int col) const {

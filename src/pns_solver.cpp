@@ -6,7 +6,6 @@
 #include "lmr.h"
 #include "move.h"
 #include "movegen.h"
-#include "movegen_suicide.h"
 #include "pn_search.h"
 #include "stats.h"
 

@@ -11,8 +11,6 @@
 #include "lmr.h"
 #include "move_order.h"
 #include "movegen.h"
-#include "movegen_normal.h"
-#include "movegen_suicide.h"
 #include "player.h"
 #include "pn_search.h"
 #include "search_algorithm.h"
@@ -196,11 +194,13 @@ class NormalPlayerBuilder : public PlayerBuilder {
 
   void BuildPlayer() override {
     assert(board_ != nullptr);
+    assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
     // For Normal player, extensions_ could be NULL as of now.
     player_.reset(new Player(book_.get(),
                              board_.get(),
+                             movegen_.get(),
                              iterative_deepener_.get(),
                              timer_.get(),
                              egtb_.get(),
@@ -254,7 +254,8 @@ class SuicidePlayerBuilder : public PlayerBuilder {
     assert(movegen_ != nullptr);
     assert(eval_ != nullptr);
     assert(extensions_ != nullptr);
-    extensions_->move_orderer = new MobilityOrderer(board_.get());
+    extensions_->move_orderer = new MobilityOrderer(board_.get(),
+                                                    movegen_.get());
     extensions_->lmr = new LMR(
         4  /* full depth moves */,
         2  /* reduction limit */,
@@ -273,11 +274,13 @@ class SuicidePlayerBuilder : public PlayerBuilder {
 
   void BuildPlayer() override {
     assert(board_ != nullptr);
+    assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
     assert(extensions_ != nullptr);
     player_.reset(new Player(book_.get(),
                              board_.get(),
+                             movegen_.get(),
                              iterative_deepener_.get(),
                              timer_.get(),
                              egtb_.get(),

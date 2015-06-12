@@ -24,7 +24,7 @@ void MobilityOrderer::Order(MoveArray* move_array) {
   OpponentMoves num_opponent_moves[256];
   for (unsigned i = 0; i < move_array->size(); ++i) {
     board_->MakeMove(move_array->get(i));
-    unsigned num_moves = CountMoves(board_->SideToMove(), *board_);
+    const unsigned num_moves = movegen_->CountMoves();
     num_opponent_moves[i] = {num_moves, i};
     board_->UnmakeLastMove();
   }

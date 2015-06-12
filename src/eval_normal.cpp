@@ -2,10 +2,8 @@
 #include "common.h"
 #include "eval_normal.h"
 #include "movegen.h"
-#include "movegen_normal.h"
 #include "piece.h"
 #include "stopwatch.h"
-#include "u64_op.h"
 
 namespace {
 // Piece values.
@@ -87,15 +85,21 @@ int EvalNormal::Evaluate() {
   if (score == WIN) {
     return score;
   }
+
   U64 self_pawns = board_->BitBoard(PieceOfSide(PAWN, side));
-  U64 opp_pawns = board_->BitBoard(PieceOfSide(PAWN, OppositeSide(side)));
-  U64Op op1(self_pawns), op2(opp_pawns);
-  int index, self_pawns_strength = 0, opp_pawns_strength = 0;
-  while ((index = op1.NextRightMostBitIndex()) != -1) {
-    self_pawns_strength += sq_strength[index];
+  int self_pawns_strength = 0;
+  while (self_pawns) {
+    const int lsb_index = Lsb1(self_pawns);
+    self_pawns_strength += sq_strength[lsb_index];
+    self_pawns ^= (1ULL << lsb_index);
   }
-  while ((index = op2.NextRightMostBitIndex()) != -1) {
-    opp_pawns_strength += sq_strength[index];
+
+  U64 opp_pawns = board_->BitBoard(PieceOfSide(PAWN, OppositeSide(side)));
+  int opp_pawns_strength = 0;
+  while (opp_pawns) {
+    const int lsb_index = Lsb1(opp_pawns);
+    opp_pawns_strength += sq_strength[lsb_index];
+    opp_pawns ^= (1ULL << lsb_index);
   }
 
   const int pawns_strength =

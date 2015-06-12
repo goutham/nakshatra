@@ -24,12 +24,26 @@ enum class Side {
   BLACK
 };
 
+// Column numbers of files.
+constexpr int FILE_A = 0;
+constexpr int FILE_B = 1;
+constexpr int FILE_C = 2;
+constexpr int FILE_D = 3;
+constexpr int FILE_E = 4;
+constexpr int FILE_F = 5;
+constexpr int FILE_G = 6;
+constexpr int FILE_H = 7;
+
 enum NodeType { FAIL_HIGH_NODE, FAIL_LOW_NODE, EXACT_NODE };
 
 enum Variant { NORMAL, SUICIDE };
 
 // Uses de Bruijn Sequences to Index a 1 in a Computer Word.
 int log2U(U64 bb);
+
+inline int Lsb1(const U64 v) {
+  return log2U(v);
+}
 
 // Number of set bits in a U64 integer.
 unsigned PopCount(U64 x);
@@ -75,6 +89,10 @@ constexpr int CharToDigit(const char c) {
 
 constexpr bool IsOnBoard(const int row, const int col) {
   return row >= 0 && row <= 7 && col >= 0 && col <= 7;
+}
+
+constexpr U64 SetBit(int row, int col) {
+  return IsOnBoard(row, col) ? (1ULL << INDX(row, col)) : 0ULL;
 }
 
 std::vector<std::string> SplitString(const std::string& s, char delim);

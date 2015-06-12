@@ -2,7 +2,6 @@
 #include "common.h"
 #include "egtb.h"
 #include "egtb_gen.h"
-#include "u64_op.h"
 
 #include <cstdio>
 #include <cstdlib>
