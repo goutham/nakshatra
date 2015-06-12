@@ -20,7 +20,7 @@ using std::vector;
 void GeneratePermutations(const vector<string>& initial_list,
                           Piece piece, vector<string>* permutations) {
   for (const string& fen : initial_list) {
-    Board board(SUICIDE, fen);
+    Board board(Variant::SUICIDE, fen);
     for (int i = 0; i < 8; ++i) {
       if (PieceType(piece) == PAWN && (i == 0 || i == 7)) {
         continue;
@@ -37,7 +37,7 @@ void GeneratePermutations(const vector<string>& initial_list,
 }
 
 string AddPlayerSide(const string& fen, Side side) {
-  Board board(SUICIDE, fen);
+  Board board(Variant::SUICIDE, fen);
   board.SetPlayerColor(side);
   return board.ParseIntoFEN();
 }
@@ -46,7 +46,7 @@ void CreateTwoPiecesEGTB(Side winning_side,
                          Side losing_side,
                          EGTBStore* store) {
   vector<string> empty_board_list(
-      {Board(SUICIDE, "8/8/8/8/8/8/8/8 w - -").ParseIntoFEN()});
+      {Board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -").ParseIntoFEN()});
 
   vector<string> one_list;
   for (Piece piece = KING; piece <= PAWN; ++piece) {

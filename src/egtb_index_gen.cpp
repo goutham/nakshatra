@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     EGTBIndexEntry egtb_index_entry;
     std::vector<std::string> parts = SplitString(s, '|');
     std::string fen = parts[0];
-    Board board(SUICIDE, fen);
+    Board board(Variant::SUICIDE, fen);
     egtb_index_entry.next_move = Move(parts[1]);
     egtb_index_entry.moves_to_end = StringToInt(parts[2]);
     if ((board.SideToMove() == Side::BLACK &&

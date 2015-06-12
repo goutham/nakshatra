@@ -161,11 +161,11 @@ class PlayerBuilder {
 class NormalPlayerBuilder : public PlayerBuilder {
  public:
   void BuildBoard() override {
-    board_.reset(new Board(NORMAL));
+    board_.reset(new Board(Variant::NORMAL));
   }
 
   void BuildBoard(const std::string& fen) override {
-    board_.reset(new Board(NORMAL, fen));
+    board_.reset(new Board(Variant::NORMAL, fen));
   }
 
   void BuildMoveGenerator() override {
@@ -183,7 +183,7 @@ class NormalPlayerBuilder : public PlayerBuilder {
   }
 
   void BuildBook() override {
-    book_.reset(new Book(NORMAL, "nbook.txt"));
+    book_.reset(new Book(Variant::NORMAL, "nbook.txt"));
   }
 
   void AddExtensions() override {
@@ -211,11 +211,11 @@ class NormalPlayerBuilder : public PlayerBuilder {
 class SuicidePlayerBuilder : public PlayerBuilder {
  public:
   void BuildBoard() override {
-    board_.reset(new Board(SUICIDE));
+    board_.reset(new Board(Variant::SUICIDE));
   }
 
   void BuildBoard(const std::string& fen) override {
-    board_.reset(new Board(SUICIDE, fen));
+    board_.reset(new Board(Variant::SUICIDE, fen));
   }
 
   void BuildMoveGenerator() override {
@@ -246,7 +246,7 @@ class SuicidePlayerBuilder : public PlayerBuilder {
   }
 
   void BuildBook() override {
-    book_.reset(new Book(SUICIDE, "sbook.txt"));
+    book_.reset(new Book(Variant::SUICIDE, "sbook.txt"));
   }
 
   void AddExtensions() override {

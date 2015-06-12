@@ -25,7 +25,7 @@ void PrintResponse(const vector<string>& response) {
 
 TEST_F(ExecutorTest, VerifyResultOnGameEnd) {
   const string fen = "8/8/1k6/1K6/8/8/8/8 w - -";
-  Executor executor("nakshatra-test", fen, SUICIDE);
+  Executor executor("nakshatra-test", fen, Variant::SUICIDE);
   vector<string> response;
   executor.Execute("new", &response);
   executor.Execute("variant suicide", &response);
@@ -36,7 +36,7 @@ TEST_F(ExecutorTest, VerifyResultOnGameEnd) {
 
 TEST_F(ExecutorTest, VerifyResultOnGameEnd2) {
   const string fen = "8/8/1k6/1K6/8/8/8/8 b - -";
-  Executor executor("nakshatra-test", fen, SUICIDE);
+  Executor executor("nakshatra-test", fen, Variant::SUICIDE);
   vector<string> response;
   executor.Execute("new", &response);
   executor.Execute("variant suicide", &response);
@@ -50,7 +50,7 @@ TEST_F(ExecutorTest, VerifyResultOnGameEnd2) {
 
 TEST_F(ExecutorTest, VerifyResult) {
   const string fen = "8/8/1k6/1K6/8/8/8/8 w - -";
-  Executor executor("nakshatra-test", fen, SUICIDE);
+  Executor executor("nakshatra-test", fen, Variant::SUICIDE);
   vector<string> response;
   executor.Execute("new", &response);
   executor.Execute("variant suicide", &response);

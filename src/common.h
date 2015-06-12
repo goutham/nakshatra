@@ -18,6 +18,8 @@
 
 typedef uint64_t U64;
 
+enum class Variant { NORMAL, SUICIDE };
+
 enum class Side {
   NONE,
   WHITE,
@@ -35,8 +37,6 @@ constexpr int FILE_G = 6;
 constexpr int FILE_H = 7;
 
 enum NodeType { FAIL_HIGH_NODE, FAIL_LOW_NODE, EXACT_NODE };
-
-enum Variant { NORMAL, SUICIDE };
 
 // Uses de Bruijn Sequences to Index a 1 in a Computer Word.
 int log2U(U64 bb);

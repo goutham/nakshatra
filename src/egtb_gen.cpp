@@ -81,7 +81,7 @@ void EGTBGenerator::Generate(vector<string> all_pos_list,
       }
       fflush(stdout);
       ++progress;
-      Board board(SUICIDE, *iter);
+      Board board(Variant::SUICIDE, *iter);
       MoveGeneratorSuicide movegen(board);
       MoveArray movelist;
       movegen.GenerateMoves(&movelist);
@@ -160,7 +160,7 @@ void EGTBGenerator::Generate(vector<string> final_pos_list,
   }
   for (vector<string>::iterator iter = all_pos_list.begin();
        iter != all_pos_list.end();) {
-    Board board(SUICIDE, *iter);
+    Board board(Variant::SUICIDE, *iter);
     MoveGeneratorSuicide movegen(board);
     EvalSuicide eval(&board, &movegen, nullptr);
     int result = eval.Result();

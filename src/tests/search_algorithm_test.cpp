@@ -20,7 +20,7 @@ class SearchAlgorithmTest : public testing::Test {
 TEST_F(SearchAlgorithmTest, NegaScout) {
   // This position can be won by white at depth 7.
   const std::string board_str = "8/R7/8/8/8/8/8/7k w - -";
-  Board board(SUICIDE, board_str);
+  Board board(Variant::SUICIDE, board_str);
 
   std::unique_ptr<MoveGenerator> movegen(new MoveGeneratorSuicide(board));
   std::unique_ptr<Evaluator> eval(new EvalSuicide(&board,

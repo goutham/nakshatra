@@ -21,7 +21,7 @@ void DebugPrintMoveList(const MoveArray& move_array) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyValidMove) {
-  Board board(SUICIDE);
+  Board board(Variant::SUICIDE);
   MoveGeneratorSuicide movegen(board);
 
   Move move("e2e3");
@@ -33,7 +33,7 @@ TEST_F(MoveGeneratorTest, VerifyValidMove) {
 
 TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
   string initial = "8/1P6/8/8/8/8/8/8 w - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -65,7 +65,7 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
 
 TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotion) {
   string initial = "8/8/8/8/8/8/1p6/8 b - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -97,7 +97,7 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotion) {
 
 TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotionHit) {
   string initial = "r1q5/1P6/8/8/8/8/8/8 w - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -134,7 +134,7 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotionHit) {
 
 TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotionHit) {
   string initial = "8/8/8/8/8/8/1p6/R1Q5 b - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -171,7 +171,7 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotionHit) {
 
 TEST_F(MoveGeneratorTest, VerifyPawnFirstMove) {
   string initial = "8/1p6/1p6/8/8/8/8/8 b - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -184,7 +184,7 @@ TEST_F(MoveGeneratorTest, VerifyPawnFirstMove) {
 
 TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
   string initial = "8/1p6/8/2P5/8/8/8/8 b - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -221,7 +221,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
 
 TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
   string initial = "8/8/8/8/2p5/8/1P6/8 w - -";
-  Board board(SUICIDE, initial);
+  Board board(Variant::SUICIDE, initial);
 
   MoveGeneratorSuicide movegen(board);
   MoveArray move_array;
@@ -257,7 +257,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
-  Board board(NORMAL);
+  Board board(Variant::NORMAL);
   MoveGeneratorNormal movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
@@ -299,7 +299,7 @@ TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
-  Board board(NORMAL, "8/8/4r3/b7/3b4/2Q2p2/4P3/4K3 w - -");
+  Board board(Variant::NORMAL, "8/8/4r3/b7/3b4/2Q2p2/4P3/4K3 w - -");
   MoveGeneratorNormal movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
@@ -329,7 +329,8 @@ TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
-  Board board(NORMAL, "rnb1kbnr/pppp1p1p/6p1/4P3/1q2P3/8/PPPK1PPP/RNBQ1BNR w KQkq -");
+  Board board(Variant::NORMAL,
+              "rnb1kbnr/pppp1p1p/6p1/4P3/1q2P3/8/PPPK1PPP/RNBQ1BNR w KQkq -");
   board.DebugPrintBoard();
   MoveGeneratorNormal movegen(&board);
   MoveArray move_array;
@@ -358,7 +359,8 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
-  Board board(NORMAL, "rnb1kbnr/pppp1ppp/4p3/8/3P4/2P5/PP1KPqPP/RNBQ1BNR w KQkq -");
+  Board board(Variant::NORMAL,
+              "rnb1kbnr/pppp1ppp/4p3/8/3P4/2P5/PP1KPqPP/RNBQ1BNR w KQkq -");
   MoveGeneratorNormal movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
@@ -399,7 +401,8 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
 }
 
 TEST_F(MoveGeneratorTest, VerifySlidingAttackMaps) {
-  Board board(SUICIDE,"R7/1P1PPP1P/N2B3R/2P1P3/PP4P1/3p1pp1/1p1ppp2/1n1qkb2 w - -");
+  Board board(Variant::SUICIDE,
+              "R7/1P1PPP1P/N2B3R/2P1P3/PP4P1/3p1pp1/1p1ppp2/1n1qkb2 w - -");
   const U64 bitboard = board.BitBoard();
   U64 attack_map = attacks::Attacks(bitboard, INDX(7, 6), QUEEN);
   EXPECT_EQ(13826121500723249152ULL, attack_map);

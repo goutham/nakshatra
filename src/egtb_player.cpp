@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
   }
 
   while (true) {
-    Board board(SUICIDE, egtb_iter->first);
+    Board board(Variant::SUICIDE, egtb_iter->first);
     board.DebugPrintBoard();
     std::cout << "--> " << egtb_iter->second.moves_to_end << " "
          << egtb_iter->second.next_move.str() << std::endl;

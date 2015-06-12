@@ -15,7 +15,7 @@ class TranspositionTable;
 class Executor {
  public:
   Executor(const std::string& name)
-      : Executor(name, "", NORMAL) {}
+      : Executor(name, "", Variant::NORMAL) {}
 
   Executor(const std::string& name,
            const std::string& init_fen,

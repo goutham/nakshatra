@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     string fen = iter->first;
     int moves_to_end = iter->second.moves_to_end;
     Move next_move = iter->second.next_move;
-    Board board(SUICIDE, fen);
+    Board board(Variant::SUICIDE, fen);
     while (moves_to_end) {
       board.MakeMove(next_move);
       string newfen = board.ParseIntoFEN();

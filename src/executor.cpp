@@ -41,10 +41,10 @@ bool Executor::MatchResult(vector<string>* response) {
 
 void Executor::ReBuildPlayer() {
   switch (variant_) {
-    case NORMAL:
+    case Variant::NORMAL:
       player_builder_.reset(new NormalPlayerBuilder());
       break;
-    case SUICIDE:
+    case Variant::SUICIDE:
       player_builder_.reset(new SuicidePlayerBuilder());
       break;
   }
@@ -62,7 +62,7 @@ bool Executor::Execute(const string& command_str,
   switch (command.cmd_name) {
     case NEW:
       {
-        variant_ = NORMAL;
+        variant_ = Variant::NORMAL;
         force_mode_ = false;
         ReBuildPlayer();
       }
@@ -71,10 +71,10 @@ bool Executor::Execute(const string& command_str,
     case VARIANT:
       {
         force_mode_ = false;
-        variant_ = NORMAL;
+        variant_ = Variant::NORMAL;
         if (command.arguments.at(0) == "suicide" ||
             command.arguments.at(0) == "S") {
-          variant_ = SUICIDE;
+          variant_ = Variant::SUICIDE;
         }
         ReBuildPlayer();
       }
@@ -163,10 +163,10 @@ bool Executor::Execute(const string& command_str,
       {
         MoveGenerator* movegen;
         switch (variant_) {
-          case NORMAL:
+          case Variant::NORMAL:
             movegen = new MoveGeneratorNormal(player_->GetBoard());
             break;
-          case SUICIDE:
+          case Variant::SUICIDE:
             movegen = new MoveGeneratorSuicide(*player_->GetBoard());
             break;
         }

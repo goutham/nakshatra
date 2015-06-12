@@ -53,7 +53,7 @@ char* EGTBUtil::ConvertFENToByteArray(const std::string& fen) {
 
 // static
 std::string EGTBUtil::ConvertByteArrayToFEN(char* b_array) {
-  Board board(SUICIDE, EMPTY_BOARD);
+  Board board(Variant::SUICIDE, EMPTY_BOARD);
   int size = b_array[0];
   unsigned j = 1;
   for (j = 1; j < (size * 2) + 1; j += 2) {

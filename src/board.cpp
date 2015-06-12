@@ -12,8 +12,8 @@
 
 namespace {
 const std::map<const Variant, const std::string> variant_fen_map = {
-  {NORMAL, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"},
-  {SUICIDE, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}
+  {Variant::NORMAL, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"},
+  {Variant::SUICIDE, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}
 };
 }  // namespace
 
@@ -24,7 +24,7 @@ Board::Board(const Variant variant, const std::string& fen) {
   castling_allowed_ = true;
   MoveStackEntry* top = move_stack_.Top();
   top->castle = 0xF;
-  if (variant == SUICIDE) {
+  if (variant == Variant::SUICIDE) {
     castling_allowed_ = false;
     top->castle = 0;
   }

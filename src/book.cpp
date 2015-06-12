@@ -21,16 +21,16 @@
 Book::Book(Variant variant, const std::string& book_file)
     : book_file_(book_file) {
   switch (variant) {
-    case NORMAL:
+    case Variant::NORMAL:
     {
-      Board board(NORMAL);
+      Board board(Variant::NORMAL);
       MoveGeneratorNormal movegen(&board);
       LoadBook(&board, &movegen);
       break;
     }
-    case SUICIDE:
+    case Variant::SUICIDE:
     {
-      Board board(SUICIDE);
+      Board board(Variant::SUICIDE);
       MoveGeneratorSuicide movegen(board);
       LoadBook(&board, &movegen);
       break;

@@ -49,7 +49,7 @@ void AddPawnPromotions(const int from_index, const int to_index,
   add_move(QUEEN);
   add_move(ROOK);
 
-  if (variant == SUICIDE) {
+  if (variant == Variant::SUICIDE) {
     add_move(KING);
   }
 }
@@ -76,9 +76,9 @@ void AddPawnMoves(U64 pawn_bitboard, MoveArray* move_array) {
 
 template <Variant variant, Side side, PawnMoveType>
 void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
-  constexpr int promotion_count = variant == NORMAL
+  constexpr int promotion_count = variant == Variant::NORMAL
                     ? 4
-                    : (variant == SUICIDE
+                    : (variant == Variant::SUICIDE
                            ? 5
                            : throw std::logic_error("Unknown variant"));
   const U64 mask_7th_row = side_relative::MaskRow<side>(7);
@@ -256,8 +256,10 @@ void GenerateMoves_Suicide(const Board& board, MoveAccumulatorType move_acc) {
   const bool generate_captures_only = Captures<side>(board);
 
   auto generate = [&] (const Piece piece_type) {
-    GeneratePieceMoves<SUICIDE, side>(board, PieceOfSide(piece_type, side),
-                                      generate_captures_only, move_acc);
+    GeneratePieceMoves<Variant::SUICIDE, side>(board,
+                                               PieceOfSide(piece_type, side),
+                                               generate_captures_only,
+                                               move_acc);
   };
 
   generate(BISHOP);
@@ -273,8 +275,10 @@ void GenerateMoves_Normal(Board* board, MoveArray* move_array) {
   MoveArray pseudo_legal_move_array;
 
   auto generate = [&] (const Piece piece_type) {
-    GeneratePieceMoves<NORMAL, side>(*board, PieceOfSide(piece_type, side),
-                                     false, &pseudo_legal_move_array);
+    GeneratePieceMoves<Variant::NORMAL, side>(*board,
+                                              PieceOfSide(piece_type, side),
+                                              false,
+                                              &pseudo_legal_move_array);
   };
 
   generate(BISHOP);
