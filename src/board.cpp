@@ -161,6 +161,28 @@ void Board::MakeMove(const Move& move) {
           break;
       }
     }
+
+    // If destination piece is ROOK on it's home index, update opponent
+    // castling rights.
+    if (PieceType(dest_piece) == ROOK) {
+      switch (side_to_move_) {
+        case Side::BLACK:
+          if (to_index == 0) {
+            top->castle &= ~0x2U;
+          } else if (to_index == 7) {
+            top->castle &= ~0x1U;
+          }
+          break;
+
+        case Side::WHITE:
+          if (to_index == 56) {
+            top->castle &= ~0x8U;
+          } else if (to_index == 63) {
+            top->castle &= ~0x4U;
+          }
+          break;
+      }
+    }
   }
 
   top->ep_index = -1;

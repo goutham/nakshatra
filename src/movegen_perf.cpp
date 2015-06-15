@@ -12,11 +12,14 @@
 #include <iostream>
 
 int64_t Perft(MoveGenerator* movegen, Board* board, unsigned int depth) {
-  if (depth == 0) {
-    return 1;
-  }
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);
+
+  // Bulk counting at depth 1.
+  if (depth == 1) {
+    return move_array.size();
+  }
+
   int64_t nodes = 0;
   for (unsigned i = 0; i < move_array.size(); ++i) {
     board->MakeMove(move_array.get(i));

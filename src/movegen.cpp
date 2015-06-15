@@ -176,16 +176,25 @@ void BitBoardToMoves(const int unused_index, U64 bitboard, int* move_count) {
 template <Side side>
 void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
                            MoveArray* move_array) {
+  constexpr Side opp_side = OppositeSide(side);
   const int row = (side == Side::WHITE) ? 0 : 7;
 
   auto is_square_empty = [&](const int row, const int col) {
     return board.PieceAt(row, col) == NULLPIECE;
   };
 
+  const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, opp_side)); 
+  const U64 pawn_capturable_empty_squares =
+      (side_relative::PushNorthWest<opp_side>(pawn_bitboard) |
+       side_relative::PushNorthEast<opp_side>(pawn_bitboard)) &
+      ~board.BitBoard();
+
+  const U64 restricted_squares = opp_attack_map | pawn_capturable_empty_squares;
+
   if (board.CanCastle(side, KING)) {
     if (is_square_empty(row, FILE_F) &&
         is_square_empty(row, FILE_G) &&
-        !(opp_attack_map & (SetBit(row, FILE_F) | SetBit(row, FILE_G)))) {
+        !(restricted_squares & (SetBit(row, FILE_F) | SetBit(row, FILE_G)))) {
       move_array->Add(Move(INDX(row, FILE_E), INDX(row, FILE_G)));
     }
   }
@@ -194,7 +203,7 @@ void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
     if (is_square_empty(row, FILE_C) &&
         is_square_empty(row, FILE_D) &&
         is_square_empty(row, FILE_B) &&
-        !(opp_attack_map & (SetBit(row, FILE_C) | SetBit(row, FILE_D)))) {
+        !(restricted_squares & (SetBit(row, FILE_C) | SetBit(row, FILE_D)))) {
       move_array->Add(Move(INDX(row, FILE_E), INDX(row, FILE_C)));
     }
   }

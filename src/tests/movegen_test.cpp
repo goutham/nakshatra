@@ -428,3 +428,36 @@ TEST_F(MoveGeneratorTest, VerifySlidingAttackMaps) {
   attack_map = attacks::Attacks(bitboard, INDX(3, 5), BISHOP);
   EXPECT_EQ(141081090983936ULL, attack_map);
 }
+
+int CountLeafMoves(MoveGenerator* movegen, Board* board, unsigned int depth) {
+  MoveArray move_array;
+  movegen->GenerateMoves(&move_array);
+
+  if (depth == 1) {
+    return move_array.size();
+  }
+
+  U64 nodes = 0ULL;
+  for (int i = 0; i < move_array.size(); ++i) {
+    board->MakeMove(move_array.get(i));
+    nodes += CountLeafMoves(movegen, board, depth - 1);
+    board->UnmakeLastMove();
+  }
+
+  return nodes;
+}
+
+TEST_F(MoveGeneratorTest, CountMoves) {
+  /*
+   * This position at depth = 7 has 94,854,874,131 nodes.
+   */
+  Board board(Variant::NORMAL,
+              "rnbqkb1r/pp1p1ppp/2p5/4P3/2B5/8/PPP1NnPP/RNBQK2R w KQkq -");
+
+  MoveGeneratorNormal movegen(&board);
+
+  EXPECT_EQ(42, CountLeafMoves(&movegen, &board, 1));
+  EXPECT_EQ(1352, CountLeafMoves(&movegen, &board, 2));
+  EXPECT_EQ(53392, CountLeafMoves(&movegen, &board, 3));
+  EXPECT_EQ(1761505, CountLeafMoves(&movegen, &board, 4));
+}
