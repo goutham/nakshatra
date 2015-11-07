@@ -204,7 +204,7 @@ bool Executor::Execute(const string& command_str,
       response->push_back("Error (Unknown command): " + command_str);
       break;
   }
-  if (quit_) {
+  if (quit_ && player_builder_.get()) {
     player_builder_->GetTranspos()->LogStats();
     if (player_builder_->GetEGTB()) {
       player_builder_->GetEGTB()->LogStats();
