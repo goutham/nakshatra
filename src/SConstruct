@@ -12,7 +12,6 @@ common_sources = Split("""
 """)
 nakshatra_sources = Split("""
     book.cpp
-    cmd_interpreter.cpp
     eval_normal.cpp
     executor.cpp
     iterative_deepener.cpp

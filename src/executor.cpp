@@ -1,4 +1,3 @@
-#include "cmd_interpreter.h"
 #include "common.h"
 #include "board.h"
 #include "creation.h"
@@ -19,6 +18,77 @@
 
 using std::string;
 using std::vector;
+
+namespace {
+
+// All supported Xboard communication protocol commands.
+enum CmdName {
+  ERROR,
+  FEATURE,
+  FORCE,
+  GO,
+  INVALID,  // if command entered is invalid.
+  MOVELIST,
+  NEW,
+  NOPOST,
+  OMOVELIST,
+  OTIME,
+  PING,
+  POST,
+  QUIT,
+  RESULT,
+  SETBOARD,
+  SHOWBOARD,
+  TIME,
+  UNMAKE,
+  USERMOVE,
+  VARIANT,
+};
+
+struct Command {
+  CmdName cmd_name;
+  std::vector<std::string> arguments;
+};
+
+Command Interpret(const std::string& cmd) {
+  static std::map<std::string, CmdName> cmd_map = {
+    {"Error", ERROR},
+    {"feature", FEATURE},
+    {"force", FORCE},
+    {"go", GO},
+    {"move", USERMOVE},
+    {"mlist", MOVELIST},
+    {"omlist", OMOVELIST},
+    {"new", NEW},
+    {"nopost", NOPOST},
+    {"otim", OTIME},
+    {"ping", PING},
+    {"post", POST},
+    {"quit", QUIT},
+    {"result", RESULT},
+    {"setboard", SETBOARD},
+    {"sb", SHOWBOARD},
+    {"time", TIME},
+    {"usermove", USERMOVE},
+    {"variant", VARIANT},
+    {"unmake", UNMAKE}
+  };
+  std::vector<std::string> parts = SplitString(cmd, ' ');
+  Command command;
+  auto cmd_map_kv = cmd_map.find(parts[0]);
+  if (cmd_map_kv == cmd_map.end()) {
+    command.cmd_name = INVALID;
+  } else {
+    command.cmd_name = cmd_map_kv->second;
+  }
+  for (int i = 1; i < parts.size(); ++i) {
+    command.arguments.push_back(parts[i]);
+  }
+  return command;
+}
+
+}  // namespace
+
 
 bool Executor::MatchResult(vector<string>* response) {
   int result = player_builder_->GetEvaluator()->Result();
@@ -173,7 +243,8 @@ bool Executor::Execute(const string& command_str,
         MoveArray move_array;
         movegen->GenerateMoves(&move_array);
         for (unsigned i = 0; i < move_array.size(); ++i) {
-          std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
+          std::cout << "# " << i + 1 << " " << move_array.get(i).str()
+                    << std::endl;
         }
         delete movegen;
       }
