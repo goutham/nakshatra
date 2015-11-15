@@ -49,7 +49,7 @@ void IterativeDeepener::Search(const IDSParams& ids_params,
   }
 
   // Iterative deepening starts here.
-  for (unsigned depth = 1; depth <= MAX_DEPTH; ++depth) {
+  for (unsigned depth = 1; depth <= ids_params.search_depth; ++depth) {
     // Do not use transposition table moves at the root if ordered/pruned
     // movelist is passed by the caller as we expect input ordering to be of
     // highest quality. Also, this avoids transposition table moves that are

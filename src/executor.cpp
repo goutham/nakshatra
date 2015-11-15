@@ -13,6 +13,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,7 @@ enum CmdName {
   POST,
   QUIT,
   RESULT,
+  SEARCH_DEPTH,
   SETBOARD,
   SHOWBOARD,
   TIME,
@@ -66,6 +68,7 @@ Command Interpret(const std::string& cmd) {
     {"post", POST},
     {"quit", QUIT},
     {"result", RESULT},
+    {"sd", SEARCH_DEPTH},
     {"setboard", SETBOARD},
     {"sb", SHOWBOARD},
     {"time", TIME},
@@ -134,6 +137,7 @@ bool Executor::Execute(const string& command_str,
       {
         variant_ = Variant::NORMAL;
         force_mode_ = false;
+        search_params_.search_depth = MAX_DEPTH;
         ReBuildPlayer();
       }
       break;
@@ -147,6 +151,15 @@ bool Executor::Execute(const string& command_str,
           variant_ = Variant::SUICIDE;
         }
         ReBuildPlayer();
+      }
+      break;
+
+    case SEARCH_DEPTH:
+      {
+        std::stringstream ss(command.arguments.at(0));
+        ss >> search_params_.search_depth;
+        std::cout << "# Search Depth = " << search_params_.search_depth
+                  << std::endl;
       }
       break;
 

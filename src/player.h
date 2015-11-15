@@ -3,6 +3,7 @@
 
 #include "board.h"
 #include "book.h"
+#include "common.h"
 #include "move.h"
 #include "timer.h"
 
@@ -15,8 +16,8 @@ class MoveGenerator;
 struct Extensions;
 
 struct SearchParams {
-  SearchParams() : thinking_output(false) {}
-  bool thinking_output;
+  bool thinking_output = false;
+  int search_depth = MAX_DEPTH;
 };
 
 class Player {

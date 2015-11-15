@@ -88,6 +88,7 @@ Move Player::Search(const SearchParams& search_params,
 
   IDSParams ids_params;
   ids_params.thinking_output = search_params.thinking_output;
+  ids_params.search_depth = search_params.search_depth;
 
   if (extensions_->pn_search && time_for_move_centis > 50 &&
       movegen_->CountMoves() > 1) {
