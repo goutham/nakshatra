@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <pthread.h>
 #include <signal.h>
 #include <sys/time.h>
 

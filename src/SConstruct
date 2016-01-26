@@ -31,7 +31,7 @@ test_sources = Glob('tests/*_test.cpp')
 env = Environment(CCFLAGS = '-std=c++0x -O3 -flto',
                   CPPPATH = '.',
                   LINKFLAGS = '-O3 -flto',
-                  LIBS = ['pthread', 'rt'])
+                  LIBS = ['rt'])
 test_env = Environment(CCFLAGS = '-std=c++0x',
                        CPPPATH = '.',
                        LIBS = ['gtest', 'gtest_main', 'pthread', 'rt'])
