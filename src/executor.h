@@ -63,7 +63,6 @@ class Executor {
 
   // Custom board FEN which is used as initial board for all games if it is non
   // empty.
-  // TODO(goutham): Make this const?
   std::string init_fen_;
 };
 
