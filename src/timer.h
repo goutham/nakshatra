@@ -54,15 +54,6 @@ class Timer {
     }
   }
 
-  // Returns time remaining for expiry, in centis.
-  double Remaining() const {
-    struct itimerspec val;
-    if (timer_gettime(timer_id_, &val) == -1) {
-      throw std::runtime_error("Error: timer_gettime");
-    }
-    return val.it_value.tv_sec * 100.0 + val.it_value.tv_nsec / 10000000.0;
-  }
-
   void Stop() {
     if (timer_expired_) {
       return;

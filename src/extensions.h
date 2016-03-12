@@ -1,16 +1,23 @@
 #ifndef EXTENSIONS_H
 #define EXTENSIONS_H
 
+#include <memory>
+
 class LMR;
 class MoveOrderer;
 class PNSearch;
 class Timer;
 
+struct PNSExtension {
+  std::unique_ptr<PNSearch> pn_search;
+  std::unique_ptr<Timer> pns_timer;
+  int pns_time_for_move_percent = 5;
+};
+
 struct Extensions {
-  MoveOrderer* move_orderer = nullptr;
-  Timer* pns_timer = nullptr;
-  PNSearch* pn_search = nullptr;
-  LMR* lmr = nullptr;
+  std::unique_ptr<MoveOrderer> move_orderer;
+  std::unique_ptr<LMR> lmr;
+  PNSExtension pns_extension;
 };
 
 #endif

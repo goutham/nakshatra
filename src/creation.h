@@ -42,18 +42,6 @@ class PlayerBuilder {
   PlayerBuilder() : external_transpos_(false) {}
 
   virtual ~PlayerBuilder() {
-    if (extensions_->move_orderer) {
-      delete extensions_->move_orderer;
-    }
-    if (extensions_->pns_timer) {
-      delete extensions_->pns_timer;
-    }
-    if (extensions_->pn_search) {
-      delete extensions_->pn_search;
-    }
-    if (extensions_->lmr) {
-      delete extensions_->lmr;
-    }
     if (external_transpos_) {
       transpos_.release();
     }
@@ -189,7 +177,7 @@ class NormalPlayerBuilder : public PlayerBuilder {
   void AddExtensions() override {
     assert(extensions_ != nullptr);
     assert(board_ != nullptr);
-    extensions_->move_orderer = new CapturesFirstOrderer(board_.get());
+    extensions_->move_orderer.reset(new CapturesFirstOrderer(board_.get()));
   }
 
   void BuildPlayer() override {
@@ -254,22 +242,22 @@ class SuicidePlayerBuilder : public PlayerBuilder {
     assert(movegen_ != nullptr);
     assert(eval_ != nullptr);
     assert(extensions_ != nullptr);
-    extensions_->move_orderer = new MobilityOrderer(board_.get(),
-                                                    movegen_.get());
-    extensions_->lmr = new LMR(
+    extensions_->move_orderer.reset(new MobilityOrderer(board_.get(),
+                                                        movegen_.get()));
+    extensions_->lmr.reset(new LMR(
         4  /* full depth moves */,
         2  /* reduction limit */,
-        1  /* depth reduction factor */);
-    extensions_->pns_timer = new Timer;
+        1  /* depth reduction factor */));
+    extensions_->pns_extension.pns_timer.reset(new Timer);
     static const int MAX_PNS_NODES = 10000000;
     std::cout << "# Maximum PNS nodes: " << MAX_PNS_NODES << std::endl;
-    extensions_->pn_search = new PNSearch(
-        MAX_PNS_NODES ,
-        board_.get(),
-        movegen_.get(),
-        eval_.get(),
-        egtb_.get(),
-        extensions_->pns_timer);
+    extensions_->pns_extension.pn_search.reset(
+        new PNSearch(MAX_PNS_NODES ,
+                     board_.get(),
+                     movegen_.get(),
+                     eval_.get(),
+                     egtb_.get(),
+                     extensions_->pns_extension.pns_timer.get()));
   }
 
   void BuildPlayer() override {

@@ -81,6 +81,12 @@ Move Player::Search(const SearchParams& search_params,
       std::cout << "# Num pieces <= 2, but EGTB missed!" << std::endl;
     }
   }
+  // If the move is forced, just move.
+  if (movegen_->CountMoves() == 1) {
+    MoveArray move_array;
+    movegen_->GenerateMoves(&move_array);
+    return move_array.get(0);
+  }
 
   // Time allocated to search for the best move.
   long time_for_move_centis = AllocateTime(time_centis, otime_centis);
@@ -89,20 +95,20 @@ Move Player::Search(const SearchParams& search_params,
   ids_params.thinking_output = search_params.thinking_output;
   ids_params.search_depth = search_params.search_depth;
 
-  if (extensions_->pn_search && time_for_move_centis > 50 &&
-      movegen_->CountMoves() > 1) {
-    assert (extensions_->pns_timer);
+  const PNSExtension& pns_extension = extensions_->pns_extension;
+  if (pns_extension.pn_search) {
+    assert (pns_extension.pns_timer);
 
-    // Allocate 5% of total time for PNS.
-    extensions_->pns_timer->Reset();
-    extensions_->pns_timer->Run(time_for_move_centis * 0.05);
+    pns_extension.pns_timer->Reset();
+    pns_extension.pns_timer->Run(time_for_move_centis *
+        (pns_extension.pns_time_for_move_percent / 100.0));
 
     StopWatch pn_stop_watch;
     pn_stop_watch.Start();
 
     PNSParams pns_params;
     PNSResult pns_result;
-    extensions_->pn_search->Search(pns_params, &pns_result);
+    pns_extension.pn_search->Search(pns_params, &pns_result);
     pn_stop_watch.Stop();
     std::cout << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
               << std::endl;
@@ -110,6 +116,12 @@ Move Player::Search(const SearchParams& search_params,
               << std::endl;
 
     PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);
+    std::cout << "# PNS best move: " << best_pns_move_stat.move.str()
+              << std::endl;
+    // If 100% time is used for PNS, return best move.
+    if (pns_extension.pns_time_for_move_percent >= 100) {
+      return best_pns_move_stat.move;
+    }
     // If the best move is WON, return.
     if (best_pns_move_stat.result == WIN) {
       std::cout << "# PNS WIN!" << std::endl;
@@ -128,6 +140,8 @@ Move Player::Search(const SearchParams& search_params,
 
     // Subtract time taken by PNSearch.
     time_for_move_centis -= static_cast<long>(pn_stop_watch.ElapsedTime());
+    std::cout << "# Time left: " << time_for_move_centis << " centis"
+              << std::endl;
   }
 
   timer_->Reset();
