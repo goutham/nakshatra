@@ -18,8 +18,6 @@
 #include <vector>
 
 int main(int argc, const char** argv) {
-  srand(time(NULL));
-
   Board board(Variant::SUICIDE);
   MoveGeneratorSuicide movegen(board);
   EGTB egtb("2p.bin.egtb", board);

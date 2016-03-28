@@ -24,8 +24,7 @@ struct PNSNode {
   // root node.
   Move move;
   PNSNode* parent = nullptr;
-  PNSNode* children = nullptr;
-  int children_size = 0;
+  std::vector<PNSNode*> children;
 
   // Number of nodes in the subtree rooted at this node.
   uint64_t tree_size = 1ULL;
@@ -89,16 +88,12 @@ class PNSearch {
       movegen_(movegen),
       evaluator_(evaluator),
       egtb_(egtb),
-      timer_(timer) {
-    const int size = max_nodes_ + 500;
-    pns_tree_buffer_ = new PNSNode[size];
-    std::cout << "# PNS memory usage: "
-              << (sizeof(PNSNode) * size) / (1U << 20) << " MB"
-              << std::endl;
-  }
+      timer_(timer) {}
+
   ~PNSearch() {
-    if (pns_tree_buffer_) {
-      delete pns_tree_buffer_;
+    if (pns_tree_) {
+      Delete(pns_tree_);
+      pns_tree_ = nullptr;
     }
   }
 
@@ -130,32 +125,8 @@ class PNSearch {
                       Board* board,
                       std::ofstream& ofs);
 
-  PNSNode* children_begin(const PNSNode* pns_node) {
-    return pns_node->children;
-  }
-
-  PNSNode* children_end(const PNSNode* pns_node) {
-    return pns_node->children + pns_node->children_size;
-  }
-
-  PNSNode* get_pns_node(PNSNodeOffset pns_node_offset) {
-    if (!is_valid_pns_node(pns_node_offset)) {
-      return nullptr;
-    }
-    return pns_tree_buffer_ + pns_node_offset;
-  }
-
-  PNSNode* get_clean_pns_node(PNSNodeOffset pns_node_offset) {
-    PNSNode* pns_node = get_pns_node(pns_node_offset);
-    if (pns_node) {
-      *pns_node = PNSNode();
-    }
-    return pns_node;
-  }
-
-  bool is_valid_pns_node(PNSNodeOffset pns_node_offset) {
-    return pns_node_offset >= 0;
-  }
+  void Delete(PNSNode* pns_node);
+  void Delete(std::vector<PNSNode*>& pns_nodes);
 
   const int max_nodes_;
 
@@ -165,8 +136,7 @@ class PNSearch {
   EGTB* egtb_;
   Timer* timer_;
 
-  PNSNode* pns_tree_buffer_;
-  PNSNodeOffset next_ = 0;
+  PNSNode* pns_tree_ = nullptr;
 };
 
 #endif

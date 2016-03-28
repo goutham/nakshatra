@@ -21,13 +21,13 @@
 
 #define PNS_MAX_DEPTH 600
 
-using std::string;
-
 void PNSearch::Search(const PNSParams& pns_params,
                       PNSResult* pns_result) {
-  PNSNode* pns_root = pns_tree_buffer_;
-  *pns_root = PNSNode();
-  next_ = 1;
+  if (pns_tree_) {
+    Delete(pns_tree_);
+    pns_tree_ = nullptr;
+  }
+  pns_tree_ = new PNSNode;
 
   int search_nodes = 0;
   if (pns_params.pns_type == PNSParams::PN2 &&
@@ -38,10 +38,9 @@ void PNSearch::Search(const PNSParams& pns_params,
     search_nodes = max_nodes_;
   }
 
-  Pns(search_nodes, pns_params, pns_root, &pns_result->num_nodes);
+  Pns(search_nodes, pns_params, pns_tree_, &pns_result->num_nodes);
 
-  for (PNSNode* pns_node = children_begin(pns_root);
-       pns_node < children_end(pns_root); ++pns_node) {
+  for (PNSNode* pns_node : pns_tree_->children) {
     // This is from the current playing side perspective.
     double score;
     int result;
@@ -72,7 +71,7 @@ void PNSearch::Search(const PNSParams& pns_params,
   // Print the ordered moves.
   std::cout << "# Move, score, tree_size:" << std::endl;
   for (const auto& move_stat : pns_result->ordered_moves) {
-    static std::map<int, string> result_map = {
+    static std::map<int, std::string> result_map = {
       {WIN, "WIN"}, {-WIN, "LOSS"}, {DRAW, "DRAW"}, {UNKNOWN, "UNKNOWN"}
     };
     std::cout << "# " << move_stat.move.str() << ", " << move_stat.score << ", "
@@ -115,7 +114,7 @@ void PNSearch::Pns(const int search_nodes,
     }
     PNSNode* mpn = FindMpn(cur_node, &depth);
     Expand(pns_params, *num_nodes, depth, mpn);
-    *num_nodes += mpn->children_size;
+    *num_nodes += mpn->children.size();
 
     // In case of PN2 search, update ancestors from the parent node of mpn
     // because mpn might have unevaluated children as we use delayed evaluation
@@ -161,23 +160,21 @@ bool PNSearch::RedundantMoves(PNSNode* pns_node) {
 
 PNSNode* PNSearch::FindMpn(PNSNode* root, int* depth) {
   PNSNode* mpn = root;
-  while (mpn->children) {
+  while (!mpn->children.empty()) {
     // If proof number of parent node is INF_NODES, all it's children will have
     // disproof number of INF_NODES. So, select the child node that has a proof
     // number that is not 0 (i.e, not yet proved). Otherwise, we may end up
     // reaching a leaf node that is proved/disproved/drawn with no scope for
     // expansion.
     if (mpn->proof == INF_NODES) {
-      for (PNSNode* pns_node = children_begin(mpn);
-           pns_node < children_end(mpn); ++pns_node) {
+      for (PNSNode* pns_node : mpn->children) {
         if (pns_node->proof) {
           mpn = pns_node;
           break;
         }
       }
     } else {
-      for (PNSNode* pns_node = children_begin(mpn);
-           pns_node < children_end(mpn); ++pns_node) {
+      for (PNSNode* pns_node : mpn->children) {
         if (mpn->proof == pns_node->disproof) {
           mpn = pns_node;
           break;
@@ -187,7 +184,7 @@ PNSNode* PNSearch::FindMpn(PNSNode* root, int* depth) {
     ++*depth;
     board_->MakeMove(mpn->move);
   }
-  assert(!mpn->children);
+  assert(mpn->children.empty());
   return mpn;
 }
 
@@ -195,12 +192,11 @@ PNSNode* PNSearch::UpdateAncestors(PNSNode* pns_node,
                                    PNSNode* pns_root,
                                    int* depth) {
   while (true) {
-    if (pns_node->children) {
+    if (!pns_node->children.empty()) {
       int proof = INF_NODES;
       int disproof = 0;
       pns_node->tree_size = 1ULL;
-      for (PNSNode* child = children_begin(pns_node);
-           child < children_end(pns_node); ++child) {
+      for (PNSNode* child : pns_node->children) {
         if (child->disproof < proof) {
           proof = child->disproof;
         }
@@ -229,10 +225,9 @@ PNSNode* PNSearch::UpdateAncestors(PNSNode* pns_node,
 }
 
 void PNSearch::UpdateTreeSize(PNSNode* pns_node) {
-  if (pns_node->children) {
+  if (!pns_node->children.empty()) {
     pns_node->tree_size = 1ULL;
-    for (PNSNode* child = children_begin(pns_node);
-         child < children_end(pns_node); ++child) {
+    for (PNSNode* child : pns_node->children) {
       pns_node->tree_size += child->tree_size;
     }
   }
@@ -245,39 +240,28 @@ void PNSearch::Expand(const PNSParams& pns_params,
   if (RedundantMoves(pns_node) || pns_node_depth >= PNS_MAX_DEPTH) {
     pns_node->proof = INF_NODES;
     pns_node->disproof = INF_NODES;
-    assert(!pns_node->children);
-    assert(pns_node->children_size == 0);
+    assert(pns_node->children.empty());
   } else if (pns_params.pns_type == PNSParams::PN2) {
     PNSParams pn2_params;
     pn2_params.pns_type = PNSParams::PN1;
     int pn2_nodes = 0;
-    PNSNodeOffset pn2_next = next_;
     Pns(PnNodes(pns_params, num_nodes), pn2_params, pns_node, &pn2_nodes);
 
     // If the tree is solved, delete the entire Pn subtree under
     // the pns_node. Else, retain MPN's immediate children only.
     if (pns_node->proof == 0 || pns_node->disproof == 0) {
-      pns_node->children = nullptr;
-      pns_node->children_size = 0;
-      next_ = pn2_next;
+      Delete(pns_node->children);
     } else {
-      for (PNSNode* child = children_begin(pns_node);
-           child < children_end(pns_node); ++child) {
-        child->children = nullptr;
-        child->children_size = 0;
+      for (PNSNode* child : pns_node->children) {
+        Delete(child->children);
       }
-      next_ = pn2_next + pns_node->children_size;
     }
   } else {
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
-    if (move_array.size()) {
-      pns_node->children = get_pns_node(next_);
-      pns_node->children_size = move_array.size();
-      pns_node->tree_size = 1 + pns_node->children_size;
-    }
     for (int i = 0; i < move_array.size(); ++i) {
-      PNSNode* child = get_clean_pns_node(next_ + i);
+      PNSNode* child = new PNSNode;
+      pns_node->children.push_back(child);
       child->move = move_array.get(i);
       child->parent = pns_node;
       board_->MakeMove(child->move);
@@ -306,7 +290,7 @@ void PNSearch::Expand(const PNSParams& pns_params,
       }
       board_->UnmakeLastMove();
     }
-    next_ += move_array.size();
+    pns_node->tree_size = 1 + pns_node->children.size();
   }
 }
 
@@ -325,7 +309,7 @@ int PNSearch::PnNodes(const PNSParams& pns_params,
 void PNSearch::SaveTree(const PNSNode* pns_node, const int num_nodes,
                         Board* board) {
   std::cout << "# Saving tree..." << std::endl;
-  const string filename = "pns_progress_" + LongToString(getpid()) + "_" +
+  const std::string filename = "pns_progress_" + LongToString(getpid()) + "_" +
       LongToString(long(num_nodes));
   std::ofstream ofs(filename.c_str(), std::ios::out);
   SaveTreeHelper(pns_node, board, ofs);
@@ -334,13 +318,12 @@ void PNSearch::SaveTree(const PNSNode* pns_node, const int num_nodes,
 
 void PNSearch::SaveTreeHelper(const PNSNode* pns_node, Board* board,
                               std::ofstream& ofs) {
-  if (!pns_node->children) {
+  if (pns_node->children.empty()) {
     return;
   }
-  const string fen = board->ParseIntoFEN();
+  const std::string fen = board->ParseIntoFEN();
   ofs << "# " << fen << std::endl;
-  for (PNSNode* child = children_begin(pns_node);
-       child < children_end(pns_node); ++child) {
+  for (PNSNode* child : pns_node->children) {
     board->MakeMove(child->move);
     double ratio;
     if (child->proof == 0) ratio = DBL_MAX;
@@ -350,10 +333,21 @@ void PNSearch::SaveTreeHelper(const PNSNode* pns_node, Board* board,
         << std::endl;
     board->UnmakeLastMove();
   }
-  for (PNSNode* child = children_begin(pns_node);
-       child < children_end(pns_node); ++child) {
+  for (PNSNode* child : pns_node->children) {
     board->MakeMove(child->move);
     SaveTreeHelper(child, board, ofs);
     board->UnmakeLastMove();
   }
+}
+
+void PNSearch::Delete(PNSNode* pns_node) {
+  Delete(pns_node->children);
+  delete pns_node;
+}
+
+void PNSearch::Delete(std::vector<PNSNode*>& pns_nodes) {
+  for (PNSNode* pns_node : pns_nodes) {
+    Delete(pns_node);
+  }
+  pns_nodes.clear();
 }
