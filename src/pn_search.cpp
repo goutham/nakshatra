@@ -32,10 +32,10 @@ void PNSearch::Search(const PNSParams& pns_params,
   int search_nodes = 0;
   if (pns_params.pns_type == PNSParams::PN2 &&
       pns_params.pn2_tree_limit > 0) {
-    assert(pns_params.pn2_tree_limit <= max_nodes_);
+    assert(pns_params.pn2_tree_limit <= pns_params.max_nodes);
     search_nodes = pns_params.pn2_tree_limit;
   } else {
-    search_nodes = max_nodes_;
+    search_nodes = pns_params.max_nodes;
   }
 
   Pns(search_nodes, pns_params, pns_tree_, &pns_result->num_nodes);
@@ -297,13 +297,14 @@ void PNSearch::Expand(const PNSParams& pns_params,
 int PNSearch::PnNodes(const PNSParams& pns_params,
                       const int num_nodes) {
   if (pns_params.pn2_full_search) {
-    return max_nodes_ - num_nodes;
+    return pns_params.max_nodes - num_nodes;
   }
-  const double a = pns_params.pn2_max_nodes_fraction_a * max_nodes_;
-  const double b = pns_params.pn2_max_nodes_fraction_b * max_nodes_;
+  const double a = pns_params.pn2_max_nodes_fraction_a * pns_params.max_nodes;
+  const double b = pns_params.pn2_max_nodes_fraction_b * pns_params.max_nodes;
   const double f_x = 1.0 / (1.0 + exp((a - num_nodes) / b));
-  return static_cast<int>(std::min(ceil(std::max(num_nodes, 1) * f_x),
-                              static_cast<double>(max_nodes_ - num_nodes)));
+  return static_cast<int>(
+      std::min(ceil(std::max(num_nodes, 1) * f_x),
+                   static_cast<double>(pns_params.max_nodes - num_nodes)));
 }
 
 void PNSearch::SaveTree(const PNSNode* pns_node, const int num_nodes,

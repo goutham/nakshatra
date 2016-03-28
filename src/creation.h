@@ -249,11 +249,8 @@ class SuicidePlayerBuilder : public PlayerBuilder {
         2  /* reduction limit */,
         1  /* depth reduction factor */));
     extensions_->pns_extension.pns_timer.reset(new Timer);
-    static const int MAX_PNS_NODES = 10000000;
-    std::cout << "# Maximum PNS nodes: " << MAX_PNS_NODES << std::endl;
     extensions_->pns_extension.pn_search.reset(
-        new PNSearch(MAX_PNS_NODES ,
-                     board_.get(),
+        new PNSearch(board_.get(),
                      movegen_.get(),
                      eval_.get(),
                      egtb_.get(),

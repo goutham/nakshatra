@@ -107,6 +107,7 @@ Move Player::Search(const SearchParams& search_params,
     pn_stop_watch.Start();
 
     PNSParams pns_params;
+    pns_params.max_nodes = 10000000;
     PNSResult pns_result;
     pns_extension.pn_search->Search(pns_params, &pns_result);
     pn_stop_watch.Stop();

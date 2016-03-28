@@ -49,6 +49,9 @@ struct PNSParams {
   };
   PNSearchType pns_type = PN1;
 
+  // Maximum number of nodes in PNS tree.
+  int max_nodes = 100000;
+
   // Used only if pns_type = PN2.
   // Use all available buffer for 2nd level search
   bool pn2_full_search = false;
@@ -77,13 +80,11 @@ class PNSearch {
  public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
-  PNSearch(const int max_nodes,
-           Board* board,
+  PNSearch(Board* board,
            MoveGenerator* movegen,
            Evaluator* evaluator,
            EGTB* egtb,
            Timer* timer) :
-      max_nodes_(max_nodes),
       board_(board),
       movegen_(movegen),
       evaluator_(evaluator),
@@ -127,8 +128,6 @@ class PNSearch {
 
   void Delete(PNSNode* pns_node);
   void Delete(std::vector<PNSNode*>& pns_nodes);
-
-  const int max_nodes_;
 
   Board* board_;
   MoveGenerator* movegen_;
