@@ -66,11 +66,6 @@ struct PNSParams {
   double pn2_max_nodes_fraction_a = 0.001;
   double pn2_max_nodes_fraction_b = 0.001;
 
-  // Useful for long running searches (using PN2). If > 0, dumps all
-  // nodes in the tree into a file after every 'n' nodes given by this
-  // variable.
-  int save_progress = -1;
-
   // Prints progress (in percentage of nodes searched out of max_nodes) after
   // every 'n' secs given by this variable if > 0.
   int log_progress = -1;

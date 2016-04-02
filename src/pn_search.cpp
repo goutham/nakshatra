@@ -86,22 +86,15 @@ void PNSearch::Pns(const int search_nodes,
                    int* num_nodes) {
   *num_nodes = 0;
   PNSNode* cur_node = pns_root;
-  Board board_at_root = *board_;
 
   StopWatch stop_watch;
   stop_watch.Start();
 
   int depth = 0;
-  int save_progress_nodes = pns_params.save_progress;
   int log_progress_secs = pns_params.log_progress;
   while (*num_nodes < search_nodes &&
          (pns_root->proof != 0 && pns_root->disproof != 0) &&
          (!timer_ || !timer_->timer_expired())) {
-    if (pns_params.save_progress > 0 && *num_nodes > save_progress_nodes) {
-      assert(pns_params.pns_type == PNSParams::PN2);  // allow only for PN2.
-      SaveTree(pns_root, *num_nodes, &board_at_root);
-      save_progress_nodes += pns_params.save_progress;
-    }
     if (pns_params.log_progress > 0 &&
         stop_watch.ElapsedTime() / 100 > log_progress_secs) {
       assert(pns_params.pns_type == PNSParams::PN2);  // allow only for PN2.
@@ -133,10 +126,6 @@ void PNSearch::Pns(const int search_nodes,
     UpdateTreeSize(cur_node);
   }
   assert(depth == 0);
-  if (pns_params.save_progress > 0) {
-    assert(pns_params.pns_type == PNSParams::PN2);  // allow only for PN2.
-    SaveTree(pns_root, *num_nodes, &board_at_root);
-  }
 }
 
 bool PNSearch::RedundantMoves(PNSNode* pns_node) {
@@ -305,40 +294,6 @@ int PNSearch::PnNodes(const PNSParams& pns_params,
   return static_cast<int>(
       std::min(ceil(std::max(num_nodes, 1) * f_x),
                    static_cast<double>(pns_params.max_nodes - num_nodes)));
-}
-
-void PNSearch::SaveTree(const PNSNode* pns_node, const int num_nodes,
-                        Board* board) {
-  std::cout << "# Saving tree..." << std::endl;
-  const std::string filename = "pns_progress_" + LongToString(getpid()) + "_" +
-      LongToString(long(num_nodes));
-  std::ofstream ofs(filename.c_str(), std::ios::out);
-  SaveTreeHelper(pns_node, board, ofs);
-  std::cout << "# Done saving tree." << std::endl;
-}
-
-void PNSearch::SaveTreeHelper(const PNSNode* pns_node, Board* board,
-                              std::ofstream& ofs) {
-  if (pns_node->children.empty()) {
-    return;
-  }
-  const std::string fen = board->ParseIntoFEN();
-  ofs << "# " << fen << std::endl;
-  for (PNSNode* child : pns_node->children) {
-    board->MakeMove(child->move);
-    double ratio;
-    if (child->proof == 0) ratio = DBL_MAX;
-    else ratio = double(child->disproof) / child->proof;
-    ofs << fen << "|" << child->move.str() << "|" << ratio << "|"
-        << child->proof << "|" << child->disproof << "|" << child->tree_size
-        << std::endl;
-    board->UnmakeLastMove();
-  }
-  for (PNSNode* child : pns_node->children) {
-    board->MakeMove(child->move);
-    SaveTreeHelper(child, board, ofs);
-    board->UnmakeLastMove();
-  }
 }
 
 void PNSearch::Delete(PNSNode* pns_node) {
