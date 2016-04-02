@@ -116,11 +116,6 @@ class PNSearch {
 
   void UpdateTreeSize(PNSNode* pns_node);
 
-  void SaveTree(const PNSNode* pns_node, int num_nodes, Board* board);
-  void SaveTreeHelper(const PNSNode* pns_node,
-                      Board* board,
-                      std::ofstream& ofs);
-
   void Delete(PNSNode* pns_node);
   void Delete(std::vector<PNSNode*>& pns_nodes);
 
