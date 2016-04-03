@@ -53,10 +53,6 @@ struct PNSParams {
   int max_nodes = 100000;
 
   // Used only if pns_type = PN2.
-  // Use all available buffer for 2nd level search
-  bool pn2_full_search = false;
-
-  // Used only if pns_type = PN2.
   // If > 0, indicates the size of top level search tree before stopping. This
   // must be <= max_nodes_.
   int pn2_tree_limit = -1;

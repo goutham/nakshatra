@@ -285,9 +285,6 @@ void PNSearch::Expand(const PNSParams& pns_params,
 
 int PNSearch::PnNodes(const PNSParams& pns_params,
                       const int num_nodes) {
-  if (pns_params.pn2_full_search) {
-    return pns_params.max_nodes - num_nodes;
-  }
   const double a = pns_params.pn2_max_nodes_fraction_a * pns_params.max_nodes;
   const double b = pns_params.pn2_max_nodes_fraction_b * pns_params.max_nodes;
   const double f_x = 1.0 / (1.0 + exp((a - num_nodes) / b));
