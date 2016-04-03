@@ -29,15 +29,7 @@ void PNSearch::Search(const PNSParams& pns_params,
   }
   pns_tree_ = new PNSNode;
 
-  int search_nodes = 0;
-  if (pns_params.pns_type == PNSParams::PN2 &&
-      pns_params.pn2_tree_limit > 0) {
-    assert(pns_params.pn2_tree_limit <= pns_params.max_nodes);
-    search_nodes = pns_params.pn2_tree_limit;
-  } else {
-    search_nodes = pns_params.max_nodes;
-  }
-
+  const int search_nodes = pns_params.max_nodes;
   Pns(search_nodes, pns_params, pns_tree_, &pns_result->num_nodes);
 
   for (PNSNode* pns_node : pns_tree_->children) {

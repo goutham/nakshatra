@@ -52,11 +52,6 @@ struct PNSParams {
   // Maximum number of nodes in PNS tree.
   int max_nodes = 100000;
 
-  // Used only if pns_type = PN2.
-  // If > 0, indicates the size of top level search tree before stopping. This
-  // must be <= max_nodes_.
-  int pn2_tree_limit = -1;
-
   // Used only if pns_type = PN2 and pn2_full_search = false. See
   // PnNodes() method implementation for how these are used.
   double pn2_max_nodes_fraction_a = 0.001;
