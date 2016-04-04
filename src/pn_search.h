@@ -92,8 +92,7 @@ class PNSearch {
               const int pns_node_depth,
               PNSNode* pns_node);
 
-  void Pns(const int search_nodes, const PNSParams& pns_params,
-           PNSNode* pns_root, int* num_nodes);
+  void Pns(const PNSParams& pns_params, PNSNode* pns_root, int* num_nodes);
 
   int PnNodes(const PNSParams& pns_params, const int num_nodes);
 

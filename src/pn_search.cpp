@@ -29,8 +29,7 @@ void PNSearch::Search(const PNSParams& pns_params,
   }
   pns_tree_ = new PNSNode;
 
-  const int search_nodes = pns_params.max_nodes;
-  Pns(search_nodes, pns_params, pns_tree_, &pns_result->num_nodes);
+  Pns(pns_params, pns_tree_, &pns_result->num_nodes);
 
   for (PNSNode* pns_node : pns_tree_->children) {
     // This is from the current playing side perspective.
@@ -72,8 +71,7 @@ void PNSearch::Search(const PNSParams& pns_params,
   }
 }
 
-void PNSearch::Pns(const int search_nodes,
-                   const PNSParams& pns_params,
+void PNSearch::Pns(const PNSParams& pns_params,
                    PNSNode* pns_root,
                    int* num_nodes) {
   *num_nodes = 0;
@@ -84,16 +82,16 @@ void PNSearch::Pns(const int search_nodes,
 
   int depth = 0;
   int log_progress_secs = pns_params.log_progress;
-  while (*num_nodes < search_nodes &&
+  while (*num_nodes < pns_params.max_nodes &&
          (pns_root->proof != 0 && pns_root->disproof != 0) &&
          (!timer_ || !timer_->timer_expired())) {
     if (pns_params.log_progress > 0 &&
         stop_watch.ElapsedTime() / 100 > log_progress_secs) {
       assert(pns_params.pns_type == PNSParams::PN2);  // allow only for PN2.
       std::cout << "# Progress: "
-           << (100.0 * *num_nodes) / search_nodes
+           << (100.0 * *num_nodes) / pns_params.max_nodes
            << "% ("
-           << *num_nodes << " / " << search_nodes
+           << *num_nodes << " / " << pns_params.max_nodes
            << ")" << std::endl;
       log_progress_secs += pns_params.log_progress;
     }
@@ -223,10 +221,11 @@ void PNSearch::Expand(const PNSParams& pns_params,
     pns_node->disproof = INF_NODES;
     assert(pns_node->children.empty());
   } else if (pns_params.pns_type == PNSParams::PN2) {
-    PNSParams pn2_params;
-    pn2_params.pns_type = PNSParams::PN1;
+    PNSParams pns_params2;
+    pns_params2.pns_type = PNSParams::PN1;
+    pns_params2.max_nodes = PnNodes(pns_params, num_nodes);
     int pn2_nodes = 0;
-    Pns(PnNodes(pns_params, num_nodes), pn2_params, pns_node, &pn2_nodes);
+    Pns(pns_params2, pns_node, &pn2_nodes);
 
     // If the tree is solved, delete the entire Pn subtree under
     // the pns_node. Else, retain MPN's immediate children only.
