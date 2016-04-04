@@ -101,7 +101,8 @@ class PNSearch {
 
   PNSNode* FindMpn(PNSNode* pns_node, int* depth);
 
-  PNSNode* UpdateAncestors(PNSNode* mpn,
+  PNSNode* UpdateAncestors(const PNSParams& pns_params,
+                           PNSNode* mpn,
                            PNSNode* pns_root,
                            int* depth);
 

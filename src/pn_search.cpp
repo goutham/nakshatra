@@ -100,16 +100,7 @@ void PNSearch::Pns(const int search_nodes,
     PNSNode* mpn = FindMpn(cur_node, &depth);
     Expand(pns_params, *num_nodes, depth, mpn);
     *num_nodes += mpn->children.size();
-
-    // In case of PN2 search, update ancestors from the parent node of mpn
-    // because mpn might have unevaluated children as we use delayed evaluation
-    // in PN2.
-    if (pns_params.pns_type == PNSParams::PN2 && mpn->parent) {
-      assert(board_->UnmakeLastMove());
-      --depth;
-      mpn = mpn->parent;
-    }
-    cur_node = UpdateAncestors(mpn, pns_root, &depth);
+    cur_node = UpdateAncestors(pns_params, mpn, pns_root, &depth);
   }
   while (cur_node != pns_root) {
     cur_node = cur_node->parent;
@@ -169,9 +160,11 @@ PNSNode* PNSearch::FindMpn(PNSNode* root, int* depth) {
   return mpn;
 }
 
-PNSNode* PNSearch::UpdateAncestors(PNSNode* pns_node,
+PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params,
+                                   PNSNode* mpn,
                                    PNSNode* pns_root,
                                    int* depth) {
+  PNSNode* pns_node = mpn;
   while (true) {
     if (!pns_node->children.empty()) {
       int proof = INF_NODES;
@@ -188,8 +181,15 @@ PNSNode* PNSearch::UpdateAncestors(PNSNode* pns_node,
         }
         pns_node->tree_size += child->tree_size;
       }
+      // Terminate updating ancestors if proof/disproof numbers
+      // don't change and it is not MPN in a PN^2 higher level
+      // tree. In PN^2, MPN will have unevaluated children due to
+      // use of delayed evaluation so we must continue even if
+      // proof/disproof don't change.
       if (pns_node->proof == proof &&
-          pns_node->disproof == disproof) {
+          pns_node->disproof == disproof &&
+          (pns_params.pns_type != PNSParams::PN2 ||
+           pns_node != mpn)) {
         return pns_node;
       }
       pns_node->proof = proof;
