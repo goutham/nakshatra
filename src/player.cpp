@@ -113,7 +113,7 @@ Move Player::Search(const SearchParams& search_params,
     pn_stop_watch.Stop();
     std::cout << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
               << std::endl;
-    std::cout << "# PNS Stats: num_nodes: " << pns_result.num_nodes
+    std::cout << "# PNS Stats: tree_size: " << pns_result.tree_size
               << std::endl;
 
     PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);

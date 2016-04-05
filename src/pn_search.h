@@ -38,7 +38,7 @@ struct PNSResult {
     int result;
   };
   int result = UNKNOWN;
-  int num_nodes = 0;
+  uint64_t tree_size;
   std::vector<MoveStat> ordered_moves;
 };
 
@@ -92,7 +92,7 @@ class PNSearch {
               const int pns_node_depth,
               PNSNode* pns_node);
 
-  void Pns(const PNSParams& pns_params, PNSNode* pns_root, int* num_nodes);
+  void Pns(const PNSParams& pns_params, PNSNode* pns_root);
 
   int PnNodes(const PNSParams& pns_params, const int num_nodes);
 
