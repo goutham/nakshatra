@@ -10,19 +10,19 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
-#include <map>
-#include <vector>
+#include <list>
 
 #define MAX 10000
 
+using std::list;
 using std::string;
-using std::vector;
 
 EGTBElement* EGTBStore::Get(string fen) {
-  if (store_.find(fen) == store_.end()) {
-    return NULL;
+  auto elem = store_.find(fen);
+  if (elem == store_.end()) {
+    return nullptr;
   }
-  return &store_[fen];
+  return &elem->second;
 }
 
 void EGTBStore::Put(string fen, int moves_to_end,
@@ -36,7 +36,7 @@ void EGTBStore::Put(string fen, int moves_to_end,
 }
 
 void EGTBStore::MergeFrom(EGTBStore store) {
-  const std::map<string, EGTBElement>& egtb_map = store.GetMap();
+  const auto& egtb_map = store.GetMap();
   for (const auto& elem : egtb_map) {
     store_[elem.first] = elem.second;
   }
@@ -60,9 +60,27 @@ void EGTBStore::Write(std::ofstream& ofs) {
   }
 }
 
-void EGTBGenerator::Generate(vector<string> all_pos_list,
-                             Side winning_side,
-                             EGTBStore* store) {
+void EGTBGenerate(list<string> all_pos_list, Side winning_side,
+                  EGTBStore* store) {
+  for (list<string>::iterator iter = all_pos_list.begin();
+       iter != all_pos_list.end();) {
+    Board board(Variant::SUICIDE, *iter);
+    MoveGeneratorSuicide movegen(board);
+    EvalSuicide eval(&board, &movegen, nullptr);
+    int result = eval.Result();
+    if (result == WIN) {
+      store->Put(*iter, 0, Move(), board.SideToMove());
+      iter = all_pos_list.erase(iter);
+    } else if (result == -WIN) {
+      store->Put(*iter, 0, Move(), OppositeSide(board.SideToMove()));
+      iter = all_pos_list.erase(iter);
+    } else if (result == DRAW) {
+      iter = all_pos_list.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+
   int superbest = 0;
   int i = 0;
   while (true) {
@@ -71,7 +89,7 @@ void EGTBGenerator::Generate(vector<string> all_pos_list,
     EGTBStore temp_store;
     bool deleted = false;
     double last_percent = 0.0;
-    for (vector<string>::iterator iter = all_pos_list.begin();
+    for (list<string>::iterator iter = all_pos_list.begin();
         iter != all_pos_list.end();) {
       double percent = (static_cast<double>(progress) / all_pos_list_size) * 100;
       if (percent >= last_percent + 1 || percent + 0.1 >= 100) {
@@ -148,33 +166,4 @@ void EGTBGenerator::Generate(vector<string> all_pos_list,
     ++i;
   }
   printf("\n");
-}
-
-void EGTBGenerator::Generate(vector<string> final_pos_list,
-                             vector<string> all_pos_list,
-                             Side winning_side,
-                             EGTBStore* store) {
-  // Put lost(0) in Store.
-  for (const string& pos : final_pos_list) {
-    store->Put(pos, 0, Move(), winning_side);
-  }
-  for (vector<string>::iterator iter = all_pos_list.begin();
-       iter != all_pos_list.end();) {
-    Board board(Variant::SUICIDE, *iter);
-    MoveGeneratorSuicide movegen(board);
-    EvalSuicide eval(&board, &movegen, nullptr);
-    int result = eval.Result();
-    if (result == WIN) {
-      store->Put(*iter, 0, Move(), board.SideToMove());
-      iter = all_pos_list.erase(iter);
-    } else if (result == -WIN) {
-      store->Put(*iter, 0, Move(), OppositeSide(board.SideToMove()));
-      iter = all_pos_list.erase(iter);
-    } else if (result == DRAW) {
-      iter = all_pos_list.erase(iter);
-    } else {
-      ++iter;
-    }
-  }
-  Generate(all_pos_list, winning_side, store);
 }

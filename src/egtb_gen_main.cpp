@@ -9,81 +9,77 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <list>
 #include <string>
 #include <vector>
 
 #define MAX 10000
 
+using std::list;
 using std::string;
 using std::vector;
 
-void GeneratePermutations(const vector<string>& initial_list,
-                          Piece piece, vector<string>* permutations) {
-  for (const string& fen : initial_list) {
-    Board board(Variant::SUICIDE, fen);
-    for (int i = 0; i < 8; ++i) {
-      if (PieceType(piece) == PAWN && (i == 0 || i == 7)) {
-        continue;
-      }
-      for (int j = 0; j < 8; ++j) {
-        if (board.PieceAt(i, j) == NULLPIECE) {
-          board.SetPiece(INDX(i, j), piece);
+void GeneratePermutations(const string& fen, const Piece piece,
+                          const vector<Side> next_player_sides,
+                          list<string>* permutations) {
+  Board board(Variant::SUICIDE, fen);
+  for (int i = 0; i < 8; ++i) {
+    if (PieceType(piece) == PAWN && (i == 0 || i == 7)) {
+      continue;
+    }
+    for (int j = 0; j < 8; ++j) {
+      if (board.PieceAt(i, j) == NULLPIECE) {
+        board.SetPiece(INDX(i, j), piece);
+        for (const Side next_player_side : next_player_sides) {
+          board.SetPlayerColor(next_player_side);
           permutations->push_back(board.ParseIntoFEN());
-          board.SetPiece(INDX(i, j), NULLPIECE);
         }
+        board.SetPiece(INDX(i, j), NULLPIECE);
       }
     }
   }
 }
 
-string AddPlayerSide(const string& fen, Side side) {
-  Board board(Variant::SUICIDE, fen);
-  board.SetPlayerColor(side);
-  return board.ParseIntoFEN();
+void GeneratePermutations(const list<string>& initial_list,
+                          const Piece piece,
+                          const vector<Side> next_player_sides,
+                          list<string>* permutations) {
+  for (const string& fen : initial_list) {
+    GeneratePermutations(fen, piece, next_player_sides, permutations);
+  }
 }
 
 void CreateTwoPiecesEGTB(Side winning_side,
                          Side losing_side,
                          EGTBStore* store) {
-  vector<string> empty_board_list(
-      {Board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -").ParseIntoFEN()});
+  Board empty_board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -");
 
-  vector<string> one_list;
+  list<string> one_piece_positions;
   for (Piece piece = KING; piece <= PAWN; ++piece) {
-    vector<string> tmp_one_list;
-    GeneratePermutations(empty_board_list,
+    GeneratePermutations(empty_board.ParseIntoFEN(),
                          PieceOfSide(piece, losing_side),
-                         &tmp_one_list);
-    one_list.insert(one_list.end(),
-                    tmp_one_list.begin(),
-                    tmp_one_list.end());
+                         {winning_side},
+                         &one_piece_positions);
   }
-  vector<string> tmp_list;
-  for (const string& fen : one_list) {
-    tmp_list.push_back(AddPlayerSide(fen, winning_side));
-  }
-  one_list.swap(tmp_list);
 
-  vector<string> two_list;
+  list<string> two_piece_positions;
   for (Piece piece = KING; piece <= PAWN; ++piece) {
-    vector<string> tmp_two_list;
-    GeneratePermutations(one_list,
+    GeneratePermutations(one_piece_positions,
                          PieceOfSide(piece, winning_side),
-                         &tmp_two_list);
-    two_list.insert(two_list.end(),
-                    tmp_two_list.begin(),
-                    tmp_two_list.end());
+                         {Side::WHITE, Side::BLACK},
+                         &two_piece_positions);
   }
-  tmp_list.clear();
-  for (const string& fen : two_list) {
-    tmp_list.push_back(AddPlayerSide(fen, losing_side));
-    tmp_list.push_back(AddPlayerSide(fen, winning_side));
-  }
-  two_list.swap(tmp_list);
-  std::cout << two_list.size() << std::endl;
 
-  EGTBGenerator egtb_gen;
-  egtb_gen.Generate(one_list, two_list, winning_side, store);
+  list<string> all_positions;
+  all_positions.insert(all_positions.end(),
+                       std::make_move_iterator(one_piece_positions.begin()),
+                       std::make_move_iterator(one_piece_positions.end()));
+  all_positions.insert(all_positions.end(),
+                       std::make_move_iterator(two_piece_positions.begin()),
+                       std::make_move_iterator(two_piece_positions.end()));
+
+  EGTBGenerate(all_positions, winning_side, store);
 }
 
 

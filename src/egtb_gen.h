@@ -3,9 +3,9 @@
 
 #include "piece.h"
 
-#include <map>
+#include <list>
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 struct EGTBElement {
   std::string fen;
@@ -20,7 +20,7 @@ class EGTBStore {
 
   void Put(std::string fen, int moves_to_end, Move next_move, Side winner);
 
-  const std::map<std::string, EGTBElement>& GetMap() {
+  const std::unordered_map<std::string, EGTBElement>& GetMap() {
     return store_;
   }
 
@@ -29,20 +29,10 @@ class EGTBStore {
   void Write(std::ofstream& ofs);
 
  private:
-  std::map<std::string, EGTBElement> store_;
+  std::unordered_map<std::string, EGTBElement> store_;
 };
 
-class EGTBGenerator {
- public:
-  void Generate(std::vector<std::string> final_pos_list,
-                std::vector<std::string> all_pos_list,
-                Side winning_side,
-                EGTBStore* store);
-
-  void Generate(std::vector<std::string> all_pos_list,
-                Side winning_side,
-                EGTBStore* store);
-};
-
+void EGTBGenerate(std::list<std::string> positions,
+                  Side winning_side, EGTBStore* store);
 
 #endif
