@@ -7,6 +7,7 @@
 #include "movegen.h"
 #include "piece.h"
 
+#include <cstdint>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -17,46 +18,72 @@
 using std::list;
 using std::string;
 
-EGTBElement* EGTBStore::Get(string fen) {
-  auto elem = store_.find(fen);
-  if (elem == store_.end()) {
+uint64_t ComputeEGTBIndex(const Board& board, int* num_pieces) {
+  uint64_t index = 0, half_space = 1;
+  *num_pieces = 0;
+  for (int i = 0; i < 64; ++i) {
+    const Piece piece = board.PieceAt(i);
+    if (piece != NULLPIECE) {
+      index = 768 * index + (12 * i + PieceIndex(piece));
+      half_space *= 768;
+      ++*num_pieces;
+    }
+  }
+  index = SideIndex(board.SideToMove()) * half_space + index;
+  return index;
+}
+
+EGTBElement* EGTBStore::Get(const Board& board) {
+  if (board.EnpassantTarget() != -1) return nullptr;
+  int num_pieces = 0;
+  uint64_t index = ComputeEGTBIndex(board, &num_pieces);
+  auto elem = store_[num_pieces].find(index);
+  if (elem == store_[num_pieces].end()) {
     return nullptr;
   }
   return &elem->second;
 }
 
-void EGTBStore::Put(string fen, int moves_to_end,
+void EGTBStore::Put(const Board& board, int moves_to_end,
                     Move next_move, Side winner) {
   EGTBElement e;
-  e.fen = fen;
+  e.fen = board.ParseIntoFEN();
   e.moves_to_end = moves_to_end;
   e.next_move = next_move;
   e.winner = winner;
-  store_[fen] = e;
+  int num_pieces = 0;
+  uint64_t index = ComputeEGTBIndex(board, &num_pieces);
+  assert(store_[num_pieces].find(index) == store_[num_pieces].end());
+  store_[num_pieces][index] = e;
 }
 
 void EGTBStore::MergeFrom(EGTBStore store) {
   const auto& egtb_map = store.GetMap();
   for (const auto& elem : egtb_map) {
-    store_[elem.first] = elem.second;
+    for (const auto& elem2 : elem.second) {
+      assert(store_[elem.first].find(elem2.first) == store_[elem.first].end());
+      store_[elem.first][elem2.first] = elem2.second;
+    }
   }
 }
 
 void EGTBStore::Write(std::ofstream& ofs) {
   for (const auto& elem : store_) {
-    string s = elem.second.next_move.str();
-    if (s == "--") {
-      s = "LOST";
+    for (const auto& elem2 : store_[elem.first]) {
+      string s = elem2.second.next_move.str();
+      if (s == "--") {
+        s = "LOST";
+      }
+      ofs << elem2.second.fen << '|' << s << '|' << elem2.second.moves_to_end << '|';
+      if (elem2.second.winner == Side::WHITE) {
+        ofs << 'W';
+      } else if (elem2.second.winner == Side::BLACK) {
+        ofs << 'B';
+      } else {
+        ofs << 'N';
+      }
+      ofs << std::endl;
     }
-    ofs << elem.second.fen << '|' << s << '|' << elem.second.moves_to_end << '|';
-    if (elem.second.winner == Side::WHITE) {
-      ofs << 'W';
-    } else if (elem.second.winner == Side::BLACK) {
-      ofs << 'B';
-    } else {
-      ofs << 'N';
-    }
-    ofs << std::endl;
   }
 }
 
@@ -69,10 +96,10 @@ void EGTBGenerate(list<string> all_pos_list, Side winning_side,
     EvalSuicide eval(&board, &movegen, nullptr);
     int result = eval.Result();
     if (result == WIN) {
-      store->Put(*iter, 0, Move(), board.SideToMove());
+      store->Put(board, 0, Move(), board.SideToMove());
       iter = all_pos_list.erase(iter);
     } else if (result == -WIN) {
-      store->Put(*iter, 0, Move(), OppositeSide(board.SideToMove()));
+      store->Put(board, 0, Move(), OppositeSide(board.SideToMove()));
       iter = all_pos_list.erase(iter);
     } else if (result == DRAW) {
       iter = all_pos_list.erase(iter);
@@ -110,8 +137,7 @@ void EGTBGenerate(list<string> all_pos_list, Side winning_side,
         for (int i = 0; i < movelist.size(); ++i) {
           const Move& move = movelist.get(i);
           board.MakeMove(move);
-          string fen = board.ParseIntoFEN();
-          EGTBElement* e = store->Get(fen);
+          EGTBElement* e = store->Get(board);
           if (e != NULL &&
               e->winner == winning_side &&
               e->moves_to_end + 1 < best) {
@@ -123,7 +149,7 @@ void EGTBGenerate(list<string> all_pos_list, Side winning_side,
         }
         if (count >= 1) {
           if (best > superbest) superbest = best;
-          temp_store.Put(*iter, best, m, winning_side);
+          temp_store.Put(board, best, m, winning_side);
           iter = all_pos_list.erase(iter);
           deleted = true;
         } else {
@@ -136,8 +162,7 @@ void EGTBGenerate(list<string> all_pos_list, Side winning_side,
         for (int i = 0; i < movelist.size(); ++i) {
           const Move& move = movelist.get(i);
           board.MakeMove(move);
-          string fen = board.ParseIntoFEN();
-          EGTBElement* e = store->Get(fen);
+          EGTBElement* e = store->Get(board);
           if (e != NULL &&
               e->winner == winning_side) {
             if (e->moves_to_end + 1 > best) {
@@ -150,7 +175,7 @@ void EGTBGenerate(list<string> all_pos_list, Side winning_side,
         }
         if (count == movelist.size()) {
           if (best > superbest) superbest = best;
-          temp_store.Put(*iter, best, m, winning_side);
+          temp_store.Put(board, best, m, winning_side);
           iter = all_pos_list.erase(iter);
           deleted = true;
         } else {
