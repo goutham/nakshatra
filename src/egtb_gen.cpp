@@ -18,15 +18,33 @@
 using std::list;
 using std::string;
 
-uint64_t ComputeEGTBIndex(const Board& board, int* num_pieces) {
-  uint64_t index = 0, half_space = 1;
-  *num_pieces = 0;
-  for (int i = 0; i < 64; ++i) {
-    const Piece piece = board.PieceAt(i);
-    if (piece != NULLPIECE) {
-      index = 768 * index + (12 * i + PieceIndex(piece));
-      half_space *= 768;
-      ++*num_pieces;
+constexpr int piece_primes[] = {
+  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+};
+
+int ComputeBoardDescriptionId(const Board& board) {
+  U64 bitboard = board.BitBoard();
+  int value = 1;
+  while (bitboard) {
+    const int lsb_index = Lsb1(bitboard);
+    value *= piece_primes[PieceIndex(board.PieceAt(lsb_index))];
+    bitboard ^= (1ULL << lsb_index);
+  }
+  return value;
+}
+
+U64 ComputeEGTBIndex(const Board& board) {
+  U64 index = 0, half_space = 1;
+  int num_pieces = 0;
+  for (Piece piece = -PAWN; piece <= PAWN; ++piece) {
+    if (piece == NULLPIECE) continue;
+    U64 piece_bitboard = board.BitBoard(piece);
+    while (piece_bitboard) {
+      const int lsb_index = Lsb1(piece_bitboard);
+      index = 64 * index + lsb_index;
+      half_space *= 64;
+      ++num_pieces;
+      piece_bitboard ^= (1ULL << lsb_index);
     }
   }
   index = SideIndex(board.SideToMove()) * half_space + index;
@@ -35,10 +53,10 @@ uint64_t ComputeEGTBIndex(const Board& board, int* num_pieces) {
 
 EGTBElement* EGTBStore::Get(const Board& board) {
   if (board.EnpassantTarget() != -1) return nullptr;
-  int num_pieces = 0;
-  uint64_t index = ComputeEGTBIndex(board, &num_pieces);
-  auto elem = store_[num_pieces].find(index);
-  if (elem == store_[num_pieces].end()) {
+  int board_desc_id = ComputeBoardDescriptionId(board);
+  U64 index = ComputeEGTBIndex(board);
+  auto elem = store_[board_desc_id].find(index);
+  if (elem == store_[board_desc_id].end()) {
     return nullptr;
   }
   return &elem->second;
@@ -51,10 +69,10 @@ void EGTBStore::Put(const Board& board, int moves_to_end,
   e.moves_to_end = moves_to_end;
   e.next_move = next_move;
   e.winner = winner;
-  int num_pieces = 0;
-  uint64_t index = ComputeEGTBIndex(board, &num_pieces);
-  assert(store_[num_pieces].find(index) == store_[num_pieces].end());
-  store_[num_pieces][index] = e;
+  int board_desc_id = ComputeBoardDescriptionId(board);
+  U64 index = ComputeEGTBIndex(board);
+  assert(store_[board_desc_id].find(index) == store_[board_desc_id].end());
+  store_[board_desc_id][index] = e;
 }
 
 void EGTBStore::MergeFrom(EGTBStore store) {
