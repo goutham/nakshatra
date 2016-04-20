@@ -41,4 +41,7 @@ int64_t GetIndex_1_1(const Board& board);
 void PrintEGTBIndexEntry(const EGTBIndexEntry& entry);
 int EGTBResult(const EGTBIndexEntry& entry);
 
+int ComputeBoardDescriptionId(const Board& board);
+U64 ComputeEGTBIndex(const Board& board);
+
 #endif

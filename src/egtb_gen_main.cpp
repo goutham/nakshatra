@@ -88,8 +88,7 @@ int main() {
   CreateTwoPiecesEGTB(Side::BLACK, Side::WHITE, &store);
   CreateTwoPiecesEGTB(Side::WHITE, Side::BLACK, &store2);
   store.MergeFrom(store2);
-  std::ofstream ofs("2p.text.egtb", std::ofstream::out);
-  store.Write(ofs);
+  store.Write();
 
   return 0;
 }

@@ -1,7 +1,9 @@
 #include "board.h"
 #include "common.h"
+#include "egtb.h"
 #include "egtb_gen.h"
 #include "eval_suicide.h"
+#include "fen.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
@@ -12,44 +14,12 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <sstream>
 
 #define MAX 10000
 
 using std::list;
 using std::string;
-
-constexpr int piece_primes[] = {
-  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
-};
-
-int ComputeBoardDescriptionId(const Board& board) {
-  U64 bitboard = board.BitBoard();
-  int value = 1;
-  while (bitboard) {
-    const int lsb_index = Lsb1(bitboard);
-    value *= piece_primes[PieceIndex(board.PieceAt(lsb_index))];
-    bitboard ^= (1ULL << lsb_index);
-  }
-  return value;
-}
-
-U64 ComputeEGTBIndex(const Board& board) {
-  U64 index = 0, half_space = 1;
-  int num_pieces = 0;
-  for (Piece piece = -PAWN; piece <= PAWN; ++piece) {
-    if (piece == NULLPIECE) continue;
-    U64 piece_bitboard = board.BitBoard(piece);
-    while (piece_bitboard) {
-      const int lsb_index = Lsb1(piece_bitboard);
-      index = 64 * index + lsb_index;
-      half_space *= 64;
-      ++num_pieces;
-      piece_bitboard ^= (1ULL << lsb_index);
-    }
-  }
-  index = SideIndex(board.SideToMove()) * half_space + index;
-  return index;
-}
 
 EGTBElement* EGTBStore::Get(const Board& board) {
   if (board.EnpassantTarget() != -1) return nullptr;
@@ -85,23 +55,26 @@ void EGTBStore::MergeFrom(EGTBStore store) {
   }
 }
 
-void EGTBStore::Write(std::ofstream& ofs) {
+void EGTBStore::Write() {
   for (const auto& elem : store_) {
+    std::stringstream ss;
+    ss << elem.first;
+    const string& filename = ss.str() + ".egtb";
+    std::ofstream ofs(filename, std::ofstream::binary);
     for (const auto& elem2 : store_[elem.first]) {
-      string s = elem2.second.next_move.str();
-      if (s == "--") {
-        s = "LOST";
-      }
-      ofs << elem2.second.fen << '|' << s << '|' << elem2.second.moves_to_end << '|';
-      if (elem2.second.winner == Side::WHITE) {
-        ofs << 'W';
-      } else if (elem2.second.winner == Side::BLACK) {
-        ofs << 'B';
-      } else {
-        ofs << 'N';
-      }
-      ofs << std::endl;
+      EGTBIndexEntry entry;
+      entry.next_move = elem2.second.next_move;
+      entry.moves_to_end = elem2.second.moves_to_end;
+      const Side playing_side = FEN::PlayerColor(elem2.second.fen);
+      entry.result = (playing_side == elem2.second.winner)
+          ? 1
+          : ((playing_side == OppositeSide(elem2.second.winner))
+              ? -1 : 0);
+      U64 index = elem2.first;
+      ofs.seekp(index * sizeof(EGTBIndexEntry), std::ios_base::beg);
+      ofs.write(reinterpret_cast<char*>(&entry), sizeof(EGTBIndexEntry));
     }
+    ofs.close();
   }
 }
 

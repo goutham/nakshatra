@@ -6,6 +6,39 @@
 #include <iostream>
 #include <string>
 
+constexpr int piece_primes[] = {
+  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+};
+
+int ComputeBoardDescriptionId(const Board& board) {
+  U64 bitboard = board.BitBoard();
+  int value = 1;
+  while (bitboard) {
+    const int lsb_index = Lsb1(bitboard);
+    value *= piece_primes[PieceIndex(board.PieceAt(lsb_index))];
+    bitboard ^= (1ULL << lsb_index);
+  }
+  return value;
+}
+
+U64 ComputeEGTBIndex(const Board& board) {
+  U64 index = 0, half_space = 1;
+  int num_pieces = 0;
+  for (Piece piece = -PAWN; piece <= PAWN; ++piece) {
+    if (piece == NULLPIECE) continue;
+    U64 piece_bitboard = board.BitBoard(piece);
+    while (piece_bitboard) {
+      const int lsb_index = Lsb1(piece_bitboard);
+      index = 64 * index + lsb_index;
+      half_space *= 64;
+      ++num_pieces;
+      piece_bitboard ^= (1ULL << lsb_index);
+    }
+  }
+  index = SideIndex(board.SideToMove()) * half_space + index;
+  return index;
+}
+
 int64_t GetIndex_1_1(const Board& board) {
   const Side cur_side = board.SideToMove();
   const Side opp_side = OppositeSide(cur_side);

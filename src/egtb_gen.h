@@ -31,7 +31,7 @@ class EGTBStore {
     return store_;
   }
 
-  void Write(std::ofstream& ofs);
+  void Write();
 
  private:
   std::unordered_map<int, std::unordered_map<uint64_t, EGTBElement>> store_;
