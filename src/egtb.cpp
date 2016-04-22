@@ -39,29 +39,6 @@ U64 ComputeEGTBIndex(const Board& board) {
   return index;
 }
 
-int64_t GetIndex_1_1(const Board& board) {
-  const Side cur_side = board.SideToMove();
-  const Side opp_side = OppositeSide(cur_side);
-  const int cur_piece_index = log2U(board.BitBoard(cur_side));
-  const int opp_piece_index = log2U(board.BitBoard(opp_side));
-  Piece cur_piece = board.PieceAt(cur_piece_index);
-  Piece opp_piece = board.PieceAt(opp_piece_index);
-  if (cur_piece == -PAWN) {
-    cur_piece = 7;
-  } else {
-    cur_piece = PieceType(cur_piece);
-  }
-  if (opp_piece == -PAWN) {
-    opp_piece = 7;
-  } else {
-    opp_piece = PieceType(opp_piece);
-  }
-  return opp_piece_index +
-         64 * opp_piece +
-         8 * 64 * cur_piece_index +
-         8 * 64 * 64 * cur_piece;
-}
-
 int EGTBResult(const EGTBIndexEntry& entry) {
   if (entry.result == 1) {
     return WIN;
@@ -103,11 +80,6 @@ void EGTB::Initialize() {
     ifs.close();
   }
   initialized_ = true;
-}
-
-int64_t EGTB::GetIndex() {
-  assert(initialized_);
-  return ::GetIndex_1_1(board_);
 }
 
 const EGTBIndexEntry* EGTB::Lookup() {

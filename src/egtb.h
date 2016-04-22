@@ -23,7 +23,6 @@ class EGTB {
        const Board& board);
   virtual ~EGTB() {}
   void Initialize();
-  int64_t GetIndex();
 
   const EGTBIndexEntry* Lookup();
 
@@ -38,7 +37,6 @@ class EGTB {
   uint64_t egtb_misses_;
 };
 
-int64_t GetIndex_1_1(const Board& board);
 void PrintEGTBIndexEntry(const EGTBIndexEntry& entry);
 int EGTBResult(const EGTBIndexEntry& entry);
 
