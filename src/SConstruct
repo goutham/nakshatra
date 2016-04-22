@@ -23,7 +23,6 @@ nakshatra_sources = Split("""
 """)
 egtb_sources = Split("""
     egtb_gen.cpp
-    egtb_util.cpp
 """)
 test_sources = Glob('tests/*_test.cpp')
 
