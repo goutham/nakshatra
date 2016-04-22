@@ -58,10 +58,10 @@ movegen_perf = env.Program(target = 'movegen_perf',
                                     obj_nakshatra +
                                     obj_common)
 
-for egtb_file in ['egtb_gen_main.cpp', 'egtb_validator.cpp',
-                  'egtb_player.cpp', 'egtb_index_gen.cpp']:
-  env.Program(target = egtb_file[:-4],  # strip '.cpp'
-              source = [egtb_file] + obj_egtb + obj_common)
+egtb_gen_main =  env.Program(target = 'egtb_gen_main',
+                             source = ['egtb_gen_main.cpp'] +
+                                      obj_egtb +
+                                      obj_common)
 
 unit_tests = test_env.Program(target = 'unit_tests',
                               source = obj_tests +
