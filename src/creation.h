@@ -2,6 +2,7 @@
 #define CREATION_H
 
 #include "board.h"
+#include "common.h"
 #include "egtb.h"
 #include "eval.h"
 #include "eval_normal.h"
@@ -21,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <sys/stat.h>
+#include <vector>
 
 struct BuildOptions {
   BuildOptions()
@@ -213,16 +215,10 @@ class SuicidePlayerBuilder : public PlayerBuilder {
 
   void BuildEGTB() override {
     assert(board_ != nullptr);
-
-    // Optionally use egtb if the file is present.
-    struct stat buffer;
-    if (stat("2p.bin.egtb", &buffer) == 0) {
-      egtb_.reset(new EGTB("2p.bin.egtb", *board_.get()));
-      egtb_->Initialize();
-      std::cout << "# EGTB enabled" << std::endl;
-    } else {
-      std::cout << "# No EGTB" << std::endl;
-    }
+    std::vector<std::string> egtb_filenames;
+    assert(GlobFiles("egtb/*.egtb", &egtb_filenames));
+    egtb_.reset(new EGTB(egtb_filenames, *board_.get()));
+    egtb_->Initialize();
   }
 
   void BuildEvaluator() override {

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 scons
+mkdir egtb
 ./egtb_gen_main
 ./egtb_index_gen
 ./unit_tests

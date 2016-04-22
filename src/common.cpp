@@ -1,4 +1,5 @@
 #include "common.h"
+#include "glob.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -8,6 +9,7 @@
 #include <sstream>
 
 using std::string;
+using std::vector;
 
 std::vector<string> SplitString(const string& s, char delim) {
   std::vector<string> vec;
@@ -66,4 +68,17 @@ unsigned PopCount(U64 x) {
     x &= (x - 1);
   }
   return count;
+}
+
+bool GlobFiles(const string& regex, vector<string>* filenames) {
+  glob_t globbuf;
+  int err = glob(regex.c_str(), 0, NULL, &globbuf);
+  if (err != 0) {
+    return false;
+  }
+  for (size_t i = 0; i < globbuf.gl_pathc; ++i) {
+    filenames->push_back(globbuf.gl_pathv[i]);
+  }
+  globfree(&globbuf);
+  return true;
 }

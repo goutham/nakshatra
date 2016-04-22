@@ -98,5 +98,6 @@ constexpr U64 SetBit(int row, int col) {
 std::vector<std::string> SplitString(const std::string& s, char delim);
 int StringToInt(const std::string& s);
 std::string LongToString(long l);
+bool GlobFiles(const std::string& regex, std::vector<std::string>* filenames);
 
 #endif

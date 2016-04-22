@@ -20,7 +20,9 @@
 int main(int argc, const char** argv) {
   Board board(Variant::SUICIDE);
   MoveGeneratorSuicide movegen(board);
-  EGTB egtb("2p.bin.egtb", board);
+  std::vector<std::string> egtb_filenames;
+  assert(GlobFiles("egtb/*.egtb", &egtb_filenames));
+  EGTB egtb(egtb_filenames, board);
   egtb.Initialize();
   EvalSuicide eval(&board, &movegen, &egtb);
   PNSParams pns_params;

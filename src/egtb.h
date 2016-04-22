@@ -5,6 +5,8 @@
 #include "move.h"
 
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 struct EGTBIndexEntry {
   uint16_t moves_to_end;
@@ -17,9 +19,9 @@ struct EGTBIndexEntry {
 
 class EGTB {
  public:
-  EGTB(const std::string& egtb_file,
+  EGTB(const std::vector<std::string>& egtb_files,
        const Board& board);
-  virtual ~EGTB();
+  virtual ~EGTB() {}
   void Initialize();
   int64_t GetIndex();
 
@@ -28,11 +30,10 @@ class EGTB {
   void LogStats();
 
  private:
-  const std::string egtb_file_;
+  const std::vector<std::string> egtb_files_;
   const Board& board_;
   bool initialized_;
-  EGTBIndexEntry* egtb_index_;
-  int64_t num_entries_;
+  std::unordered_map<int, std::vector<EGTBIndexEntry>> egtb_index_;
   uint64_t egtb_hits_;
   uint64_t egtb_misses_;
 };

@@ -59,7 +59,7 @@ void EGTBStore::Write() {
   for (const auto& elem : store_) {
     std::stringstream ss;
     ss << elem.first;
-    const string& filename = ss.str() + ".egtb";
+    const string& filename = "egtb/" + ss.str() + ".egtb";
     std::ofstream ofs(filename, std::ofstream::binary);
     for (const auto& elem2 : store_[elem.first]) {
       EGTBIndexEntry entry;

@@ -72,33 +72,36 @@ int EGTBResult(const EGTBIndexEntry& entry) {
   }
 }
 
-EGTB::EGTB(const std::string& egtb_file,
+EGTB::EGTB(const std::vector<std::string>& egtb_files,
            const Board& board)
-    : egtb_file_(egtb_file),
+    : egtb_files_(egtb_files),
       board_(board),
       initialized_(false),
-      egtb_index_(nullptr),
-      num_entries_(0LL),
       egtb_hits_(0ULL),
       egtb_misses_(0ULL) {}
 
-EGTB::~EGTB() {
-  if (egtb_index_) {
-    delete egtb_index_;
-  }
-}
-
 void EGTB::Initialize() {
-  std::ifstream ifs(egtb_file_.c_str(), std::ifstream::binary);
-  ifs.seekg(0, std::ios_base::end);
-  int64_t file_size = ifs.tellg();
-  std::cout << "# Size of " << egtb_file_ << ": " << file_size << std::endl;
-  num_entries_ = file_size / sizeof(EGTBIndexEntry);
-  std::cout << "# Num EGTB entries: " << num_entries_ << std::endl;
-  ifs.seekg(0, std::ios_base::beg);
-  egtb_index_ = new EGTBIndexEntry[num_entries_];
-  ifs.read(reinterpret_cast<char*>(egtb_index_), file_size);
-  ifs.close();
+  for (const std::string& egtb_file : egtb_files_) {
+    const auto parts = SplitString(egtb_file, '/');
+    int board_desc_id = StringToInt(
+        SplitString(parts.at(parts.size() - 1), '.').at(0));
+    assert(board_desc_id != 0);
+    std::ifstream ifs(egtb_file, std::ifstream::binary);
+    ifs.seekg(0, std::ios_base::end);
+    const int64_t file_size = ifs.tellg();
+    const int num_entries = file_size / sizeof(EGTBIndexEntry);
+    assert(egtb_index_.find(board_desc_id) == egtb_index_.end());
+    auto& v = egtb_index_[board_desc_id];
+    v.resize(num_entries);
+    ifs.seekg(0, std::ios_base::beg);
+    EGTBIndexEntry* tmp = new EGTBIndexEntry[num_entries];
+    ifs.read(reinterpret_cast<char*>(tmp), file_size);
+    for (int i = 0; i < num_entries; ++i) {
+      v[i] = tmp[i];
+    }
+    delete[] tmp;
+    ifs.close();
+  }
   initialized_ = true;
 }
 
@@ -109,19 +112,22 @@ int64_t EGTB::GetIndex() {
 
 const EGTBIndexEntry* EGTB::Lookup() {
   assert(initialized_);
-  int64_t entry_index = GetIndex();
-  // This can happen when a query is made for an index beyond
-  // the range stored in the EGTB.
-  if (entry_index >= num_entries_) {
+  int board_desc_id = ComputeBoardDescriptionId(board_);
+  auto v = egtb_index_.find(board_desc_id);
+  if (v == egtb_index_.end()) {
     return nullptr;
   }
-  EGTBIndexEntry* entry = egtb_index_ + entry_index;
-  if (!entry->next_move.is_valid()) {
+  int64_t index = ComputeEGTBIndex(board_);
+  if (index >= v->second.size()) {
+    return nullptr;
+  }
+  EGTBIndexEntry& entry = v->second.at(index);
+  if (!entry.next_move.is_valid()) {
     ++egtb_misses_;
     return nullptr;
   }
   ++egtb_hits_;
-  return entry;
+  return &entry;
 }
 
 void EGTB::LogStats() {
