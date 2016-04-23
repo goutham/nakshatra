@@ -79,7 +79,7 @@ void CreateTwoPiecesEGTB(Side winning_side,
                        std::make_move_iterator(two_piece_positions.begin()),
                        std::make_move_iterator(two_piece_positions.end()));
 
-  EGTBGenerate(all_positions, winning_side, store);
+  EGTBGenerate(all_positions, store);
 }
 
 

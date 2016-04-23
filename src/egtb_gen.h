@@ -3,6 +3,7 @@
 
 #include "board.h"
 #include "common.h"
+#include "egtb.h"
 #include "piece.h"
 
 #include <cstdint>
@@ -10,23 +11,16 @@
 #include <string>
 #include <unordered_map>
 
-struct EGTBElement {
-  std::string fen;
-  int moves_to_end;
-  Move next_move;
-  Side winner;
-};
-
 class EGTBStore {
  public:
-  EGTBElement* Get(const Board& board);
+  EGTBIndexEntry* Get(const Board& board);
 
   void Put(const Board& board, int moves_to_end, Move next_move,
-           Side winner);
+           int8_t result);
 
   void MergeFrom(EGTBStore store);
 
-  const std::unordered_map<int, std::unordered_map<uint64_t, EGTBElement>>&
+  const std::unordered_map<int, std::unordered_map<uint64_t, EGTBIndexEntry>>&
   GetMap() {
     return store_;
   }
@@ -34,10 +28,9 @@ class EGTBStore {
   void Write();
 
  private:
-  std::unordered_map<int, std::unordered_map<uint64_t, EGTBElement>> store_;
+  std::unordered_map<int, std::unordered_map<uint64_t, EGTBIndexEntry>> store_;
 };
 
-void EGTBGenerate(std::list<std::string> positions,
-                  Side winning_side, EGTBStore* store);
+void EGTBGenerate(std::list<std::string> positions, EGTBStore* store);
 
 #endif
