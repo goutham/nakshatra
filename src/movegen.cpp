@@ -9,6 +9,7 @@
 #include <array>
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 

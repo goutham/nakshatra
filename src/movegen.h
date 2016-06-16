@@ -6,8 +6,6 @@
 #include "move_array.h"
 #include "piece.h"
 
-#include <stdexcept>
-
 
 // Interface implemented by the move generators of all variants.
 class MoveGenerator {
