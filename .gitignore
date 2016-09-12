@@ -1,2 +1,5 @@
+/src/*.a
 /src/*.o
+/src/egtb
+/src/gtest
 /src/tests/*.o

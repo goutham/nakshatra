@@ -1,30 +1,34 @@
-common_sources = Split("""
-    board.cpp
-    common.cpp
-    egtb.cpp
-    eval_suicide.cpp
-    fen.cpp
-    movegen.cpp
-    attacks.cpp
-    pawns.cpp
-    transpos.cpp
-    zobrist.cpp
-""")
-nakshatra_sources = Split("""
-    book.cpp
-    eval_normal.cpp
-    executor.cpp
-    iterative_deepener.cpp
-    move_order.cpp
-    player.cpp
-    pn_search.cpp
-    san.cpp
-    search_algorithm.cpp
-""")
-egtb_sources = Split("""
-    egtb_gen.cpp
-""")
-test_sources = Glob('tests/*_test.cpp')
+common_sources = [
+  'attacks.cpp',
+  'board.cpp',
+  'common.cpp',
+  'egtb.cpp',
+  'eval_suicide.cpp',
+  'fen.cpp',
+  'movegen.cpp',
+  'pawns.cpp',
+  'transpos.cpp',
+  'zobrist.cpp',
+]
+
+nakshatra_sources = [
+  'book.cpp',
+  'eval_normal.cpp',
+  'executor.cpp',
+  'iterative_deepener.cpp',
+  'move_order.cpp',
+  'player.cpp',
+  'pn_search.cpp',
+  'san.cpp',
+  'search_algorithm.cpp',
+]
+
+egtb_sources = ['egtb_gen.cpp',]
+
+test_sources = Glob('tests/*_test.cpp') + [
+  'gtest/src/gtest-all.cc',
+  'gtest/src/gtest_main.cc',
+]
 
 # Build environments.
 env = Environment(CCFLAGS = '-std=c++0x -O3 -flto',
@@ -32,8 +36,8 @@ env = Environment(CCFLAGS = '-std=c++0x -O3 -flto',
                   LINKFLAGS = '-O3 -flto',
                   LIBS = ['rt'])
 test_env = Environment(CCFLAGS = '-std=c++0x',
-                       CPPPATH = '.',
-                       LIBS = ['gtest', 'gtest_main', 'pthread', 'rt'])
+                       CPPPATH = ['.', 'gtest/include', 'gtest'],
+                       LIBS = ['pthread', 'rt'])
 
 # Build object files.
 obj_common = env.Object(common_sources)
