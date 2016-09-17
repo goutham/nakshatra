@@ -57,6 +57,9 @@ struct PNSParams {
   double pn2_max_nodes_fraction_a = 0.001;
   double pn2_max_nodes_fraction_b = 0.001;
 
+  // If true, does not print results of PNS.
+  bool quiet = false;
+
   // Prints progress (in percentage of nodes searched out of max_nodes) after
   // every 'n' secs given by this variable if > 0.
   int log_progress = -1;

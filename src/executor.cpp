@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 using std::string;
@@ -121,12 +122,57 @@ void Executor::ReBuildPlayer() {
       player_builder_.reset(new SuicidePlayerBuilder());
       break;
   }
-  assert(player_builder_.get() != NULL);
+  assert(player_builder_.get() != nullptr);
   PlayerBuilderDirector director(player_builder_.get());
   BuildOptions options;
   options.init_fen = init_fen_;
   player_ = director.Build(options);
-  assert(player_ != NULL);
+  assert(player_ != nullptr);
+}
+
+void Executor::ReBuildPonderer() {
+  switch (variant_) {
+    case Variant::NORMAL:
+      ponderer_builder_.reset(new NormalPlayerBuilder());
+      break;
+    case Variant::SUICIDE:
+      ponderer_builder_.reset(new SuicidePlayerBuilder(false));
+      break;
+  }
+  assert(ponderer_builder_.get() != nullptr);
+  if (!player_) {
+    ReBuildPlayer();
+  }
+  PlayerBuilderDirector director(ponderer_builder_.get());
+  BuildOptions options;
+  options.init_fen = player_->GetBoard()->ParseIntoFEN();
+  options.transpos = player_builder_->GetTranspos();
+  options.build_book = false;
+  ponderer_ = director.Build(options);
+  assert(ponderer_ != nullptr);
+}
+
+void Executor::StartPondering() {
+  // If already pondering, then no-op.
+  if (pondering_thread_.get() != nullptr) {
+    return;
+  }
+  ReBuildPonderer();
+  pondering_thread_.reset(new std::thread([this] {
+    SearchParams ponder_params;
+    ponder_params.thinking_output = false;
+    this->ponderer_->Search(ponder_params, 100000, 100000);
+  }));
+}
+
+void Executor::StopPondering() {
+  // If already not pondering, then no-op.
+  if (pondering_thread_.get() == nullptr) {
+    return;
+  }
+  ponderer_builder_->GetTimer()->Stop();
+  pondering_thread_->join();
+  pondering_thread_.reset(nullptr);
 }
 
 bool Executor::Execute(const string& command_str,
@@ -135,6 +181,7 @@ bool Executor::Execute(const string& command_str,
   switch (command.cmd_name) {
     case NEW:
       {
+        StopPondering();
         variant_ = Variant::NORMAL;
         force_mode_ = false;
         search_params_.search_depth = MAX_DEPTH;
@@ -144,6 +191,7 @@ bool Executor::Execute(const string& command_str,
 
     case VARIANT:
       {
+        StopPondering();
         force_mode_ = false;
         variant_ = Variant::NORMAL;
         if (command.arguments.at(0) == "suicide" ||
@@ -179,6 +227,7 @@ bool Executor::Execute(const string& command_str,
 
     case GO:
       {
+        StopPondering();
         if (MatchResult(response)) {
           break;
         }
@@ -188,6 +237,7 @@ bool Executor::Execute(const string& command_str,
         player_->GetBoard()->MakeMove(cmove);
         OutputFEN();
         response->push_back("move " + cmove.str());
+        StartPondering();
       }
       break;
 
@@ -201,6 +251,7 @@ bool Executor::Execute(const string& command_str,
 
     case USERMOVE:
       {
+        StopPondering();
         Move move(command.arguments.at(0));
         if (force_mode_) {
           std::cout << "# Forced: " << player_->GetBoard()->ParseIntoFEN() << "|"
@@ -227,10 +278,12 @@ bool Executor::Execute(const string& command_str,
         if (MatchResult(response)) {
           break;
         }
+        StartPondering();
       }
       break;
 
     case FORCE:
+      StopPondering();
       force_mode_ = true;
       break;
 
@@ -289,6 +342,7 @@ bool Executor::Execute(const string& command_str,
       break;
   }
   if (quit_ && player_builder_.get()) {
+    StopPondering();
     player_builder_->GetTranspos()->LogStats();
     if (player_builder_->GetEGTB()) {
       player_builder_->GetEGTB()->LogStats();

@@ -3,6 +3,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -17,6 +18,7 @@
 #define UNKNOWN -1
 
 typedef uint64_t U64;
+extern std::ostream nullstream;
 
 enum class Variant { NORMAL, SUICIDE };
 

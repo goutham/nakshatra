@@ -4,12 +4,15 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
 using std::string;
 using std::vector;
+
+std::ostream nullstream(0);
 
 std::vector<string> SplitString(const string& s, char delim) {
   std::vector<string> vec;

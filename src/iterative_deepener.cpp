@@ -21,14 +21,14 @@ void IterativeDeepener::Search(const IDSParams& ids_params,
                                Move* best_move,
                                int* best_move_score,
                                SearchStats* id_search_stats) {
+  std::ostream& out = ids_params.thinking_output ? std::cout : nullstream;
   ClearState();
 
   StopWatch stop_watch;
   stop_watch.Start();
 
   movegen_->GenerateMoves(&root_move_array_);
-  std::cout << "# Number of moves at root: " << root_move_array_.size()
-            << std::endl;
+  out << "# Number of moves at root: " << root_move_array_.size() << std::endl;
 
   // Caller provided move ordering and pruning takes priority over move orderer.
   if (ids_params.pruned_ordered_moves.size()) {
@@ -37,8 +37,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params,
     extensions_->move_orderer->Order(&root_move_array_);
   }
   assert(root_move_array_.size() > 0);
-  std::cout << "# Number of root moves being searched: "
-            << root_move_array_.size() << std::endl;
+  out << "# Number of root moves being searched: " << root_move_array_.size()
+      << std::endl;
 
   // If there is only one move to be made, make it without hesitation as search
   // won't yield anything new.
@@ -109,8 +109,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params,
     }
   }
   stop_watch.Stop();
-  std::cout << "# Time taken for ID search: " << stop_watch.ElapsedTime()
-       << " centis" << std::endl;
+  out << "# Time taken for ID search: " << stop_watch.ElapsedTime() << " centis"
+      << std::endl;
 }
 
 // Finds the best move by searching up to given max_depth. Stops and returns

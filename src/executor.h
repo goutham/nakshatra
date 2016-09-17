@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 class Player;
@@ -43,6 +44,10 @@ class Executor {
   bool MatchResult(std::vector<std::string>* response);
 
   void ReBuildPlayer();
+  void ReBuildPonderer();
+
+  void StartPondering();
+  void StopPondering();
 
   void MakeRandomMove(std::vector<std::string>* response);
 
@@ -52,8 +57,11 @@ class Executor {
   std::string name_;
 
   Player* player_;  // not owned.
+  Player* ponderer_;  // not owned.
   SearchParams search_params_;
   std::unique_ptr<PlayerBuilder> player_builder_;
+  std::unique_ptr<PlayerBuilder> ponderer_builder_;
+  std::unique_ptr<std::thread> pondering_thread_;
   Variant variant_;
   bool quit_ = false;
   bool force_mode_ = false;

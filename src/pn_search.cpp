@@ -61,14 +61,15 @@ void PNSearch::Search(const PNSParams& pns_params,
          return a.score < b.score;
        });
   // Print the ordered moves.
-  std::cout << "# Move, score, tree_size:" << std::endl;
-  for (const auto& move_stat : pns_result->ordered_moves) {
-    static std::map<int, std::string> result_map = {
-      {WIN, "WIN"}, {-WIN, "LOSS"}, {DRAW, "DRAW"}, {UNKNOWN, "UNKNOWN"}
-    };
-    std::cout << "# " << move_stat.move.str() << ", " << move_stat.score << ", "
-         << move_stat.tree_size << ", " << result_map.at(move_stat.result)
-         << std::endl;
+  if (!pns_params.quiet) {
+    std::cout << "# Move, score, tree_size:" << std::endl;
+    for (const auto& move_stat : pns_result->ordered_moves) {
+      static std::map<int, std::string> result_map = {
+          {WIN, "WIN"}, {-WIN, "LOSS"}, {DRAW, "DRAW"}, {UNKNOWN, "UNKNOWN"}};
+      std::cout << "# " << move_stat.move.str() << ", " << move_stat.score
+                << ", " << move_stat.tree_size << ", "
+                << result_map.at(move_stat.result) << std::endl;
+    }
   }
 }
 

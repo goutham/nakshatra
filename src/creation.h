@@ -25,9 +25,6 @@
 #include <vector>
 
 struct BuildOptions {
-  BuildOptions()
-      : transpos(nullptr) {}
-
   // Initial FEN to construct board with. If this is empty, use default
   // initialization for given variant.
   std::string init_fen;
@@ -35,8 +32,10 @@ struct BuildOptions {
   // Use this transposition table instead of building a new one. This is useful
   // during pondering where we need a new Player instance to ponder over a
   // different board position but reuse the existing transposition table. If
-  // this variable is NULL, a new transposition table is built.
-  TranspositionTable* transpos;
+  // this variable is nullptr, a new transposition table is built.
+  TranspositionTable* transpos = nullptr;
+
+  bool build_book = true;
 };
 
 class PlayerBuilder {
@@ -132,6 +131,10 @@ class PlayerBuilder {
     return transpos_.get();
   }
 
+  virtual Timer* GetTimer() const {
+    return timer_.get();
+  }
+
  protected:
   const std::map<std::string, std::string> config_map_;
   std::unique_ptr<Board> board_;
@@ -200,6 +203,9 @@ class NormalPlayerBuilder : public PlayerBuilder {
 
 class SuicidePlayerBuilder : public PlayerBuilder {
  public:
+  SuicidePlayerBuilder(const bool enable_pns = true)
+      : enable_pns_(enable_pns) {}
+
   void BuildBoard() override {
     board_.reset(new Board(Variant::SUICIDE));
   }
@@ -244,13 +250,15 @@ class SuicidePlayerBuilder : public PlayerBuilder {
         4  /* full depth moves */,
         2  /* reduction limit */,
         1  /* depth reduction factor */));
-    extensions_->pns_extension.pns_timer.reset(new Timer);
-    extensions_->pns_extension.pn_search.reset(
-        new PNSearch(board_.get(),
-                     movegen_.get(),
-                     eval_.get(),
-                     egtb_.get(),
-                     extensions_->pns_extension.pns_timer.get()));
+    if (enable_pns_) {
+      extensions_->pns_extension.pns_timer.reset(new Timer);
+      extensions_->pns_extension.pn_search.reset(
+          new PNSearch(board_.get(),
+                       movegen_.get(),
+                       eval_.get(),
+                       egtb_.get(),
+                       extensions_->pns_extension.pns_timer.get()));
+    }
   }
 
   void BuildPlayer() override {
@@ -267,6 +275,8 @@ class SuicidePlayerBuilder : public PlayerBuilder {
                              egtb_.get(),
                              extensions_.get()));
   }
+ private:
+  const bool enable_pns_;
 };
 
 class PlayerBuilderDirector {
@@ -280,7 +290,9 @@ class PlayerBuilderDirector {
     } else {
       player_builder_->BuildTranspositionTable();
     }
-    player_builder_->BuildBook();
+    if (options.build_book) {
+      player_builder_->BuildBook();
+    }
     if (options.init_fen.empty()) {
       player_builder_->BuildBoard();
     } else {

@@ -63,6 +63,7 @@ Player::Player(const Book* book,
 Move Player::Search(const SearchParams& search_params,
                     long time_centis,
                     long otime_centis) {
+  std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
   if (book_) {
     Move book_move = book_->GetBookMove(*board_);
     if (book_move.is_valid()) {
@@ -72,13 +73,13 @@ Move Player::Search(const SearchParams& search_params,
   if (egtb_ &&
       OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
       OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
-    std::cout << "# Num pieces <= 2, looking up EGTB..." << std::endl;
+    out << "# Num pieces <= 2, looking up EGTB..." << std::endl;
     const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
     if (egtb_entry) {
       PrintEGTBIndexEntry(*egtb_entry);
       return egtb_entry->next_move;
     } else {
-      std::cout << "# Num pieces <= 2, but EGTB missed!" << std::endl;
+      out << "# Num pieces <= 2, but EGTB missed!" << std::endl;
     }
   }
   // If the move is forced, just move.
@@ -107,42 +108,44 @@ Move Player::Search(const SearchParams& search_params,
     pn_stop_watch.Start();
 
     PNSParams pns_params;
+    pns_params.quiet = !search_params.thinking_output;
     pns_params.max_nodes = 10000000;
     PNSResult pns_result;
     pns_extension.pn_search->Search(pns_params, &pns_result);
     pn_stop_watch.Stop();
-    std::cout << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
-              << std::endl;
-    std::cout << "# PNS Stats: tree_size: " << pns_result.tree_size
-              << std::endl;
+    out << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
+        << std::endl;
 
-    PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);
-    std::cout << "# PNS best move: " << best_pns_move_stat.move.str()
-              << std::endl;
-    // If 100% time is used for PNS, return best move.
-    if (pns_extension.pns_time_for_move_percent >= 100) {
-      return best_pns_move_stat.move;
-    }
-    // If the best move is WON, return.
-    if (best_pns_move_stat.result == WIN) {
-      std::cout << "# PNS WIN!" << std::endl;
-      return best_pns_move_stat.move;
-    }
-    // If the best move is lost, let Negascout search find the best move.
-    if (best_pns_move_stat.result == -WIN) {
-      std::cout << "# PNS LOSS!" << std::endl;
-    } else {
-      // Include all non-LOSS moves.
-      for (const PNSResult::MoveStat& move_stat : pns_result.ordered_moves) {
-        if (move_stat.result == -WIN) break;
-        ids_params.pruned_ordered_moves.Add(move_stat.move);
+    if (pns_result.ordered_moves.size()) {
+      out << "# PNS Stats: tree_size: " << pns_result.tree_size << std::endl;
+      PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);
+      out << "# PNS best move: " << best_pns_move_stat.move.str() << std::endl;
+      // If 100% time is used for PNS, return best move.
+      if (pns_extension.pns_time_for_move_percent >= 100) {
+        return best_pns_move_stat.move;
       }
+      // If the best move is WON, return.
+      if (best_pns_move_stat.result == WIN) {
+        out << "# PNS WIN!" << std::endl;
+        return best_pns_move_stat.move;
+      }
+      // If the best move is lost, let Negascout search find the best move.
+      if (best_pns_move_stat.result == -WIN) {
+        out << "# PNS LOSS!" << std::endl;
+      } else {
+        // Include all non-LOSS moves.
+        for (const PNSResult::MoveStat& move_stat : pns_result.ordered_moves) {
+          if (move_stat.result == -WIN) break;
+          ids_params.pruned_ordered_moves.Add(move_stat.move);
+        }
+      }
+    } else {
+      out << "# No PNS moves.";
     }
 
     // Subtract time taken by PNSearch.
     time_for_move_centis -= static_cast<long>(pn_stop_watch.ElapsedTime());
-    std::cout << "# Time left: " << time_for_move_centis << " centis"
-              << std::endl;
+    out << "# Time left: " << time_for_move_centis << " centis" << std::endl;
   }
 
   timer_->Reset();
