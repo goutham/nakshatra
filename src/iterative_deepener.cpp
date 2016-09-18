@@ -30,6 +30,14 @@ void IterativeDeepener::Search(const IDSParams& ids_params,
   movegen_->GenerateMoves(&root_move_array_);
   out << "# Number of moves at root: " << root_move_array_.size() << std::endl;
 
+  // No moves to make. Just return by setting invalid move. This can happen if
+  // Search() is called after game ends.
+  if (root_move_array_.size() == 0) {
+    *best_move = Move();
+    *best_move_score = INF;
+    return;
+  }
+
   // Caller provided move ordering and pruning takes priority over move orderer.
   if (ids_params.pruned_ordered_moves.size()) {
     root_move_array_ = ids_params.pruned_ordered_moves;

@@ -28,6 +28,8 @@ class Executor {
         otime_centis_(10 * 60 * 100),
         init_fen_(init_fen) {}
 
+  ~Executor() { StopPondering(); }
+
   // Executes command and returns true on success. The result string is set or
   // empty depending on the protocol. If error, returns false and result string
   // is set to error message.
