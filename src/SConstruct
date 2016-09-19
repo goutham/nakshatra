@@ -1,73 +1,110 @@
-common_sources = [
-  'attacks.cpp',
-  'board.cpp',
-  'common.cpp',
-  'egtb.cpp',
-  'eval_suicide.cpp',
-  'fen.cpp',
-  'movegen.cpp',
-  'pawns.cpp',
-  'transpos.cpp',
-  'zobrist.cpp',
-]
-
-nakshatra_sources = [
-  'book.cpp',
-  'eval_normal.cpp',
-  'executor.cpp',
-  'iterative_deepener.cpp',
-  'move_order.cpp',
-  'player.cpp',
-  'pn_search.cpp',
-  'san.cpp',
-  'search_algorithm.cpp',
-]
-
-egtb_sources = ['egtb_gen.cpp',]
-
-test_sources = Glob('tests/*_test.cpp') + [
-  'gtest/src/gtest-all.cc',
-  'gtest/src/gtest_main.cc',
-]
-
 # Build environments.
-env = Environment(CCFLAGS = '-std=c++0x -O3 -flto',
-                  CPPPATH = '.',
-                  LINKFLAGS = '-O3 -flto',
-                  LIBS = ['rt'])
-test_env = Environment(CCFLAGS = '-std=c++0x',
-                       CPPPATH = ['.', 'gtest/include', 'gtest'],
-                       LIBS = ['pthread', 'rt'])
+env = Environment(
+    CCFLAGS = ['-std=c++0x', '-O3'],
+    CPPPATH = '.')
 
-# Build object files.
-obj_common = env.Object(common_sources)
-obj_nakshatra = env.Object(nakshatra_sources)
-obj_egtb = env.Object(egtb_sources)
-obj_tests = test_env.Object(test_sources)
+common = env.Library(
+    target = 'common',
+    source = ['common.cpp',
+              'fen.cpp',
+              'san.cpp'])
 
+board = env.Library(
+    target = 'board',
+    source = ['board.cpp',
+              'zobrist.cpp'])
+
+movegen = env.Library(
+    target = 'movegen',
+    source = ['movegen.cpp',
+              'attacks.cpp'])
+
+evaluator = env.Library(
+    target = 'evaluator',
+    source = ['eval_suicide.cpp',
+              'eval_normal.cpp',
+              'egtb.cpp',
+              'pawns.cpp'])
+
+player = env.Library(
+    target = 'player',
+    source = ['player.cpp',
+              'book.cpp',
+              'pn_search.cpp',
+              'iterative_deepener.cpp',
+              'move_order.cpp',
+              'search_algorithm.cpp',
+              'transpos.cpp'])
+
+executor = env.Library(
+    target = 'executor',
+    source = ['executor.cpp'])
+                                  
+egtb_gen = env.Library(
+    target = 'egtb_gen',
+    source = ['egtb_gen.cpp'])
+
+#
 # Build binaries.
-nakshatra = env.Program(target = 'nakshatra',
-                        source = ['nakshatra.cpp'] +
-                                 obj_nakshatra +
-                                 obj_common)
+#
 
-pns_solver = env.Program(target = 'pns_solver',
-                         source = ['pns_solver.cpp'] +
-                                  obj_nakshatra +
-                                  obj_common)
+nakshatra = env.Program(
+    target = 'nakshatra',
+    source = ['nakshatra.cpp'],
+    LIBS = [executor,
+            player,
+            evaluator,
+            movegen,
+            board,
+            common, 
+            'pthread',
+            'rt'],
+    LIBPATH = '.')
 
-movegen_perf = env.Program(target = 'movegen_perf',
-                           source = ['movegen_perf.cpp'] +
-                                    obj_nakshatra +
-                                    obj_common)
+pns_solver = env.Program(
+    target = 'pns_solver',
+    source = ['pns_solver.cpp'],
+    LIBS = [player,
+            board,
+            common,
+            movegen,
+            evaluator],
+    LIBPATH = '.')
 
-egtb_gen_main =  env.Program(target = 'egtb_gen_main',
-                             source = ['egtb_gen_main.cpp'] +
-                                      obj_egtb +
-                                      obj_common)
+movegen_perf = env.Program(
+    target = 'movegen_perf',
+    source = ['movegen_perf.cpp'],
+    LIBS = [movegen,
+            board,
+            common],
+    LIBPATH = '.')
 
-unit_tests = test_env.Program(target = 'unit_tests',
-                              source = obj_tests +
-                                       obj_nakshatra +
-                                       obj_common +
-                                       obj_egtb)
+egtb_gen_main = env.Program(
+    target = 'egtb_gen_main',
+    source = ['egtb_gen_main.cpp'],
+    LIBS = [egtb_gen,
+            evaluator,
+            movegen,
+            board,
+            common],
+    LIBPATH = '.')
+
+test_env = Environment(
+    CCFLAGS = '-std=c++0x',
+    CPPPATH = ['.', 'gtest/include', 'gtest'])
+
+unit_tests = test_env.Program(
+    target = 'unit_tests',
+    source = Glob('tests/*_test.cpp') + [
+                 'gtest/src/gtest-all.cc',
+                 'gtest/src/gtest_main.cc'],
+    LIBS = [egtb_gen,
+            executor,
+            player,
+            evaluator,
+            movegen,
+            board,
+            common,
+            'pthread',
+            'rt'],
+    LIBPATH = '.')
