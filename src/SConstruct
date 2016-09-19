@@ -76,10 +76,10 @@ pns_solver = env.Program(
     target = 'pns_solver',
     source = ['pns_solver.cpp'],
     LIBS = [player,
-            board,
-            common,
+            evaluator,
             movegen,
-            evaluator],
+            board,
+            common],
     LIBPATH = '.')
 
 movegen_perf = env.Program(
