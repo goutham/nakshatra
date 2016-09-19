@@ -1,13 +1,23 @@
-# Build environments.
+#
+# Build environments
+#
+
 env = Environment(
     CCFLAGS = ['-std=c++0x', '-O3'],
     CPPPATH = '.')
 
+test_env = Environment(
+    CCFLAGS = '-std=c++0x',
+    CPPPATH = ['.', 'gtest/include', 'gtest'])
+
+#
+# Libraries
+#
+
 common = env.Library(
     target = 'common',
     source = ['common.cpp',
-              'fen.cpp',
-              'san.cpp'])
+              'fen.cpp'])
 
 board = env.Library(
     target = 'board',
@@ -17,7 +27,8 @@ board = env.Library(
 movegen = env.Library(
     target = 'movegen',
     source = ['movegen.cpp',
-              'attacks.cpp'])
+              'attacks.cpp',
+              'san.cpp'])
 
 evaluator = env.Library(
     target = 'evaluator',
@@ -45,7 +56,7 @@ egtb_gen = env.Library(
     source = ['egtb_gen.cpp'])
 
 #
-# Build binaries.
+# Executables
 #
 
 nakshatra = env.Program(
@@ -89,9 +100,9 @@ egtb_gen_main = env.Program(
             common],
     LIBPATH = '.')
 
-test_env = Environment(
-    CCFLAGS = '-std=c++0x',
-    CPPPATH = ['.', 'gtest/include', 'gtest'])
+#
+# Tests
+#
 
 unit_tests = test_env.Program(
     target = 'unit_tests',
