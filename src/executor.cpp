@@ -159,9 +159,18 @@ void Executor::StartPondering() {
   }
   ReBuildPonderer();
   pondering_thread_.reset(new std::thread([this] {
-    SearchParams ponder_params;
-    ponder_params.thinking_output = false;
-    this->ponderer_->Search(ponder_params, 100000, 100000);
+    // Ponder until stopped or no more moves can be made.
+    while (true) {
+      SearchParams ponder_params;
+      ponder_params.thinking_output = false;
+      const Move move = this->ponderer_->Search(ponder_params, 100000, 100000);
+      if (move.is_valid() &&
+          !this->ponderer_builder_->GetTimer()->timer_expired()) {
+        this->ponderer_->GetBoard()->MakeMove(move);
+      } else {
+        break;
+      }
+    }
   }));
 }
 
