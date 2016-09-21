@@ -37,7 +37,7 @@ void MobilityOrderer::Order(MoveArray* move_array) {
 }
 
 void CapturesFirstOrderer::Order(MoveArray* move_array) {
-  const int num_moves = move_array->size();
+  const size_t num_moves = move_array->size();
   struct CapturesDiff {
     Move move;
     int diff;
@@ -49,7 +49,7 @@ void CapturesFirstOrderer::Order(MoveArray* move_array) {
   CapturesDiff captures_diff[256];
   int j = 0;
   MoveArray non_captures;
-  for (int i = 0; i < num_moves; ++i) {
+  for (size_t i = 0; i < num_moves; ++i) {
     const Move& move = move_array->get(i);
     if (board_->PieceAt(move.to_index()) != NULLPIECE) {
       captures_diff[j] = {move, diff(move)};
@@ -65,7 +65,7 @@ void CapturesFirstOrderer::Order(MoveArray* move_array) {
   for (int i = 0; i < j; ++i) {
     move_array->Add(captures_diff[i].move);
   }
-  for (int i = 0; i < non_captures.size(); ++i) {
+  for (size_t i = 0; i < non_captures.size(); ++i) {
     move_array->Add(non_captures.get(i));
   }
   assert(num_moves == move_array->size());

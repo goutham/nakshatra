@@ -89,7 +89,7 @@ const EGTBIndexEntry* EGTB::Lookup() {
   if (v == egtb_index_.end()) {
     return nullptr;
   }
-  int64_t index = ComputeEGTBIndex(board_);
+  U64 index = ComputeEGTBIndex(board_);
   if (index >= v->second.size()) {
     return nullptr;
   }

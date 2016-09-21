@@ -122,7 +122,7 @@ void Board::MakeMove(const Move& move) {
         break;
 
       default:
-        throw std::runtime_error("Unknown side");
+        throw std::runtime_error("Invalid side.");
     }
 
     const unsigned char castling_bits = castling_bit_king | castling_bit_queen;
@@ -181,6 +181,9 @@ void Board::MakeMove(const Move& move) {
             top->castle &= ~0x4U;
           }
           break;
+
+        default:
+          throw std::runtime_error("Unknown side to move");
       }
     }
   }
@@ -202,7 +205,6 @@ bool Board::UnmakeLastMove() {
   const int to_index = move.to_index();
   const int from_row = ROW(from_index);
   const int from_col = COL(from_index);
-  const int to_row = ROW(to_index);
   const int to_col = COL(to_index);
   const Piece dest_piece = board_array_[to_index];
 

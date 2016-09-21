@@ -120,7 +120,7 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
       int best_losing = -1;
       Move best_winning_move;
       Move best_losing_move;
-      for (int i = 0; i < movelist.size(); ++i) {
+      for (size_t i = 0; i < movelist.size(); ++i) {
         const Move& move = movelist.get(i);
         board.MakeMove(move);
         EGTBIndexEntry* e = store->Get(board);
@@ -148,7 +148,7 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
         temp_store.Put(board, best_winning, best_winning_move, 1);
         iter = all_pos_list.erase(iter);
         deleted = true;
-      } else if (count_losing == movelist.size()) {
+      } else if (count_losing == int(movelist.size())) {
         if (best_losing > superbest) superbest = best_losing;
         temp_store.Put(board, best_losing, best_losing_move, -1);
         iter = all_pos_list.erase(iter);

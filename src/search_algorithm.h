@@ -31,8 +31,8 @@ class SearchAlgorithm {
  private:
   Board* board_;
   MoveGenerator* movegen_;
-  Evaluator* evaluator_;
   Timer* timer_;
+  Evaluator* evaluator_;
   TranspositionTable* transpos_;
   Extensions* extensions_;
 };

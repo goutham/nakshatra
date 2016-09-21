@@ -85,7 +85,7 @@ Command Interpret(const std::string& cmd) {
   } else {
     command.cmd_name = cmd_map_kv->second;
   }
-  for (int i = 1; i < parts.size(); ++i) {
+  for (size_t i = 1; i < parts.size(); ++i) {
     command.arguments.push_back(parts[i]);
   }
   return command;
@@ -184,7 +184,7 @@ void Executor::StopPondering() {
   pondering_thread_.reset(nullptr);
 }
 
-bool Executor::Execute(const string& command_str,
+void Executor::Execute(const string& command_str,
                        vector<string>* response) {
   Command command = Interpret(command_str);
   switch (command.cmd_name) {
@@ -306,7 +306,7 @@ bool Executor::Execute(const string& command_str,
 
     case MOVELIST:
       {
-        MoveGenerator* movegen;
+        MoveGenerator* movegen = nullptr;
         switch (variant_) {
           case Variant::NORMAL:
             movegen = new MoveGeneratorNormal(player_->GetBoard());
@@ -317,7 +317,7 @@ bool Executor::Execute(const string& command_str,
         }
         MoveArray move_array;
         movegen->GenerateMoves(&move_array);
-        for (unsigned i = 0; i < move_array.size(); ++i) {
+        for (size_t i = 0; i < move_array.size(); ++i) {
           std::cout << "# " << i + 1 << " " << move_array.get(i).str()
                     << std::endl;
         }

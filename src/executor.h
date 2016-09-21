@@ -30,10 +30,9 @@ class Executor {
 
   ~Executor() { StopPondering(); }
 
-  // Executes command and returns true on success. The result string is set or
-  // empty depending on the protocol. If error, returns false and result string
-  // is set to error message.
-  bool Execute(const std::string& command_str,
+  // Executes command. Response may be set (depending on the command) in the
+  // response string vector.
+  void Execute(const std::string& command_str,
                std::vector<std::string>* response);
 
   // Returns true if program has to quit.

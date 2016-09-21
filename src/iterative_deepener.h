@@ -17,7 +17,7 @@ class TranspositionTable;
 // Iterative deepening search parameters.
 struct IDSParams {
   bool thinking_output = false;
-  int search_depth = MAX_DEPTH;
+  unsigned search_depth = MAX_DEPTH;
   MoveArray pruned_ordered_moves;
 };
 

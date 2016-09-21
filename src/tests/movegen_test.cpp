@@ -25,10 +25,10 @@ TEST_F(MoveGeneratorTest, VerifyValidMove) {
   MoveGeneratorSuicide movegen(board);
 
   Move move("e2e3");
-  EXPECT_EQ(true, movegen.IsValidMove(move));
+  EXPECT_TRUE(movegen.IsValidMove(move));
 
   Move move2("e2e5");
-  EXPECT_EQ(false, movegen.IsValidMove(move2));
+  EXPECT_FALSE(movegen.IsValidMove(move2));
 }
 
 TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {

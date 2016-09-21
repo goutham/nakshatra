@@ -52,7 +52,7 @@ int EvalSuicide::PieceValDifference() const {
 int EvalSuicide::OpponentMobility(const MoveArray& move_array) {
   // This function should not be called when self mobility is 0.
   assert(move_array.size() > 0);
-  int best = INF;
+  unsigned best = INF;
   for (unsigned i = 0; i < move_array.size(); ++i) {
     board_->MakeMove(move_array.get(i));
     unsigned num_opp_moves = movegen_->CountMoves();
@@ -98,9 +98,9 @@ bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
   const U64 white_bishop = board_->BitBoard(BISHOP);
   const U64 black_bishop = board_->BitBoard(-BISHOP);
 
-  return (white_bishop && black_bishop &&
-      ((white_bishop & WHITE_SQUARES) && (black_bishop & BLACK_SQUARES)) ||
-      ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES)));
+  return ((white_bishop && black_bishop) &&
+      (((white_bishop & WHITE_SQUARES) && (black_bishop & BLACK_SQUARES)) ||
+      ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES))));
 }
 
 int EvalSuicide::Evaluate() {

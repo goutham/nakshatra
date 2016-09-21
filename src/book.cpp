@@ -67,7 +67,7 @@ void Book::LoadBook(Board* board, MoveGenerator* movegen) {
   ifs.close();
 
   std::stack<std::string> book_lines;
-  for (int i = 0; i < contents.size();) {
+  for (size_t i = 0; i < contents.size();) {
     if (contents.at(i) == '(') {
       book_lines.push(std::string(1, contents.at(i)));
       ++i;

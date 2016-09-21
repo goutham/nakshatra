@@ -237,7 +237,7 @@ void PNSearch::Expand(const PNSParams& pns_params,
   } else {
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
-    for (int i = 0; i < move_array.size(); ++i) {
+    for (size_t i = 0; i < move_array.size(); ++i) {
       PNSNode* child = new PNSNode;
       pns_node->children.push_back(child);
       child->move = move_array.get(i);

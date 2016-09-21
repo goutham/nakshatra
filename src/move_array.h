@@ -12,8 +12,8 @@ class MoveArray {
   }
 
   void SwapToFront(const Move& move) {
-    unsigned index_to_swap = 0;
-    for (unsigned i = 0; i < n_; ++i) {
+    size_t index_to_swap = 0;
+    for (size_t i = 0; i < n_; ++i) {
       if (moves_[i] == move) {
         index_to_swap = i;
         break;
@@ -26,8 +26,8 @@ class MoveArray {
   }
 
   void PushToFront(const Move& move) {
-    int index = 0;
-    for (int i = 0; i < n_; ++i) {
+    size_t index = 0;
+    for (size_t i = 0; i < n_; ++i) {
       if (moves_[i] == move) {
         index = i;
         break;
@@ -40,22 +40,19 @@ class MoveArray {
     moves_[index] = move;
   }
 
-  // Returns index of the move in the move array. Returns -1 if no such move
-  // exists.
-  int Find(const Move& move) const {
-    for (int i = 0; i < n_; ++i) {
-      if (moves_[i] == move) {
-        return i;
-      }
+  bool Contains(const Move& move) const {
+    for (size_t i = 0; i < n_; ++i) {
+      if (moves_[i] == move)
+        return true;
     }
-    return -1;
+    return false;
   }
 
-  unsigned size() const {
+  size_t size() const {
     return n_;
   }
 
-  const Move& get(unsigned index) const {
+  const Move& get(size_t index) const {
     return moves_[index];
   }
 
@@ -65,7 +62,7 @@ class MoveArray {
 
  private:
   Move moves_[256];
-  unsigned n_;
+  size_t n_;
 };
 
 #endif

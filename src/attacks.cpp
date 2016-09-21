@@ -165,19 +165,6 @@ U64 GenerateAttack(const Direction& direction,
   return attack_bb;
 }
 
-// Returns a unsigned 64 bit random number.
-U64 U64Rand() {
-  return (U64(0xFFFF & rand()) << 48) |
-      (U64(0xFFFF & rand()) << 32) |
-      (U64(0xFFFF & rand()) << 16) |
-      U64(0xFFFF & rand());
-}
-
-// Bias the random number to contain more 0 bits.
-U64 ZeroBitBiasedRandom() {
-  return U64Rand() & U64Rand() & U64Rand();
-}
-
 void GenerateAttackTable(const vector<Direction>& directions,
                          const int index,
                          const int shift_bits,
@@ -204,7 +191,7 @@ void GenerateAttackTable(const vector<Direction>& directions,
   static const U64 kInvalidAttack = ~0ULL;
 
   vector<U64> table(1U << shift_bits, kInvalidAttack);
-  for (int k = 0; k < occupancies.size(); ++k) {
+  for (size_t k = 0; k < occupancies.size(); ++k) {
     const U64 occupancy = occupancies.at(k);
     const U64 attack = attacks.at(k);
     const int offset = (occupancy * magic) >> (64 - shift_bits);

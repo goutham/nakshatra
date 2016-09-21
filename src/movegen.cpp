@@ -298,7 +298,6 @@ void GenerateMoves_Normal(Board* board, MoveArray* move_array) {
   generate(QUEEN);
   generate(ROOK);
 
-  constexpr int row = (side == Side::WHITE ? 0 : 7);
   constexpr Piece king_piece = PieceOfSide(KING, side);
   const int king_index = Lsb1(board->BitBoard(king_piece));
   
@@ -309,7 +308,7 @@ void GenerateMoves_Normal(Board* board, MoveArray* move_array) {
 
   // If king is under check, work on evading check.
   if (opp_attack_map & board->BitBoard(king_piece)) {
-    for (int i = 0; i < pseudo_legal_move_array.size(); ++i) {
+    for (size_t i = 0; i < pseudo_legal_move_array.size(); ++i) {
       const Move& move = pseudo_legal_move_array.get(i);
 
       board->MakeMove(move);
@@ -336,7 +335,7 @@ void GenerateMoves_Normal(Board* board, MoveArray* move_array) {
         attacks::Attacks(board->BitBoard(), king_index, QUEEN) &
         opp_attack_map & board->BitBoard(side);
 
-    for (int i = 0; i < pseudo_legal_move_array.size(); ++i) {
+    for (size_t i = 0; i < pseudo_legal_move_array.size(); ++i) {
       const Move& move = pseudo_legal_move_array.get(i);
 
       // Add all non-king, non-pinned piece moves.
@@ -416,7 +415,7 @@ int MoveGeneratorSuicide::CountMoves() {
 bool MoveGeneratorSuicide::IsValidMove(const Move& move) {
   MoveArray move_array;
   GenerateMoves(&move_array);
-  return move_array.Find(move) != -1;
+  return move_array.Contains(move);
 }
 
 void MoveGeneratorNormal::GenerateMoves(MoveArray* move_array) {
@@ -443,5 +442,5 @@ int MoveGeneratorNormal::CountMoves() {
 bool MoveGeneratorNormal::IsValidMove(const Move& move) {
   MoveArray move_array;
   GenerateMoves(&move_array);
-  return move_array.Find(move) != -1;
+  return move_array.Contains(move);
 }

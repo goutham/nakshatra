@@ -68,7 +68,7 @@ int EvalNormal::Evaluate() {
     }
   }
   int score = MATERIAL_FACTOR * PieceValDifference();
-  for (int i = 0; i < move_array.size(); ++i) {
+  for (size_t i = 0; i < move_array.size(); ++i) {
     const Move& move = move_array.get(i);
     board_->MakeMove(move);
     U64 attack_map = ComputeAttackMap(*board_, side);

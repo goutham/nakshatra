@@ -50,7 +50,7 @@ int SearchAlgorithm::NegaScout(int max_depth,
   Move best_move;
   NodeType node_type = FAIL_LOW_NODE;
   int b = beta;
-  for (int index = 0; index < move_array.size(); ++index) {
+  for (size_t index = 0; index < move_array.size(); ++index) {
     ++search_stats->nodes_searched;
     const Move& move = move_array.get(index);
     board_->MakeMove(move);

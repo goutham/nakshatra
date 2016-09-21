@@ -109,7 +109,7 @@ Move SANToMove(const string& move_san,
                MoveGenerator* movegen) {
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);
-  for (int i = 0; i < move_array.size(); ++i) {
+  for (size_t i = 0; i < move_array.size(); ++i) {
     const Move& move = move_array.get(i);
     if (SAN(board, move) == move_san) {
       return move;
