@@ -93,6 +93,8 @@ class Board {
     side_to_move_ = side;
   }
 
+  void FlipSideToMove();
+
  private:
   // An entry in the move stack.
   struct MoveStackEntry {
@@ -146,8 +148,6 @@ class Board {
     MoveStackEntry entries_[1000];
     int size_ = 0;
   };
-
-  void FlipSideToMove();
 
   // Generates Zobrist key for the board. Call this only after the board array,
   // side to move, en-passant target (if any) have been set.

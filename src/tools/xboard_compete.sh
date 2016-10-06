@@ -6,6 +6,7 @@ TIME_CONTROL="3:0"
 VARIANT="suicide"
 MATCH_GAMES=1
 SAVE_GAME_FILE="games.pgn"
+DEBUG_FILE="xboard.debug"
 
 while (( "$#" ))
 do
@@ -34,6 +35,13 @@ do
       shift
       SAVE_GAME_FILE="$1"
       ;;
+    -debugFile)
+      shift
+      DEBUG_FILE="$1"
+      ;;
+    *)
+      echo "Unknown flag encountered"
+      exit 1
   esac
   shift
 done
@@ -48,8 +56,8 @@ xvfb-run -a xboard \
   -noGUI \
   -fcp $FCP \
   -scp $SCP \
-#  -lpf start_boards.txt \
-#  -lpi -1 \
+  -lpf start_boards.txt \
+  -lpi -1 \
   -variant $VARIANT \
   -matchGames $MATCH_GAMES \
   -testClaims false \
@@ -58,5 +66,6 @@ xvfb-run -a xboard \
   -repeatsToDraw 3 \
   -saveGameFile $SAVE_GAME_FILE \
   -popupExitMessage false \
-  -debug
+  -debug \
+  -nameOfDebugFile $DEBUG_FILE
 set +x

@@ -20,7 +20,9 @@ constexpr int PAWN = 3;
 }  // namespace pv
 
 // Weight for mobility.
-const int MOBILITY_FACTOR = 25;
+constexpr int MOBILITY_FACTOR = 25;
+
+constexpr int TEMPO = 100;
 }
 
 int EvalSuicide::PieceValDifference() const {
@@ -44,53 +46,6 @@ int EvalSuicide::PieceValDifference() const {
          (black_val - white_val);
 }
 
-// Returns the mobility of opponent. This is calculated as the least possible
-// number of moves that opponent can be forced to make by current playing side.
-// Should only be called when self mobility is non-zero.
-// Special case: If no current side move leaves the opponent with any move to
-// play, return INF.
-int EvalSuicide::OpponentMobility(const MoveArray& move_array) {
-  // This function should not be called when self mobility is 0.
-  assert(move_array.size() > 0);
-  unsigned best = INF;
-  for (unsigned i = 0; i < move_array.size(); ++i) {
-    board_->MakeMove(move_array.get(i));
-    unsigned num_opp_moves = movegen_->CountMoves();
-    board_->UnmakeLastMove();
-    if (num_opp_moves == 1) {  // Best case scenario; return immediately.
-      return num_opp_moves;
-    }
-    if (num_opp_moves > 0 && num_opp_moves < best) {
-      best = num_opp_moves;
-    }
-  }
-  return best;
-}
-
-// Inspect result of a move where opponent_mobility = INF.
-int EvalSuicide::InspectResultOfMove() {
-  MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
-  assert(move_array.size() != 0);
-  int result = -INF;
-  for (unsigned i = 0; i < move_array.size(); ++i) {
-    board_->MakeMove(move_array.get(i));
-    // Inverse of opponent's perspective.
-    int opponent_pieces = board_->NumPieces(board_->SideToMove());
-    int self_pieces = board_->NumPieces(OppositeSide(board_->SideToMove()));
-    board_->UnmakeLastMove();
-    if (opponent_pieces == self_pieces) {
-      if (result < DRAW) result = DRAW;
-    } else if (opponent_pieces < self_pieces) {
-      if (result < -WIN) result = -WIN;
-    } else {
-      result = WIN;
-      break;
-    }
-  }
-  return result;
-}
-
 bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
   static const U64 WHITE_SQUARES = 0xAA55AA55AA55AA55ULL;
   static const U64 BLACK_SQUARES = 0x55AA55AA55AA55AAULL;
@@ -104,10 +59,11 @@ bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
 }
 
 int EvalSuicide::Evaluate() {
-  int self_pieces = board_->NumPieces(board_->SideToMove());
-  int opponent_pieces = board_->NumPieces(OppositeSide(board_->SideToMove()));
+  const Side side = board_->SideToMove();
+  const int self_pieces = board_->NumPieces(side);
+  const int opp_pieces = board_->NumPieces(OppositeSide(side));
 
-  if (self_pieces == 1 && opponent_pieces == 1) {
+  if (self_pieces == 1 && opp_pieces == 1) {
     if (egtb_) {
       const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
       if (egtb_entry) {
@@ -119,35 +75,46 @@ int EvalSuicide::Evaluate() {
     }
   }
 
-  MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
-  int self_mobility = move_array.size();
-
-  // If there are no pieces to move, it is the end of the game.
-  if (self_mobility == 0) {
-    if (self_pieces < opponent_pieces) return WIN;
-    else if (self_pieces == opponent_pieces) return DRAW;
-    return -WIN;
+  const int self_moves = movegen_->CountMoves();
+  if (self_moves == 0) {
+    return self_pieces < opp_pieces
+               ? WIN
+               : (self_pieces == opp_pieces
+                     ? DRAW
+                     : -WIN);
   }
 
-  if (self_mobility == 1) {
+  if (self_moves == 1) {
+    MoveArray move_array;
+    movegen_->GenerateMoves(&move_array);
     board_->MakeMove(move_array.get(0));
-    int eval_val = -Evaluate();
+    const int eval_val = -Evaluate();
     board_->UnmakeLastMove();
     return eval_val;
   }
 
-  int opponent_mobility = OpponentMobility(move_array);
-
-  // Current board position could be bad for current side as no self move allows
-  // opponent to make a move. We need to evaluate the result of this move to
-  // verify whether it is actually bad or good.
-  if (opponent_mobility == INF) {
-    return InspectResultOfMove();
+  board_->FlipSideToMove();
+  const int opp_moves = movegen_->CountMoves();
+  if (opp_moves == 0) {
+    board_->FlipSideToMove();
+    MoveArray move_array;
+    movegen_->GenerateMoves(&move_array);
+    int max_eval = -INF;
+    for (size_t i = 0; i < move_array.size(); ++i) {
+      const Move& move = move_array.get(i);
+      board_->MakeMove(move);
+      const int eval_val = -Evaluate();
+      board_->UnmakeLastMove();
+      if (max_eval < eval_val) {
+        max_eval = eval_val;
+      }
+    }
+    return max_eval;
   }
+  board_->FlipSideToMove();
 
-  return PieceValDifference() +
-         MOBILITY_FACTOR * (self_mobility - opponent_mobility);
+  return (self_moves - opp_moves) * MOBILITY_FACTOR +
+         PieceValDifference() + TEMPO;
 }
 
 int EvalSuicide::Result() const {
