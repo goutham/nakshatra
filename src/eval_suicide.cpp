@@ -118,23 +118,23 @@ int EvalSuicide::Evaluate() {
 }
 
 int EvalSuicide::Result() const {
-  int self_pieces = board_->NumPieces(board_->SideToMove());
-  int opponent_pieces = board_->NumPieces(OppositeSide(board_->SideToMove()));
+  const Side side = board_->SideToMove();
+  const int self_pieces = board_->NumPieces(side);
+  const int opp_pieces = board_->NumPieces(OppositeSide(side));
 
-  if (self_pieces == 1 && opponent_pieces == 1 &&
+  if (self_pieces == 1 && opp_pieces == 1 &&
       RivalBishopsOnOppositeColoredSquares()) {
     return DRAW;
   }
 
-  int self_mobility = movegen_->CountMoves();
-
-  // If there are no pieces to move, it is the end of the game.
-  if (self_mobility == 0) {
-    if (self_pieces < opponent_pieces) return WIN;
-    else if (self_pieces == opponent_pieces) return DRAW;
-    else return -WIN;
+  const int self_moves = movegen_->CountMoves();
+  if (self_moves == 0) {
+    return self_pieces < opp_pieces
+               ? WIN
+               : (self_pieces == opp_pieces
+                     ? DRAW
+                     : -WIN);
   }
 
-  // Non-{WIN, -WIN, DRAW} value suffices.
   return UNKNOWN;
 }
