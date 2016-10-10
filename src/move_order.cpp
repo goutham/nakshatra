@@ -9,18 +9,11 @@
 #include <cstdio>
 #include <cstring>
 
-namespace {
-struct OpponentMoves {
-  unsigned opp_moves;
-  unsigned index;
-};
-
-bool Sort(const OpponentMoves& a, const OpponentMoves& b) {
-  return a.opp_moves < b.opp_moves;
-}
-}
-
 void MobilityOrderer::Order(MoveArray* move_array) {
+  struct OpponentMoves {
+    unsigned opp_moves;
+    unsigned index;
+  };
   OpponentMoves num_opponent_moves[256];
   for (unsigned i = 0; i < move_array->size(); ++i) {
     board_->MakeMove(move_array->get(i));
@@ -28,7 +21,10 @@ void MobilityOrderer::Order(MoveArray* move_array) {
     num_opponent_moves[i] = {num_moves, i};
     board_->UnmakeLastMove();
   }
-  std::sort(num_opponent_moves, num_opponent_moves + move_array->size(), Sort);
+  std::sort(num_opponent_moves, num_opponent_moves + move_array->size(),
+      [](const OpponentMoves& a, const OpponentMoves& b) {
+        return a.opp_moves < b.opp_moves;
+      });
   MoveArray new_move_array;
   for (unsigned i = 0; i < move_array->size(); ++i) {
     new_move_array.Add(move_array->get(num_opponent_moves[i].index));
