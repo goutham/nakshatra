@@ -31,8 +31,7 @@ class Player {
          Extensions* extensions);
 
   Move Search(const SearchParams& search_params,
-              long time_centis,
-              long otime_centis);
+              long time_for_move_centis);
 
   Board* GetBoard() { return board_; }
 

@@ -17,34 +17,6 @@
 #include <signal.h>
 #include <sys/time.h>
 
-namespace {
-// Define a line with 2 points - (x1, y1) and (x2, y2). Returns the
-// y-coordinate of a third point whose x-coordinate is given - x3.
-inline double PointOnLine(double x1,
-                          double y1,
-                          double x2,
-                          double y2,
-                          double x3) {
-  return y1 + ((y2 - y1) / (x2 - x1)) * (x3 - x1);
-}
-
-long AllocateTime(long time_centis, long otime_centis) {
-  if (time_centis >= 60000) {
-    return 2250l;
-  }
-  if (time_centis >= 6000) {
-    return PointOnLine(6000, 500, 60000, 2250, time_centis);
-  }
-  if (time_centis >= 1000) {
-    return PointOnLine(1000, 200, 6000, 500, time_centis);
-  }
-  if (time_centis >= 200) {
-    return PointOnLine(200, 20, 1000, 200, time_centis);
-  }
-  return 10l;
-}
-}
-
 Player::Player(const Book* book,
                Board* board,
                MoveGenerator* movegen,
@@ -61,8 +33,7 @@ Player::Player(const Book* book,
     extensions_(extensions) {}
 
 Move Player::Search(const SearchParams& search_params,
-                    long time_centis,
-                    long otime_centis) {
+                    long time_for_move_centis) {
   std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
   if (book_) {
     Move book_move = book_->GetBookMove(*board_);
@@ -88,9 +59,6 @@ Move Player::Search(const SearchParams& search_params,
     movegen_->GenerateMoves(&move_array);
     return move_array.get(0);
   }
-
-  // Time allocated to search for the best move.
-  long time_for_move_centis = AllocateTime(time_centis, otime_centis);
 
   IDSParams ids_params;
   ids_params.thinking_output = search_params.thinking_output;

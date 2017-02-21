@@ -91,6 +91,27 @@ Command Interpret(const std::string& cmd) {
   return command;
 }
 
+// Linear interpolation - given x1, y1, x2, y2 and x3, find y3.
+double Interpolate(double x1, double y1, double x2, double y2, double x3) {
+  return y1 + ((y2 - y1) / (x2 - x1)) * (x3 - x1);
+}
+
+// Returns time (in centis) to allocate for search.
+long AllocateTime(long time_centis, long otime_centis) {
+  if (time_centis >= 60000) {
+    return 2250l;
+  }
+  if (time_centis >= 6000) {
+    return Interpolate(6000, 500, 60000, 2250, time_centis);
+  }
+  if (time_centis >= 1000) {
+    return Interpolate(1000, 200, 6000, 500, time_centis);
+  }
+  if (time_centis >= 200) {
+    return Interpolate(200, 20, 1000, 200, time_centis);
+  }
+  return 10l;
+}
 }  // namespace
 
 
@@ -163,7 +184,7 @@ void Executor::StartPondering() {
     while (true) {
       SearchParams ponder_params;
       ponder_params.thinking_output = false;
-      const Move move = this->ponderer_->Search(ponder_params, 100000, 100000);
+      const Move move = this->ponderer_->Search(ponder_params, 300 * 100);
       if (move.is_valid() &&
           !this->ponderer_builder_->GetTimer()->timer_expired()) {
         this->ponderer_->GetBoard()->MakeMove(move);
@@ -241,8 +262,8 @@ void Executor::Execute(const string& command_str,
           break;
         }
         force_mode_ = false;
-        Move cmove =
-            player_->Search(search_params_, time_centis_, otime_centis_);
+        Move cmove = player_->Search(search_params_,
+                         AllocateTime(time_centis_, otime_centis_));
         player_->GetBoard()->MakeMove(cmove);
         OutputFEN();
         response->push_back("move " + cmove.str());
@@ -279,8 +300,8 @@ void Executor::Execute(const string& command_str,
           break;
         }
 
-        Move cmove =
-            player_->Search(search_params_, time_centis_, otime_centis_);
+        Move cmove = player_->Search(search_params_,
+                         AllocateTime(time_centis_, otime_centis_));
         player_->GetBoard()->MakeMove(cmove);
         OutputFEN();
         response->push_back("move " + cmove.str());
