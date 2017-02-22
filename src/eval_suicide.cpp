@@ -95,8 +95,8 @@ int EvalSuicide::Evaluate() {
 
   board_->FlipSideToMove();
   const int opp_moves = movegen_->CountMoves();
+  board_->FlipSideToMove();
   if (opp_moves == 0) {
-    board_->FlipSideToMove();
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
     int max_eval = -INF;
@@ -111,7 +111,6 @@ int EvalSuicide::Evaluate() {
     }
     return max_eval;
   }
-  board_->FlipSideToMove();
 
   return (self_moves - opp_moves) * MOBILITY_FACTOR +
          PieceValDifference() + TEMPO;
