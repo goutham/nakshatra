@@ -1,5 +1,5 @@
-#ifndef STATS_UTIL_H
-#define STATS_UTIL_H
+#ifndef STOPWATCH_H
+#define STOPWATCH_H
 
 #include <cstdio>
 #include <sys/time.h>
