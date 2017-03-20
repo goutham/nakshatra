@@ -1,5 +1,5 @@
 # nakshatra
-Variant chess engine that primarily plays suicide chess on FICS. Also supports normal chess but little effort has been put so far to make it a strong player. Code is organized to make it easy to extend the engine to support more variants.
+Variant chess engine that primarily plays suicide chess on [FICS](http://www.freechess.org). Also supports normal chess but little effort has been put so far to make it a strong player. Code is organized to make it easy to extend the engine to support more variants.
 
 [FICS](http://www.freechess.org) rating as of March 2017:
 
