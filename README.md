@@ -3,6 +3,6 @@ Variant chess engine that primarily plays suicide chess on FICS. Also supports n
 
 Current [FICS](http://www.freechess.org) rating:
 
-          rating     RD      win    loss    draw   total   best 
-Blitz      1428    174.1      40      19       4      63   1480 (20-Jan-2014) 
-Suicide    2508     67.0    6926    2038     250    9214   2691 (23-Dec-2013) 
+              rating     RD      win    loss    draw   total   best 
+    Blitz      1428    174.1      40      19       4      63   1480 (20-Jan-2014) 
+    Suicide    2508     67.0    6926    2038     250    9214   2691 (23-Dec-2013) 
