@@ -22,7 +22,7 @@ class Timer {
     }
   }
 
-  ~Timer() {
+  ~Timer() noexcept(false) {
     if (!timer_expired_) {
       Stop();
       if (timer_delete(timer_id_) == -1) {
