@@ -40,6 +40,10 @@ struct PNSResult {
   int result = UNKNOWN;
   uint64_t tree_size;
   std::vector<MoveStat> ordered_moves;
+  // Pointer to the root of pns search tree. The tree will be deleted by
+  // subsequent call to PNSearch::Search. So, this pointer must not be referred
+  // afterwards.
+  PNSNode* pns_tree = nullptr;
 };
 
 struct PNSParams {

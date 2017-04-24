@@ -21,8 +21,7 @@
 
 #define PNS_MAX_DEPTH 600
 
-void PNSearch::Search(const PNSParams& pns_params,
-                      PNSResult* pns_result) {
+void PNSearch::Search(const PNSParams& pns_params, PNSResult* pns_result) {
   if (pns_tree_) {
     Delete(pns_tree_);
     pns_tree_ = nullptr;
@@ -30,6 +29,7 @@ void PNSearch::Search(const PNSParams& pns_params,
   pns_tree_ = new PNSNode;
 
   Pns(pns_params, pns_tree_);
+  pns_result->pns_tree = pns_tree_;
   pns_result->tree_size = pns_tree_->tree_size;
 
   for (PNSNode* pns_node : pns_tree_->children) {
