@@ -86,7 +86,6 @@ void PNSearch::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
          (!timer_ || !timer_->timer_expired())) {
     if (pns_params.log_progress > 0 &&
         stop_watch.ElapsedTime() / 100 > log_progress_secs) {
-      assert(pns_params.pns_type == PNSParams::PN2);  // allow only for PN2.
       std::cout << "# Progress: "
            << (100.0 * num_nodes) / pns_params.max_nodes
            << "% ("
