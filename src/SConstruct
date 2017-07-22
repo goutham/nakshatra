@@ -72,9 +72,9 @@ nakshatra = env.Program(
             'rt'],
     LIBPATH = '.')
 
-pns_solver = env.Program(
-    target = 'pns_solver',
-    source = ['pns_solver.cpp'],
+pns_analyze = env.Program(
+    target = 'pns_analyze',
+    source = ['pns_analyze.cpp'],
     LIBS = [player,
             evaluator,
             movegen,
