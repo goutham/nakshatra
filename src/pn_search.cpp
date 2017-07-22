@@ -165,7 +165,7 @@ PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params,
     if (!pns_node->children.empty()) {
       int proof = INF_NODES;
       int disproof = 0;
-      pns_node->tree_size = 1ULL;
+      pns_node->tree_size = 1;
       for (PNSNode* child : pns_node->children) {
         if (child->disproof < proof) {
           proof = child->disproof;
@@ -203,7 +203,7 @@ PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params,
 
 void PNSearch::UpdateTreeSize(PNSNode* pns_node) {
   if (!pns_node->children.empty()) {
-    pns_node->tree_size = 1ULL;
+    pns_node->tree_size = 1;
     for (PNSNode* child : pns_node->children) {
       pns_node->tree_size += child->tree_size;
     }
@@ -228,10 +228,13 @@ void PNSearch::Expand(const PNSParams& pns_params,
     // the pns_node. Else, retain MPN's immediate children only.
     if (pns_node->proof == 0 || pns_node->disproof == 0) {
       Delete(pns_node->children);
+      pns_node->tree_size = 1;
     } else {
       for (PNSNode* child : pns_node->children) {
         Delete(child->children);
+        child->tree_size = 1;
       }
+      pns_node->tree_size = 1 + pns_node->children.size();
     }
   } else {
     MoveArray move_array;

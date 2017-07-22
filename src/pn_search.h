@@ -27,7 +27,7 @@ struct PNSNode {
   std::vector<PNSNode*> children;
 
   // Number of nodes in the subtree rooted at this node.
-  uint64_t tree_size = 1ULL;
+  uint32_t tree_size = 1;
 };
 
 struct PNSResult {
