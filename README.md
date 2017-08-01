@@ -1,5 +1,7 @@
-# nakshatra
-Nakshatra is a variant chess engine originally built to play [suicide chess](https://en.wikipedia.org/wiki/Losing_Chess) on [FICS](http://www.freechess.org). It can technically play normal chess as well but little to no effort has been made to improve its normal chess playing strength. One of my initial goals was to support many [chess variants](https://en.wikipedia.org/wiki/List_of_chess_variants) so I believe the code is well organized for that purpose, at least, though I never actually got around to add more variants :)
+nakshatra
+==========
+
+Nakshatra is a variant chess engine originally built to play [suicide chess](https://en.wikipedia.org/wiki/Losing_Chess) on [FICS](http://www.freechess.org). It can technically play normal chess as well but little to no effort has been made to improve its normal chess playing strength. One of my initial goals was to support many [chess variants](https://en.wikipedia.org/wiki/List_of_chess_variants) so I believe the code is well organized for that purpose, at least, though I never actually got around to adding more variants :)
 
 Click [here](http://ficsgames.org/cgi-bin/search.cgi?player=nakshatra&action=Finger) for latest FICS stats of nakshatra.
 
