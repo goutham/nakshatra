@@ -3,4 +3,6 @@ Nakshatra is a variant chess engine originally built to play [suicide chess](htt
 
 Click [here](http://ficsgames.org/cgi-bin/search.cgi?player=nakshatra&action=Finger) for latest FICS stats of nakshatra.
 
+Once upon a time, I (sparingly) maintained a companion [blog](http://nakshatrachess.blogspot.com).
+
 NOTE: As of late 2016, suicide chess is weakly solved. White can force a [win with 1. e3](http://magma.maths.usyd.edu.au/~watkins/LOSING_CHESS/ICGA2016.pdf).
