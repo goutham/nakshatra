@@ -1,6 +1,6 @@
+#include "egtb.h"
 #include "board.h"
 #include "common.h"
-#include "egtb.h"
 #include "egtb_gen.h"
 #include "eval_suicide.h"
 #include "move.h"
@@ -21,7 +21,8 @@ using std::list;
 using std::string;
 
 EGTBIndexEntry* EGTBStore::Get(const Board& board) {
-  if (board.EnpassantTarget() != -1) return nullptr;
+  if (board.EnpassantTarget() != -1)
+    return nullptr;
   int board_desc_id = ComputeBoardDescriptionId(board);
   if (store_.find(board_desc_id) == store_.end()) {
     return nullptr;
@@ -34,8 +35,8 @@ EGTBIndexEntry* EGTBStore::Get(const Board& board) {
   return &elem->second;
 }
 
-void EGTBStore::Put(const Board& board, int moves_to_end,
-                    Move next_move, int8_t result) {
+void EGTBStore::Put(const Board& board, int moves_to_end, Move next_move,
+                    int8_t result) {
   EGTBIndexEntry e;
   e.moves_to_end = moves_to_end;
   e.next_move = next_move;
@@ -101,8 +102,9 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
     bool deleted = false;
     double last_percent = 0.0;
     for (list<string>::iterator iter = all_pos_list.begin();
-        iter != all_pos_list.end();) {
-      double percent = (static_cast<double>(progress) / all_pos_list_size) * 100;
+         iter != all_pos_list.end();) {
+      double percent =
+          (static_cast<double>(progress) / all_pos_list_size) * 100;
       if (percent >= last_percent + 1 || percent + 0.1 >= 100) {
         printf("%5.2lf %%\r", percent);
         fflush(stdout);
@@ -144,12 +146,14 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
         board.UnmakeLastMove();
       }
       if (count_winning >= 1) {
-        if (best_winning > superbest) superbest = best_winning;
+        if (best_winning > superbest)
+          superbest = best_winning;
         temp_store.Put(board, best_winning, best_winning_move, 1);
         iter = all_pos_list.erase(iter);
         deleted = true;
       } else if (count_losing == int(movelist.size())) {
-        if (best_losing > superbest) superbest = best_losing;
+        if (best_losing > superbest)
+          superbest = best_losing;
         temp_store.Put(board, best_losing, best_losing_move, -1);
         iter = all_pos_list.erase(iter);
         deleted = true;
@@ -158,7 +162,8 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
       }
     }
     printf("\n");
-    if (!deleted) break;
+    if (!deleted)
+      break;
     store->MergeFrom(temp_store);
     ++s;
   }

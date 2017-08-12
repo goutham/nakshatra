@@ -1,6 +1,6 @@
+#include "eval_normal.h"
 #include "board.h"
 #include "common.h"
-#include "eval_normal.h"
 #include "movegen.h"
 #include "piece.h"
 #include "stopwatch.h"
@@ -14,7 +14,7 @@ const int ROOK = 5;
 const int BISHOP = 3;
 const int KNIGHT = 3;
 const int PAWN = 1;
-}  // namespace pv
+} // namespace pv
 
 const int MATERIAL_FACTOR = 25;
 
@@ -22,6 +22,7 @@ const int MATERIAL_FACTOR = 25;
 const int OPENING_PAWNS_STRENGTH_FACTOR = 4;
 const int MIDDLE_PAWNS_STRENGTH_FACTOR = 2;
 
+// clang-format off
 const int sq_strength[] = {
   1, 1, 1, 1, 1, 1, 1, 1,
   1, 2, 2, 2, 2, 2, 2, 1,
@@ -32,24 +33,23 @@ const int sq_strength[] = {
   1, 2, 2, 2, 2, 2, 2, 1,
   1, 1, 1, 1, 1, 1, 1, 1
 };
+// clang-format on
 
-}  // namespace
+} // namespace
 
 int EvalNormal::PieceValDifference() const {
-  const int white_val =
-      PopCount(board_->BitBoard(KING))    * pv::KING   +
-      PopCount(board_->BitBoard(QUEEN))   * pv::QUEEN  +
-      PopCount(board_->BitBoard(PAWN))    * pv::PAWN   +
-      PopCount(board_->BitBoard(BISHOP))  * pv::BISHOP +
-      PopCount(board_->BitBoard(KNIGHT))  * pv::KNIGHT +
-      PopCount(board_->BitBoard(ROOK))    * pv::ROOK;
-  const int black_val =
-      PopCount(board_->BitBoard(-KING))   * pv::KING   +
-      PopCount(board_->BitBoard(-QUEEN))  * pv::QUEEN  +
-      PopCount(board_->BitBoard(-PAWN))   * pv::PAWN   +
-      PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
-      PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
-      PopCount(board_->BitBoard(-ROOK))   * pv::ROOK;
+  const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
+                        PopCount(board_->BitBoard(QUEEN)) * pv::QUEEN +
+                        PopCount(board_->BitBoard(PAWN)) * pv::PAWN +
+                        PopCount(board_->BitBoard(BISHOP)) * pv::BISHOP +
+                        PopCount(board_->BitBoard(KNIGHT)) * pv::KNIGHT +
+                        PopCount(board_->BitBoard(ROOK)) * pv::ROOK;
+  const int black_val = PopCount(board_->BitBoard(-KING)) * pv::KING +
+                        PopCount(board_->BitBoard(-QUEEN)) * pv::QUEEN +
+                        PopCount(board_->BitBoard(-PAWN)) * pv::PAWN +
+                        PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
+                        PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
+                        PopCount(board_->BitBoard(-ROOK)) * pv::ROOK;
 
   return (board_->SideToMove() == Side::WHITE) ? (white_val - black_val)
                                                : (black_val - white_val);
@@ -64,7 +64,7 @@ int EvalNormal::Evaluate() {
     if (attack_map & board_->BitBoard(PieceOfSide(KING, side))) {
       return -WIN;
     } else {
-      return DRAW;  // stalemate
+      return DRAW; // stalemate
     }
   }
   int score = MATERIAL_FACTOR * PieceValDifference();
@@ -72,8 +72,7 @@ int EvalNormal::Evaluate() {
     const Move& move = move_array.get(i);
     board_->MakeMove(move);
     U64 attack_map = ComputeAttackMap(*board_, side);
-    if (attack_map &
-        board_->BitBoard(PieceOfSide(KING, OppositeSide(side)))) {
+    if (attack_map & board_->BitBoard(PieceOfSide(KING, OppositeSide(side)))) {
       MoveArray opp_move_array;
       movegen_->GenerateMoves(&opp_move_array);
       if (opp_move_array.size() == 0) {
@@ -134,7 +133,7 @@ int EvalNormal::Result() const {
     if (attack_map & board_->BitBoard(PieceOfSide(KING, side))) {
       return -WIN;
     } else {
-      return DRAW;  // stalemate
+      return DRAW; // stalemate
     }
   }
   return -1;

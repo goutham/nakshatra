@@ -1,7 +1,7 @@
+#include "eval_suicide.h"
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "eval_suicide.h"
 #include "movegen.h"
 #include "piece.h"
 #include "stopwatch.h"
@@ -17,7 +17,7 @@ constexpr int ROOK = 7;
 constexpr int BISHOP = 2;
 constexpr int KNIGHT = 3;
 constexpr int PAWN = 3;
-}  // namespace pv
+} // namespace pv
 
 // Weight for mobility.
 constexpr int MOBILITY_FACTOR = 25;
@@ -26,24 +26,21 @@ constexpr int TEMPO = 100;
 }
 
 int EvalSuicide::PieceValDifference() const {
-  const int white_val =
-      PopCount(board_->BitBoard(KING))    * pv::KING   +
-      PopCount(board_->BitBoard(QUEEN))   * pv::QUEEN  +
-      PopCount(board_->BitBoard(PAWN))    * pv::PAWN   +
-      PopCount(board_->BitBoard(BISHOP))  * pv::BISHOP +
-      PopCount(board_->BitBoard(KNIGHT))  * pv::KNIGHT +
-      PopCount(board_->BitBoard(ROOK))    * pv::ROOK;
-  const int black_val =
-      PopCount(board_->BitBoard(-KING))   * pv::KING   +
-      PopCount(board_->BitBoard(-QUEEN))  * pv::QUEEN  +
-      PopCount(board_->BitBoard(-PAWN))   * pv::PAWN   +
-      PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
-      PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
-      PopCount(board_->BitBoard(-ROOK))   * pv::ROOK;
+  const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
+                        PopCount(board_->BitBoard(QUEEN)) * pv::QUEEN +
+                        PopCount(board_->BitBoard(PAWN)) * pv::PAWN +
+                        PopCount(board_->BitBoard(BISHOP)) * pv::BISHOP +
+                        PopCount(board_->BitBoard(KNIGHT)) * pv::KNIGHT +
+                        PopCount(board_->BitBoard(ROOK)) * pv::ROOK;
+  const int black_val = PopCount(board_->BitBoard(-KING)) * pv::KING +
+                        PopCount(board_->BitBoard(-QUEEN)) * pv::QUEEN +
+                        PopCount(board_->BitBoard(-PAWN)) * pv::PAWN +
+                        PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
+                        PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
+                        PopCount(board_->BitBoard(-ROOK)) * pv::ROOK;
 
-  return (board_->SideToMove() == Side::WHITE) ?
-         (white_val - black_val) :
-         (black_val - white_val);
+  return (board_->SideToMove() == Side::WHITE) ? (white_val - black_val)
+                                               : (black_val - white_val);
 }
 
 bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
@@ -54,8 +51,8 @@ bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
   const U64 black_bishop = board_->BitBoard(-BISHOP);
 
   return ((white_bishop && black_bishop) &&
-      (((white_bishop & WHITE_SQUARES) && (black_bishop & BLACK_SQUARES)) ||
-      ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES))));
+          (((white_bishop & WHITE_SQUARES) && (black_bishop & BLACK_SQUARES)) ||
+           ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES))));
 }
 
 int EvalSuicide::Evaluate() {
@@ -77,11 +74,8 @@ int EvalSuicide::Evaluate() {
 
   const int self_moves = movegen_->CountMoves();
   if (self_moves == 0) {
-    return self_pieces < opp_pieces
-               ? WIN
-               : (self_pieces == opp_pieces
-                     ? DRAW
-                     : -WIN);
+    return self_pieces < opp_pieces ? WIN
+                                    : (self_pieces == opp_pieces ? DRAW : -WIN);
   }
 
   if (self_moves == 1) {
@@ -112,8 +106,8 @@ int EvalSuicide::Evaluate() {
     return max_eval;
   }
 
-  return (self_moves - opp_moves) * MOBILITY_FACTOR +
-         PieceValDifference() + TEMPO;
+  return (self_moves - opp_moves) * MOBILITY_FACTOR + PieceValDifference() +
+         TEMPO;
 }
 
 int EvalSuicide::Result() const {
@@ -128,11 +122,8 @@ int EvalSuicide::Result() const {
 
   const int self_moves = movegen_->CountMoves();
   if (self_moves == 0) {
-    return self_pieces < opp_pieces
-               ? WIN
-               : (self_pieces == opp_pieces
-                     ? DRAW
-                     : -WIN);
+    return self_pieces < opp_pieces ? WIN
+                                    : (self_pieces == opp_pieces ? DRAW : -WIN);
   }
 
   return UNKNOWN;

@@ -22,26 +22,17 @@ struct IDSParams {
 };
 
 class IterativeDeepener {
- public:
-  IterativeDeepener(Board* board,
-                    MoveGenerator* movegen,
-                    SearchAlgorithm* search_algorithm,
-                    Timer* timer,
-                    TranspositionTable* transpos,
-                    Extensions* extensions)
-      : board_(board),
-        movegen_(movegen),
-        search_algorithm_(search_algorithm),
-        timer_(timer),
-        transpos_(transpos),
-        extensions_(extensions) {}
+public:
+  IterativeDeepener(Board* board, MoveGenerator* movegen,
+                    SearchAlgorithm* search_algorithm, Timer* timer,
+                    TranspositionTable* transpos, Extensions* extensions)
+      : board_(board), movegen_(movegen), search_algorithm_(search_algorithm),
+        timer_(timer), transpos_(transpos), extensions_(extensions) {}
 
-  void Search(const IDSParams& ids_params,
-              Move* best_move,
-              int* best_move_score,
-              SearchStats* id_search_stats);
+  void Search(const IDSParams& ids_params, Move* best_move,
+              int* best_move_score, SearchStats* id_search_stats);
 
- private:
+private:
   void FindBestMove(int max_depth);
 
   // Returns principal variation as a string of moves.

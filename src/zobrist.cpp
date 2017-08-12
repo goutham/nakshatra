@@ -1,10 +1,10 @@
+#include "zobrist.h"
 #include "common.h"
 #include "piece.h"
-#include "zobrist.h"
 
 #include <array>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 namespace {
 
@@ -52,7 +52,7 @@ const std::array<U64, 16> castling_ = []() {
 
 const U64 turn_ = RandU64();
 
-}  // namespace
+} // namespace
 
 namespace zobrist {
 
@@ -60,21 +60,13 @@ U64 Get(Piece piece, int sq) {
   return zobrist_[PieceType(piece)][SideIndex(PieceSide(piece))][sq];
 }
 
-U64 Turn() {
-  return turn_;
-}
+U64 Turn() { return turn_; }
 
-U64 EP(int sq) {
-  return ep_[sq];
-}
+U64 EP(int sq) { return ep_[sq]; }
 
-U64 Castling(unsigned index) {
-  return castling_[index];
-}
+U64 Castling(unsigned index) { return castling_[index]; }
 
-U64 Castling(unsigned char castle) {
-  return castling_[castle];
-}
+U64 Castling(unsigned char castle) { return castling_[castle]; }
 
 void PrintZobrist() {
   for (int i = 0; i < PIECE_MAX; ++i) {
@@ -86,4 +78,4 @@ void PrintZobrist() {
   }
 }
 
-}  // namespace zobrist
+} // namespace zobrist

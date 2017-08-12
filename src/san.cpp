@@ -1,10 +1,10 @@
+#include "san.h"
 #include "attacks.h"
 #include "board.h"
 #include "common.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
-#include "san.h"
 
 #include <cstdlib>
 #include <string>
@@ -16,13 +16,12 @@ string SAN(const Board& board, const Move& move) {
 
   // Castling.
   if (PieceType(piece) == KING) {
-    const int squares_moved =
-        abs(static_cast<int>(COL(move.to_index())) -
-            static_cast<int>(COL(move.from_index())));
+    const int squares_moved = abs(static_cast<int>(COL(move.to_index())) -
+                                  static_cast<int>(COL(move.from_index())));
     if (squares_moved == 2) {
-      return "O-O";  // king side castling
+      return "O-O"; // king side castling
     } else if (squares_moved == 3) {
-      return "O-O-O";  // queen side castling
+      return "O-O-O"; // queen side castling
     }
   }
 
@@ -50,8 +49,8 @@ string SAN(const Board& board, const Move& move) {
     std::vector<int> indices;
     while (piece_bb) {
       const int lsb_index = Lsb1(piece_bb);
-      const U64 attacks = attacks::Attacks(occupancy_bitboard, lsb_index,
-                                           piece);
+      const U64 attacks =
+          attacks::Attacks(occupancy_bitboard, lsb_index, piece);
       if (attacks & dest_sq_bb) {
         indices.push_back(lsb_index);
       }
@@ -104,8 +103,7 @@ string SAN(const Board& board, const Move& move) {
   return san;
 }
 
-Move SANToMove(const string& move_san,
-               const Board& board,
+Move SANToMove(const string& move_san, const Board& board,
                MoveGenerator* movegen) {
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);

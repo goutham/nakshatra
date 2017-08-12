@@ -37,6 +37,7 @@ string LongToString(long l) {
   return ss.str();
 }
 
+// clang-format off
 const int index64[64] = {
    63,  0, 58,  1, 59, 47, 53,  2,
    60, 39, 48, 27, 54, 33, 42,  3,
@@ -47,6 +48,7 @@ const int index64[64] = {
    56, 45, 25, 31, 35, 16,  9, 12,
    44, 24, 15,  8, 23,  7,  6,  5
 };
+// clang-format on
 
 /**
  * bitScanForward
@@ -60,7 +62,7 @@ const int index64[64] = {
  */
 int log2U(U64 bb) {
   const U64 debruijn64 = 0x07EDD5E59A4E28C2ULL;
-  assert (bb != 0ULL);
+  assert(bb != 0ULL);
   return index64[((bb & -bb) * debruijn64) >> 58];
 }
 

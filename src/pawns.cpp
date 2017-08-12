@@ -1,7 +1,7 @@
+#include "pawns.h"
 #include "board.h"
 #include "common.h"
 #include "movegen.h"
-#include "pawns.h"
 
 #include <stdexcept>
 namespace pawns {
@@ -9,9 +9,16 @@ namespace pawns {
 namespace {
 
 // Shifts the bitboard one row to the front corresponding to the side.
-template <Side side> U64 ShiftFront(U64 bitboard);
-template <> U64 ShiftFront<Side::WHITE>(U64 bitboard) { return bitboard << 8; }
-template <> U64 ShiftFront<Side::BLACK>(U64 bitboard) { return bitboard >> 8; }
+template <Side side>
+U64 ShiftFront(U64 bitboard);
+template <>
+U64 ShiftFront<Side::WHITE>(U64 bitboard) {
+  return bitboard << 8;
+}
+template <>
+U64 ShiftFront<Side::BLACK>(U64 bitboard) {
+  return bitboard >> 8;
+}
 
 template <Side side>
 U64 FrontFill(U64 bitboard);
@@ -47,7 +54,7 @@ U64 RearSpan(U64 bitboard) {
   return ShiftFront<OppositeSide(side)>(RearFill<side>(bitboard));
 }
 
-}  // namespace
+} // namespace
 
 U64 DoubledPawns(const Board& board, const Side side) {
   const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, side));
@@ -58,4 +65,4 @@ U64 DoubledPawns(const Board& board, const Side side) {
                                      : throw std::logic_error("Invalid side")));
 }
 
-}  // namespace pawns
+} // namespace pawns

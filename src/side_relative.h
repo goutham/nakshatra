@@ -69,6 +69,6 @@ constexpr U64 PushNorthWest(U64 bitboard) {
   return LeftShift<side>(bitboard & ~MaskColumn<side>(0), 9);
 }
 
-}  // namespace side_relative
+} // namespace side_relative
 
 #endif

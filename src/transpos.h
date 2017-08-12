@@ -12,45 +12,34 @@ struct TranspositionTableEntry {
   bool valid;
   short int score;
   NodeType node_type;
-  unsigned char depth;  // depth to the bottom of the tree in depth-restricted search.
+  unsigned char
+      depth; // depth to the bottom of the tree in depth-restricted search.
   Move best_move;
   U64 zkey;
 };
 
 struct TranspositionTable2Entry {
-  TranspositionTableEntry t1;  // depth preferred
-  TranspositionTableEntry t2;  // always replace
+  TranspositionTableEntry t1; // depth preferred
+  TranspositionTableEntry t2; // always replace
 };
 
 class TranspositionTable {
- public:
+public:
   TranspositionTable(int size);
   ~TranspositionTable();
   TranspositionTableEntry* Get(U64 zkey);
-  void Put(int score,
-           NodeType node_type,
-           int depth,
-           U64 zkey,
-           Move best_move);
+  void Put(int score, NodeType node_type, int depth, U64 zkey, Move best_move);
   void Reset();
 
   void LogStats() const;
 
- private:
-  void Set(int score,
-           NodeType node_type,
-           int depth,
-           U64 zkey,
-           Move best_move,
+private:
+  void Set(int score, NodeType node_type, int depth, U64 zkey, Move best_move,
            TranspositionTableEntry* t);
 
-  int hash(const U64 key) const {
-    return key % size_;
-  }
+  int hash(const U64 key) const { return key % size_; }
 
-  int hash2(const U64 key) const {
-    return (key >> 1) % size_;
-  }
+  int hash2(const U64 key) const { return (key >> 1) % size_; }
 
   double UtilizationFactor() const;
 

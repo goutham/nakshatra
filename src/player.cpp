@@ -1,3 +1,4 @@
+#include "player.h"
 #include "board.h"
 #include "book.h"
 #include "common.h"
@@ -6,7 +7,6 @@
 #include "iterative_deepener.h"
 #include "movegen.h"
 #include "piece.h"
-#include "player.h"
 #include "pn_search.h"
 #include "stopwatch.h"
 #include "timer.h"
@@ -17,20 +17,12 @@
 #include <signal.h>
 #include <sys/time.h>
 
-Player::Player(const Book* book,
-               Board* board,
-               MoveGenerator* movegen,
-               IterativeDeepener* iterative_deepener,
-               Timer* timer,
-               EGTB* egtb,
+Player::Player(const Book* book, Board* board, MoveGenerator* movegen,
+               IterativeDeepener* iterative_deepener, Timer* timer, EGTB* egtb,
                Extensions* extensions)
-  : book_(book),
-    board_(board),
-    movegen_(movegen),
-    iterative_deepener_(iterative_deepener),
-    timer_(timer),
-    egtb_(egtb),
-    extensions_(extensions) {}
+    : book_(book), board_(board), movegen_(movegen),
+      iterative_deepener_(iterative_deepener), timer_(timer), egtb_(egtb),
+      extensions_(extensions) {}
 
 Move Player::Search(const SearchParams& search_params,
                     long time_for_move_centis) {
@@ -41,8 +33,7 @@ Move Player::Search(const SearchParams& search_params,
       return book_move;
     }
   }
-  if (egtb_ &&
-      OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
+  if (egtb_ && OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
       OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
     out << "# Num pieces <= 2, looking up EGTB..." << std::endl;
     const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
@@ -66,10 +57,11 @@ Move Player::Search(const SearchParams& search_params,
 
   const PNSExtension& pns_extension = extensions_->pns_extension;
   if (pns_extension.pn_search) {
-    assert (pns_extension.pns_timer);
+    assert(pns_extension.pns_timer);
 
     pns_extension.pns_timer->Reset();
-    pns_extension.pns_timer->Run(time_for_move_centis *
+    pns_extension.pns_timer->Run(
+        time_for_move_centis *
         (pns_extension.pns_time_for_move_percent / 100.0));
 
     StopWatch pn_stop_watch;
@@ -103,7 +95,8 @@ Move Player::Search(const SearchParams& search_params,
       } else {
         // Include all non-LOSS moves.
         for (const PNSResult::MoveStat& move_stat : pns_result.ordered_moves) {
-          if (move_stat.result == -WIN) break;
+          if (move_stat.result == -WIN)
+            break;
           ids_params.pruned_ordered_moves.Add(move_stat.move);
         }
       }
@@ -122,9 +115,7 @@ Move Player::Search(const SearchParams& search_params,
   SearchStats id_search_stats;
   int move_score;
   Move best_move;
-  iterative_deepener_->Search(ids_params,
-                              &best_move,
-                              &move_score,
+  iterative_deepener_->Search(ids_params, &best_move, &move_score,
                               &id_search_stats);
   return best_move;
 }

@@ -1,14 +1,12 @@
+#include "egtb.h"
 #include "board.h"
 #include "common.h"
-#include "egtb.h"
 
 #include <fstream>
 #include <iostream>
 #include <string>
 
-constexpr int piece_primes[] = {
-  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
-};
+constexpr int piece_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
 
 int ComputeBoardDescriptionId(const Board& board) {
   U64 bitboard = board.BitBoard();
@@ -25,7 +23,8 @@ U64 ComputeEGTBIndex(const Board& board) {
   U64 index = 0, half_space = 1;
   int num_pieces = 0;
   for (Piece piece = -PAWN; piece <= PAWN; ++piece) {
-    if (piece == NULLPIECE) continue;
+    if (piece == NULLPIECE)
+      continue;
     U64 piece_bitboard = board.BitBoard(piece);
     while (piece_bitboard) {
       const int lsb_index = Lsb1(piece_bitboard);
@@ -45,23 +44,19 @@ int EGTBResult(const EGTBIndexEntry& entry) {
   } else if (entry.result == -1) {
     return -WIN;
   } else {
-    assert(false);  // no other values currently supported.
+    assert(false); // no other values currently supported.
   }
 }
 
-EGTB::EGTB(const std::vector<std::string>& egtb_files,
-           const Board& board)
-    : egtb_files_(egtb_files),
-      board_(board),
-      initialized_(false),
-      egtb_hits_(0ULL),
-      egtb_misses_(0ULL) {}
+EGTB::EGTB(const std::vector<std::string>& egtb_files, const Board& board)
+    : egtb_files_(egtb_files), board_(board), initialized_(false),
+      egtb_hits_(0ULL), egtb_misses_(0ULL) {}
 
 void EGTB::Initialize() {
   for (const std::string& egtb_file : egtb_files_) {
     const auto parts = SplitString(egtb_file, '/');
-    int board_desc_id = StringToInt(
-        SplitString(parts.at(parts.size() - 1), '.').at(0));
+    int board_desc_id =
+        StringToInt(SplitString(parts.at(parts.size() - 1), '.').at(0));
     assert(board_desc_id != 0);
     std::ifstream ifs(egtb_file, std::ifstream::binary);
     ifs.seekg(0, std::ios_base::end);
@@ -116,6 +111,7 @@ void PrintEGTBIndexEntry(const EGTBIndexEntry& entry) {
   std::cout << "# EGTB best move: " << entry.next_move.str() << std::endl;
   std::cout << "# Moves to end: " << entry.moves_to_end << std::endl;
   std::cout << "# Result for side to move: "
-      << (entry.result == 1 ? "Win" : (entry.result == -1 ? "Loss" : "Unknown"))
-      << std::endl;
+            << (entry.result == 1 ? "Win"
+                                  : (entry.result == -1 ? "Loss" : "Unknown"))
+            << std::endl;
 }

@@ -1,24 +1,20 @@
+#include "transpos.h"
 #include "common.h"
 #include "stopwatch.h"
-#include "transpos.h"
 #include "zobrist.h"
 
 #include <iostream>
 
-TranspositionTable::TranspositionTable(int size) :
-    size_(size),
-    transpos1_hits_(0U),
-    transpos2_hits_(0U),
-    transpos_misses_(0U) {
+TranspositionTable::TranspositionTable(int size)
+    : size_(size), transpos1_hits_(0U), transpos2_hits_(0U),
+      transpos_misses_(0U) {
   std::cout << "# Transposition table memory usage: "
             << (size_ * sizeof(TranspositionTable2Entry)) / (1U << 20) << " MB"
             << std::endl;
   tentries_ = new TranspositionTable2Entry[size_];
 }
 
-TranspositionTable::~TranspositionTable() {
-  Reset();
-}
+TranspositionTable::~TranspositionTable() { Reset(); }
 
 TranspositionTableEntry* TranspositionTable::Get(U64 zkey) {
   TranspositionTable2Entry* tentry = &tentries_[hash(zkey)];
@@ -34,10 +30,7 @@ TranspositionTableEntry* TranspositionTable::Get(U64 zkey) {
   return nullptr;
 }
 
-void TranspositionTable::Put(int score,
-                             NodeType node_type,
-                             int depth,
-                             U64 zkey,
+void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
                              Move best_move) {
   TranspositionTable2Entry* tentry = &tentries_[hash(zkey)];
   TranspositionTableEntry* t = nullptr;
@@ -59,9 +52,7 @@ void TranspositionTable::Set(int score, NodeType node_type, int depth, U64 zkey,
   t->best_move = best_move;
 }
 
-void TranspositionTable::Reset() {
-  delete tentries_;
-}
+void TranspositionTable::Reset() { delete tentries_; }
 
 double TranspositionTable::UtilizationFactor() const {
   unsigned int num_filled_entries = 0;
@@ -84,7 +75,7 @@ void TranspositionTable::LogStats() const {
   if (transpos1_hits_ + transpos2_hits_ + transpos_misses_ > 0) {
     cout << "# Percentage of hits:\t"
          << (100.0 * (transpos1_hits_ + transpos2_hits_)) /
-         (transpos1_hits_ + transpos2_hits_ + transpos_misses_) << " %"
-         << endl;
+                (transpos1_hits_ + transpos2_hits_ + transpos_misses_)
+         << " %" << endl;
   }
 }

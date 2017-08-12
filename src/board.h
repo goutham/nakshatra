@@ -9,7 +9,7 @@
 
 // A Chess board that supports multiple variants.
 class Board {
- public:
+public:
   // Construct with the standard initial board position for the variant.
   Board(const Variant variant);
 
@@ -24,16 +24,12 @@ class Board {
   bool UnmakeLastMove();
 
   // Next side to move.
-  Side SideToMove() const {
-    return side_to_move_;
-  }
+  Side SideToMove() const { return side_to_move_; }
 
   // If pawn was advanced by 2 squares from its starting position in the last
   // move, this function returns the en-passant target square. If no such move
   // was made, returns -1.
-  int EnpassantTarget() const {
-    return move_stack_.Top()->ep_index;
-  }
+  int EnpassantTarget() const { return move_stack_.Top()->ep_index; }
 
   // Returns true if given side can castle on the 'piece_type' side. piece_type
   // can be KING or QUEEN. Version without 'side' argument uses current side
@@ -45,14 +41,10 @@ class Board {
   Piece PieceAt(const int row, const int col) const {
     return board_array_[INDX(row, col)];
   }
-  Piece PieceAt(const int index) const {
-    return board_array_[index];
-  }
+  Piece PieceAt(const int index) const { return board_array_[index]; }
 
   // Returns complete bitboard or side/piece specific bitboards.
-  U64 BitBoard() const {
-    return BitBoard(Side::BLACK) | BitBoard(Side::WHITE);
-  }
+  U64 BitBoard() const { return BitBoard(Side::BLACK) | BitBoard(Side::WHITE); }
   U64 BitBoard(const Side side) const {
     return bitboard_sides_[SideIndex(side)];
   }
@@ -61,22 +53,16 @@ class Board {
   }
 
   // Returns the number of pieces of given side on the board.
-  int NumPieces(const Side side) const {
-    return PopCount(BitBoard(side));
-  }
+  int NumPieces(const Side side) const { return PopCount(BitBoard(side)); }
 
   // The zobrist key for current board position.
-  U64 ZobristKey() const {
-    return move_stack_.Top()->zobrist_key;
-  }
+  U64 ZobristKey() const { return move_stack_.Top()->zobrist_key; }
 
   // Returns the board as an FEN (Forsyth-Edwards Notation) string.
   std::string ParseIntoFEN() const;
 
   // Returns number of plies played on the board so far.
-  int Ply() const {
-    return move_stack_.Size();
-  }
+  int Ply() const { return move_stack_.Size(); }
 
   void DebugPrintBoard() const;
 
@@ -89,13 +75,11 @@ class Board {
     board_array_[index] = piece;
   }
 
-  void SetPlayerColor(const Side side) {
-    side_to_move_ = side;
-  }
+  void SetPlayerColor(const Side side) { side_to_move_ = side; }
 
   void FlipSideToMove();
 
- private:
+private:
   // An entry in the move stack.
   struct MoveStackEntry {
     Move move;
@@ -118,33 +102,21 @@ class Board {
   // A thin wrapper around an array of MoveStackEntry elements that provides a
   // stack-like interface. Methods don't check array bounds.
   class MoveStack {
-   public:
-    void Push() {
-      ++size_;
-    }
+  public:
+    void Push() { ++size_; }
 
-    void Pop() {
-      --size_;
-    }
+    void Pop() { --size_; }
 
-    int Size() const {
-      return size_;
-    }
+    int Size() const { return size_; }
 
-    MoveStackEntry* Top() {
-      return entries_ + size_;
-    }
-    const MoveStackEntry* Top() const {
-      return entries_ + size_;
-    }
+    MoveStackEntry* Top() { return entries_ + size_; }
+    const MoveStackEntry* Top() const { return entries_ + size_; }
 
     // Returns a pointer to an entry 'pos' elements down the stack.
     // Seek(0) == Top(). Client should ensure pos <= Size().
-    const MoveStackEntry* Seek(int pos) const {
-      return Top() - pos;
-    }
+    const MoveStackEntry* Seek(int pos) const { return Top() - pos; }
 
-   private:
+  private:
     MoveStackEntry entries_[1000];
     int size_ = 0;
   };

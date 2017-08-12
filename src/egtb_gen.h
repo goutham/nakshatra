@@ -12,11 +12,10 @@
 #include <unordered_map>
 
 class EGTBStore {
- public:
+public:
   EGTBIndexEntry* Get(const Board& board);
 
-  void Put(const Board& board, int moves_to_end, Move next_move,
-           int8_t result);
+  void Put(const Board& board, int moves_to_end, Move next_move, int8_t result);
 
   void MergeFrom(EGTBStore store);
 
@@ -27,7 +26,7 @@ class EGTBStore {
 
   void Write();
 
- private:
+private:
   std::unordered_map<int, std::unordered_map<uint64_t, EGTBIndexEntry>> store_;
 };
 

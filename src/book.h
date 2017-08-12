@@ -13,15 +13,15 @@ class Board;
 class MoveGenerator;
 
 class Book {
- public:
+public:
   Book(Variant variant, const std::string& book_file);
 
   Move GetBookMove(const Board& board) const;
 
- private:
+private:
   void LoadBook(Board* board, MoveGenerator* movegen);
 
-  std::map<std::string, std::vector<Move> > book_;
+  std::map<std::string, std::vector<Move>> book_;
   const std::string book_file_;
 };
 

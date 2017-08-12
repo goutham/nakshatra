@@ -21,21 +21,16 @@ struct SearchParams {
 };
 
 class Player {
- public:
-  Player(const Book* book,
-         Board* board,
-         MoveGenerator* movegen,
-         IterativeDeepener* iterative_deepener,
-         Timer* timer,
-         EGTB* egtb,
+public:
+  Player(const Book* book, Board* board, MoveGenerator* movegen,
+         IterativeDeepener* iterative_deepener, Timer* timer, EGTB* egtb,
          Extensions* extensions);
 
-  Move Search(const SearchParams& search_params,
-              long time_for_move_centis);
+  Move Search(const SearchParams& search_params, long time_for_move_centis);
 
   Board* GetBoard() { return board_; }
 
- private:
+private:
   const Book* book_;
   Board* board_;
   MoveGenerator* movegen_;

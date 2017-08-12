@@ -10,19 +10,15 @@ class MoveArray;
 class MoveGenerator;
 
 class EvalSuicide : public Evaluator {
- public:
-  EvalSuicide(Board* board,
-              MoveGenerator* movegen,
-              EGTB* egtb)
-      : board_(board),
-        movegen_(movegen),
-        egtb_(egtb) {}
+public:
+  EvalSuicide(Board* board, MoveGenerator* movegen, EGTB* egtb)
+      : board_(board), movegen_(movegen), egtb_(egtb) {}
 
   int Evaluate() override;
 
   int Result() const override;
 
- private:
+private:
   int PieceValDifference() const;
 
   int OpponentMobility(const MoveArray& move_array);

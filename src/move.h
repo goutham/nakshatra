@@ -20,8 +20,8 @@
 typedef unsigned short int EncodedMove;
 
 class Move {
- public:
-  Move() : encoded_move_(0) { }
+public:
+  Move() : encoded_move_(0) {}
 
   Move(const int from_index, const int to_index) {
     EncodeMove(from_index, to_index, NULLPIECE);
@@ -41,17 +41,11 @@ class Move {
     EncodeMove(from_index, to_index, promoted_piece);
   }
 
-  EncodedMove encoded_move() const {
-    return encoded_move_;
-  }
+  EncodedMove encoded_move() const { return encoded_move_; }
 
-  int from_index() const {
-    return encoded_move_ >> 10;
-  }
+  int from_index() const { return encoded_move_ >> 10; }
 
-  int to_index() const {
-    return (encoded_move_ & 0x3FF) >> 4;
-  }
+  int to_index() const { return (encoded_move_ & 0x3FF) >> 4; }
 
   Piece promoted_piece() const {
     const int side = ((encoded_move_ & 0x8) ? -1 : 1);
@@ -68,13 +62,9 @@ class Move {
     return (encoded_move_ & 0xFFF7) != (move.encoded_move() & 0xFFF7);
   }
 
-  bool is_promotion() const {
-    return encoded_move_ & 0x7;
-  }
+  bool is_promotion() const { return encoded_move_ & 0x7; }
 
-  bool is_valid() const {
-    return encoded_move_ != 0;
-  }
+  bool is_valid() const { return encoded_move_ != 0; }
 
   std::string str() const {
     std::string d;
@@ -95,19 +85,15 @@ class Move {
     return static_cast<char>(COL(index) + 97);
   }
 
-  static char rank(const int index) {
-    return DigitToChar(ROW(index) + 1);
-  }
+  static char rank(const int index) { return DigitToChar(ROW(index) + 1); }
 
   static std::string file_rank(const int index) {
-    char str[3] = { file(index), rank(index), '\0' };
+    char str[3] = {file(index), rank(index), '\0'};
     return static_cast<std::string>(str);
   }
 
- private:
-
-  void EncodeMove(const int from_index,
-                  const int to_index,
+private:
+  void EncodeMove(const int from_index, const int to_index,
                   const Piece promoted_piece) {
     encoded_move_ = ((from_index << 10) | (to_index << 4) |
                      ((PieceSide(promoted_piece) == Side::BLACK) << 3) |

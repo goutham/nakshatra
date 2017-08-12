@@ -12,13 +12,12 @@
 
 namespace {
 const std::map<const Variant, const std::string> variant_fen_map = {
-  {Variant::NORMAL, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"},
-  {Variant::SUICIDE, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}
-};
-}  // namespace
+    {Variant::NORMAL, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"},
+    {Variant::SUICIDE, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}};
+} // namespace
 
 Board::Board(const Variant variant)
-  : Board(variant, variant_fen_map.at(variant)) {}
+    : Board(variant, variant_fen_map.at(variant)) {}
 
 Board::Board(const Variant variant, const std::string& fen) {
   castling_allowed_ = true;
@@ -98,10 +97,9 @@ void Board::MakeMove(const Move& move) {
       RemovePiece(INDX(from_row, to_col));
     }
 
-    PlacePiece(to_index,
-               move.is_promotion()
-                   ? PieceOfSide(move.promoted_piece(), side_to_move_)
-                   : src_piece);
+    PlacePiece(to_index, move.is_promotion()
+                             ? PieceOfSide(move.promoted_piece(), side_to_move_)
+                             : src_piece);
 
     FlipSideToMove();
     return;
@@ -111,18 +109,18 @@ void Board::MakeMove(const Move& move) {
   if (castling_allowed_) {
     unsigned char castling_bit_king, castling_bit_queen;
     switch (side_to_move_) {
-      case Side::BLACK:
-        castling_bit_king = top->castle & 0x4;
-        castling_bit_queen = top->castle & 0x8;
-        break;
+    case Side::BLACK:
+      castling_bit_king = top->castle & 0x4;
+      castling_bit_queen = top->castle & 0x8;
+      break;
 
-      case Side::WHITE:
-        castling_bit_king = top->castle & 0x1;
-        castling_bit_queen = top->castle & 0x2;
-        break;
+    case Side::WHITE:
+      castling_bit_king = top->castle & 0x1;
+      castling_bit_queen = top->castle & 0x2;
+      break;
 
-      default:
-        throw std::runtime_error("Invalid side.");
+    default:
+      throw std::runtime_error("Invalid side.");
     }
 
     const unsigned char castling_bits = castling_bit_king | castling_bit_queen;
@@ -132,33 +130,33 @@ void Board::MakeMove(const Move& move) {
 
       // Update castling data if the moving piece is king or rook.
       switch (PieceType(src_piece)) {
-        case KING:
-          if (abs(to_col - from_col) > 1) {
-            // When king is moved by more than one space, it is for castling so
-            // move the rook to appropriate square.
-            const int rook_index = INDX(from_row, to_col > from_col ? 7 : 0);
-            const Piece rook = board_array_[rook_index];
-            RemovePiece(rook_index);
-            PlacePiece(INDX(from_row, (to_col + from_col) >> 1), rook);
-          }
-          // Update castle and zobrist. This will only happen first time king is
-          // moved, as for later movements of king 'castling_bits' will be 0 and
-          // we'll not reach this point.
-          top->castle &= ~castling_bits;
-          top->zobrist_key ^= zobrist::Castling(top->castle);
-          break;
+      case KING:
+        if (abs(to_col - from_col) > 1) {
+          // When king is moved by more than one space, it is for castling so
+          // move the rook to appropriate square.
+          const int rook_index = INDX(from_row, to_col > from_col ? 7 : 0);
+          const Piece rook = board_array_[rook_index];
+          RemovePiece(rook_index);
+          PlacePiece(INDX(from_row, (to_col + from_col) >> 1), rook);
+        }
+        // Update castle and zobrist. This will only happen first time king is
+        // moved, as for later movements of king 'castling_bits' will be 0 and
+        // we'll not reach this point.
+        top->castle &= ~castling_bits;
+        top->zobrist_key ^= zobrist::Castling(top->castle);
+        break;
 
-        case ROOK:
-          // Depending on which rook is moved, mask the relevant bit in 'castle'
-          // and update zobrist key.
-          if (from_col == 0 && castling_bit_queen) {
-            top->castle &= ~castling_bit_queen;
-            top->zobrist_key ^= zobrist::Castling(top->castle);
-          } else if (from_col == 7 && castling_bit_king) {
-            top->castle &= ~castling_bit_king;
-            top->zobrist_key ^= zobrist::Castling(top->castle);
-          }
-          break;
+      case ROOK:
+        // Depending on which rook is moved, mask the relevant bit in 'castle'
+        // and update zobrist key.
+        if (from_col == 0 && castling_bit_queen) {
+          top->castle &= ~castling_bit_queen;
+          top->zobrist_key ^= zobrist::Castling(top->castle);
+        } else if (from_col == 7 && castling_bit_king) {
+          top->castle &= ~castling_bit_king;
+          top->zobrist_key ^= zobrist::Castling(top->castle);
+        }
+        break;
       }
     }
 
@@ -166,24 +164,24 @@ void Board::MakeMove(const Move& move) {
     // castling rights.
     if (PieceType(dest_piece) == ROOK) {
       switch (side_to_move_) {
-        case Side::BLACK:
-          if (to_index == 0) {
-            top->castle &= ~0x2U;
-          } else if (to_index == 7) {
-            top->castle &= ~0x1U;
-          }
-          break;
+      case Side::BLACK:
+        if (to_index == 0) {
+          top->castle &= ~0x2U;
+        } else if (to_index == 7) {
+          top->castle &= ~0x1U;
+        }
+        break;
 
-        case Side::WHITE:
-          if (to_index == 56) {
-            top->castle &= ~0x8U;
-          } else if (to_index == 63) {
-            top->castle &= ~0x4U;
-          }
-          break;
+      case Side::WHITE:
+        if (to_index == 56) {
+          top->castle &= ~0x8U;
+        } else if (to_index == 63) {
+          top->castle &= ~0x4U;
+        }
+        break;
 
-        default:
-          throw std::runtime_error("Unknown side to move");
+      default:
+        throw std::runtime_error("Unknown side to move");
       }
     }
   }
@@ -218,14 +216,12 @@ bool Board::UnmakeLastMove() {
     return true;
   }
 
-  if (PieceType(dest_piece) == PAWN &&
-      to_col != from_col &&
+  if (PieceType(dest_piece) == PAWN && to_col != from_col &&
       top->captured_piece == NULLPIECE) {
     PlacePieceNoZ(INDX(from_row, to_col),
                   PieceOfSide(PAWN, OppositeSide(side_to_move_)));
-  } else if (castling_allowed_ &&
-      PieceType(dest_piece) == KING &&
-      abs(to_col - from_col) == 2) {
+  } else if (castling_allowed_ && PieceType(dest_piece) == KING &&
+             abs(to_col - from_col) == 2) {
     // Move rook.
     const int rook_old_index = INDX(from_row, to_col > from_col ? 7 : 0);
     const int rook_cur_index = INDX(from_row, (to_col + from_col) >> 1);
@@ -249,8 +245,8 @@ bool Board::CanCastle(const Side side, const Piece piece_type) const {
     throw std::runtime_error("Bad parameters");
   }
 
-  const int shift = (side == Side::BLACK ? 2 : 0) +
-                    (piece_type == QUEEN ? 1 : 0);
+  const int shift =
+      (side == Side::BLACK ? 2 : 0) + (piece_type == QUEEN ? 1 : 0);
 
   return move_stack_.Top()->castle & (1U << shift);
 }
@@ -261,9 +257,7 @@ bool Board::CanCastle(Piece piece_type) const {
 
 std::string Board::ParseIntoFEN() const {
   const MoveStackEntry* top = move_stack_.Top();
-  return FEN::MakeFEN(board_array_, side_to_move_,
-                      top->castle,
-                      top->ep_index);
+  return FEN::MakeFEN(board_array_, side_to_move_, top->castle, top->ep_index);
 }
 
 void Board::DebugPrintBoard() const {
@@ -299,13 +293,13 @@ void Board::DebugPrintBoard() const {
         cout << black_piece;
       }
       cout << " " << piece << " ";
-      cout << "\x1b[0m";  // clear side attributes
+      cout << "\x1b[0m"; // clear side attributes
     }
     cout << endl;
   }
   cout << "#   ";
   for (int i = 0; i < 8; ++i) {
-    cout << " " << (char) (i + 65) << " ";
+    cout << " " << (char)(i + 65) << " ";
   }
   cout << endl;
   cout << "# W pieces: " << NumPieces(Side::WHITE) << endl;

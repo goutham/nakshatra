@@ -1,3 +1,4 @@
+#include "search_algorithm.h"
 #include "board.h"
 #include "common.h"
 #include "eval.h"
@@ -5,19 +6,15 @@
 #include "lmr.h"
 #include "move_order.h"
 #include "movegen.h"
-#include "search_algorithm.h"
 #include "stats.h"
 #include "timer.h"
 #include "transpos.h"
 
-int SearchAlgorithm::NegaScout(int max_depth,
-                               int alpha,
-                               int beta,
+int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
                                SearchStats* search_stats) {
   U64 zkey = board_->ZobristKey();
   TranspositionTableEntry* tentry = transpos_->Get(zkey);
-  if (tentry != nullptr &&
-      tentry->depth >= max_depth &&
+  if (tentry != nullptr && tentry->depth >= max_depth &&
       (tentry->node_type == EXACT_NODE ||
        (tentry->node_type == FAIL_HIGH_NODE && tentry->score >= beta) ||
        (tentry->node_type == FAIL_LOW_NODE && tentry->score <= alpha))) {
@@ -63,9 +60,7 @@ int SearchAlgorithm::NegaScout(int max_depth,
         extensions_->lmr->CanReduce(index, max_depth)) {
       value =
           -NegaScout(max_depth - (1 + extensions_->lmr->DepthReductionFactor()),
-                     -alpha - 1,
-                     -alpha,
-                     search_stats);
+                     -alpha - 1, -alpha, search_stats);
       lmr_triggered = true;
     }
 
@@ -98,11 +93,7 @@ int SearchAlgorithm::NegaScout(int max_depth,
   }
 
   if (!timer_ || !timer_->timer_expired()) {
-    transpos_->Put(alpha,
-                   node_type,
-                   max_depth,
-                   zkey,
-                   best_move);
+    transpos_->Put(alpha, node_type, max_depth, zkey, best_move);
   }
   return alpha;
 }

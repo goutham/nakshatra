@@ -14,18 +14,13 @@ class Player;
 class TranspositionTable;
 
 class Executor {
- public:
-  Executor(const std::string& name)
-      : Executor(name, "", Variant::NORMAL) {}
+public:
+  Executor(const std::string& name) : Executor(name, "", Variant::NORMAL) {}
 
-  Executor(const std::string& name,
-           const std::string& init_fen,
+  Executor(const std::string& name, const std::string& init_fen,
            const Variant variant)
-      : name_(name),
-        player_(nullptr),
-        variant_(variant),
-        time_centis_(10 * 60 * 100),
-        otime_centis_(10 * 60 * 100),
+      : name_(name), player_(nullptr), variant_(variant),
+        time_centis_(10 * 60 * 100), otime_centis_(10 * 60 * 100),
         init_fen_(init_fen) {}
 
   ~Executor() { StopPondering(); }
@@ -38,7 +33,7 @@ class Executor {
   // Returns true if program has to quit.
   bool quit() { return quit_; }
 
- private:
+private:
   // Checks if match has a result - i.e, the result code obtained from evaluator
   // is one of WIN, -WIN or DRAW. If a result is available, returns true, else
   // false.
@@ -57,8 +52,8 @@ class Executor {
   // Name of the computer player.
   std::string name_;
 
-  Player* player_;  // not owned.
-  Player* ponderer_;  // not owned.
+  Player* player_;   // not owned.
+  Player* ponderer_; // not owned.
   SearchParams search_params_;
   std::unique_ptr<PlayerBuilder> player_builder_;
   std::unique_ptr<PlayerBuilder> ponderer_builder_;

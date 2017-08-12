@@ -1,7 +1,7 @@
+#include "movegen.h"
 #include "board.h"
 #include "common.h"
 #include "move_array.h"
-#include "movegen.h"
 #include "stopwatch.h"
 
 #include <cassert>
@@ -29,7 +29,7 @@ int64_t Perft(MoveGenerator* movegen, Board* board, unsigned int depth) {
   return nodes;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   assert(argc == 3);
 
   unsigned int depth = 0;
@@ -52,12 +52,16 @@ int main(int argc, char **argv) {
   delete board;
   const double elapsed_secs = stop_watch.ElapsedTime() / 100.0;
 
-  printf("+--------+------------------+-----------------+--------------------+\n");
-  printf("| Depth  | Elapsed time (s) |    Num Nodes    |   Num Nodes / sec  |\n");
-  printf("+--------+------------------+-----------------+--------------------+\n");
+  printf(
+      "+--------+------------------+-----------------+--------------------+\n");
+  printf(
+      "| Depth  | Elapsed time (s) |    Num Nodes    |   Num Nodes / sec  |\n");
+  printf(
+      "+--------+------------------+-----------------+--------------------+\n");
   printf("|%6d  | %16.3f | %12" PRId64 "    | %17.3f  |\n", depth, elapsed_secs,
          nodes, static_cast<double>(nodes) / elapsed_secs);
-  printf("+--------+------------------+-----------------+--------------------+\n");
+  printf(
+      "+--------+------------------+-----------------+--------------------+\n");
 
   return 0;
 }

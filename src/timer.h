@@ -10,7 +10,7 @@
 #include <time.h>
 
 class Timer {
- public:
+public:
   Timer() : timer_expired_(false) {
     struct sigevent sigx;
     sigx.sigev_notify = SIGEV_THREAD;
@@ -62,12 +62,10 @@ class Timer {
     timer_expired_ = true;
   }
 
-  bool timer_expired() const {
-    return timer_expired_;
-  }
- private:
+  bool timer_expired() const { return timer_expired_; }
 
-  static void Handler(sigval_t  sival) {
+private:
+  static void Handler(sigval_t sival) {
     reinterpret_cast<Timer*>(sival.sival_ptr)->Stop();
   }
 

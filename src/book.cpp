@@ -1,5 +1,5 @@
-#include "board.h"
 #include "book.h"
+#include "board.h"
 #include "common.h"
 #include "move.h"
 #include "movegen.h"
@@ -21,22 +21,20 @@
 Book::Book(Variant variant, const std::string& book_file)
     : book_file_(book_file) {
   switch (variant) {
-    case Variant::NORMAL:
-    {
-      Board board(Variant::NORMAL);
-      MoveGeneratorNormal movegen(&board);
-      LoadBook(&board, &movegen);
-      break;
-    }
-    case Variant::SUICIDE:
-    {
-      Board board(Variant::SUICIDE);
-      MoveGeneratorSuicide movegen(board);
-      LoadBook(&board, &movegen);
-      break;
-    }
-    default:
-      throw std::runtime_error("Unknown variant.");
+  case Variant::NORMAL: {
+    Board board(Variant::NORMAL);
+    MoveGeneratorNormal movegen(&board);
+    LoadBook(&board, &movegen);
+    break;
+  }
+  case Variant::SUICIDE: {
+    Board board(Variant::SUICIDE);
+    MoveGeneratorSuicide movegen(board);
+    LoadBook(&board, &movegen);
+    break;
+  }
+  default:
+    throw std::runtime_error("Unknown variant.");
   }
 }
 

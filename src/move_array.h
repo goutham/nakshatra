@@ -4,12 +4,10 @@
 #include "move.h"
 
 class MoveArray {
- public:
+public:
   MoveArray() : n_(0u) {}
 
-  void Add(const Move& move) {
-    moves_[n_++] = move;
-  }
+  void Add(const Move& move) { moves_[n_++] = move; }
 
   void SwapToFront(const Move& move) {
     size_t index_to_swap = 0;
@@ -48,19 +46,13 @@ class MoveArray {
     return false;
   }
 
-  size_t size() const {
-    return n_;
-  }
+  size_t size() const { return n_; }
 
-  const Move& get(size_t index) const {
-    return moves_[index];
-  }
+  const Move& get(size_t index) const { return moves_[index]; }
 
-  void clear() {
-    n_ = 0;
-  }
+  void clear() { n_ = 0; }
 
- private:
+private:
   Move moves_[256];
   size_t n_;
 };

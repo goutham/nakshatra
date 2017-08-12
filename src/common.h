@@ -22,11 +22,7 @@ extern std::ostream nullstream;
 
 enum class Variant { NORMAL, SUICIDE };
 
-enum class Side {
-  NONE,
-  WHITE,
-  BLACK
-};
+enum class Side { NONE, WHITE, BLACK };
 
 // Column numbers of files.
 constexpr int FILE_A = 0;
@@ -43,9 +39,7 @@ enum NodeType { FAIL_HIGH_NODE, FAIL_LOW_NODE, EXACT_NODE };
 // Uses de Bruijn Sequences to Index a 1 in a Computer Word.
 int log2U(U64 bb);
 
-inline int Lsb1(const U64 v) {
-  return log2U(v);
-}
+inline int Lsb1(const U64 v) { return log2U(v); }
 
 // Number of set bits in a U64 integer.
 unsigned PopCount(U64 x);
@@ -54,13 +48,9 @@ constexpr unsigned INDX(const unsigned row, const unsigned col) {
   return row * 8 + col;
 }
 
-constexpr unsigned ROW(const unsigned index) {
-  return index / 8;
-}
+constexpr unsigned ROW(const unsigned index) { return index / 8; }
 
-constexpr unsigned COL(const unsigned index) {
-  return index % 8;
-}
+constexpr unsigned COL(const unsigned index) { return index % 8; }
 
 constexpr Side OppositeSide(Side side) {
   return side == Side::BLACK ? Side::WHITE
@@ -68,15 +58,11 @@ constexpr Side OppositeSide(Side side) {
 }
 
 // Maps a side to an index; 0 for white and 1 for black.
-constexpr int SideIndex(const Side side) {
-  return side == Side::WHITE ? 0 : 1;
-}
+constexpr int SideIndex(const Side side) { return side == Side::WHITE ? 0 : 1; }
 
 // Returns true if only one bit is set in given U64. This is much faster
 // than using PopCount function.
-constexpr bool OnlyOneBitSet(U64 v) {
-  return v && !(v & (v - 1));
-}
+constexpr bool OnlyOneBitSet(U64 v) { return v && !(v & (v - 1)); }
 
 constexpr char DigitToChar(const int digit) {
   return (digit >= 0 && digit <= 9) ? static_cast<char>(digit + 48)

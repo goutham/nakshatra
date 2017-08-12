@@ -39,7 +39,7 @@ struct BuildOptions {
 };
 
 class PlayerBuilder {
- public:
+public:
   PlayerBuilder() : external_transpos_(false) {}
 
   virtual ~PlayerBuilder() {
@@ -63,9 +63,7 @@ class PlayerBuilder {
     transpos_.reset(transpos);
     external_transpos_ = true;
   }
-  virtual void BuildTimer() {
-    timer_.reset(new Timer);
-  }
+  virtual void BuildTimer() { timer_.reset(new Timer); }
   virtual void BuildSearchAlgorithm() {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
@@ -73,12 +71,9 @@ class PlayerBuilder {
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
     assert(extensions_ != nullptr);
-    search_algorithm_.reset(new SearchAlgorithm(board_.get(),
-                                                movegen_.get(),
-                                                eval_.get(),
-                                                timer_.get(),
-                                                transpos_.get(),
-                                                extensions_.get()));
+    search_algorithm_.reset(
+        new SearchAlgorithm(board_.get(), movegen_.get(), eval_.get(),
+                            timer_.get(), transpos_.get(), extensions_.get()));
   }
   virtual void BuildIterativeDeepener() {
     assert(board_ != nullptr);
@@ -87,12 +82,9 @@ class PlayerBuilder {
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
     assert(extensions_ != nullptr);
-    iterative_deepener_.reset(new IterativeDeepener(board_.get(),
-                                                    movegen_.get(),
-                                                    search_algorithm_.get(),
-                                                    timer_.get(),
-                                                    transpos_.get(),
-                                                    extensions_.get()));
+    iterative_deepener_.reset(new IterativeDeepener(
+        board_.get(), movegen_.get(), search_algorithm_.get(), timer_.get(),
+        transpos_.get(), extensions_.get()));
   }
 
   // BuildExtensions only allocates memory for the extensions_ object. The
@@ -103,39 +95,25 @@ class PlayerBuilder {
   // require arbitrarily many other objects to have been built. The
   // side-effect of this is that none of the constructors which take extensions_
   // as an argument can refer to its contents.
-  virtual void BuildExtensions() {
-    extensions_.reset(new Extensions());
-  }
+  virtual void BuildExtensions() { extensions_.reset(new Extensions()); }
   virtual void AddExtensions() = 0;
 
   virtual void BuildBook() = 0;
   virtual void BuildPlayer() = 0;
 
-  virtual Player* GetPlayer() const {
-    return player_.get();
-  }
+  virtual Player* GetPlayer() const { return player_.get(); }
 
-  virtual MoveGenerator* GetMoveGenerator() const {
-    return movegen_.get();
-  }
+  virtual MoveGenerator* GetMoveGenerator() const { return movegen_.get(); }
 
-  virtual EGTB* GetEGTB() const {
-    return egtb_.get();
-  }
+  virtual EGTB* GetEGTB() const { return egtb_.get(); }
 
-  virtual Evaluator* GetEvaluator() const {
-    return eval_.get();
-  }
+  virtual Evaluator* GetEvaluator() const { return eval_.get(); }
 
-  virtual TranspositionTable* GetTranspos() const {
-    return transpos_.get();
-  }
+  virtual TranspositionTable* GetTranspos() const { return transpos_.get(); }
 
-  virtual Timer* GetTimer() const {
-    return timer_.get();
-  }
+  virtual Timer* GetTimer() const { return timer_.get(); }
 
- protected:
+protected:
   const std::map<std::string, std::string> config_map_;
   std::unique_ptr<Board> board_;
   std::unique_ptr<MoveGenerator> movegen_;
@@ -152,10 +130,8 @@ class PlayerBuilder {
 };
 
 class NormalPlayerBuilder : public PlayerBuilder {
- public:
-  void BuildBoard() override {
-    board_.reset(new Board(Variant::NORMAL));
-  }
+public:
+  void BuildBoard() override { board_.reset(new Board(Variant::NORMAL)); }
 
   void BuildBoard(const std::string& fen) override {
     board_.reset(new Board(Variant::NORMAL, fen));
@@ -166,8 +142,7 @@ class NormalPlayerBuilder : public PlayerBuilder {
     movegen_.reset(new MoveGeneratorNormal(board_.get()));
   }
 
-  void BuildEGTB() override {
-  }
+  void BuildEGTB() override {}
 
   void BuildEvaluator() override {
     assert(board_ != nullptr);
@@ -191,24 +166,18 @@ class NormalPlayerBuilder : public PlayerBuilder {
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
     // For Normal player, extensions_ could be NULL as of now.
-    player_.reset(new Player(book_.get(),
-                             board_.get(),
-                             movegen_.get(),
-                             iterative_deepener_.get(),
-                             timer_.get(),
-                             egtb_.get(),
-                             extensions_.get()));
+    player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
+                             iterative_deepener_.get(), timer_.get(),
+                             egtb_.get(), extensions_.get()));
   }
 };
 
 class SuicidePlayerBuilder : public PlayerBuilder {
- public:
+public:
   SuicidePlayerBuilder(const bool enable_pns = true)
       : enable_pns_(enable_pns) {}
 
-  void BuildBoard() override {
-    board_.reset(new Board(Variant::SUICIDE));
-  }
+  void BuildBoard() override { board_.reset(new Board(Variant::SUICIDE)); }
 
   void BuildBoard(const std::string& fen) override {
     board_.reset(new Board(Variant::SUICIDE, fen));
@@ -230,9 +199,7 @@ class SuicidePlayerBuilder : public PlayerBuilder {
   void BuildEvaluator() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
-    eval_.reset(new EvalSuicide(board_.get(),
-                                movegen_.get(),
-                                egtb_.get()));
+    eval_.reset(new EvalSuicide(board_.get(), movegen_.get(), egtb_.get()));
   }
 
   void BuildBook() override {
@@ -244,19 +211,15 @@ class SuicidePlayerBuilder : public PlayerBuilder {
     assert(movegen_ != nullptr);
     assert(eval_ != nullptr);
     assert(extensions_ != nullptr);
-    extensions_->move_orderer.reset(new MobilityOrderer(board_.get(),
-                                                        movegen_.get()));
-    extensions_->lmr.reset(new LMR(
-        4  /* full depth moves */,
-        2  /* reduction limit */,
-        1  /* depth reduction factor */));
+    extensions_->move_orderer.reset(
+        new MobilityOrderer(board_.get(), movegen_.get()));
+    extensions_->lmr.reset(new LMR(4 /* full depth moves */,
+                                   2 /* reduction limit */,
+                                   1 /* depth reduction factor */));
     if (enable_pns_) {
       extensions_->pns_extension.pns_timer.reset(new Timer);
       extensions_->pns_extension.pn_search.reset(
-          new PNSearch(board_.get(),
-                       movegen_.get(),
-                       eval_.get(),
-                       egtb_.get(),
+          new PNSearch(board_.get(), movegen_.get(), eval_.get(), egtb_.get(),
                        extensions_->pns_extension.pns_timer.get()));
     }
   }
@@ -267,20 +230,17 @@ class SuicidePlayerBuilder : public PlayerBuilder {
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
     assert(extensions_ != nullptr);
-    player_.reset(new Player(book_.get(),
-                             board_.get(),
-                             movegen_.get(),
-                             iterative_deepener_.get(),
-                             timer_.get(),
-                             egtb_.get(),
-                             extensions_.get()));
+    player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
+                             iterative_deepener_.get(), timer_.get(),
+                             egtb_.get(), extensions_.get()));
   }
- private:
+
+private:
   const bool enable_pns_;
 };
 
 class PlayerBuilderDirector {
- public:
+public:
   PlayerBuilderDirector(PlayerBuilder* player_builder)
       : player_builder_(player_builder) {}
 
@@ -306,11 +266,11 @@ class PlayerBuilderDirector {
     player_builder_->BuildSearchAlgorithm();
     player_builder_->BuildIterativeDeepener();
     player_builder_->BuildPlayer();
-    player_builder_->AddExtensions();  // Must always be called last.
+    player_builder_->AddExtensions(); // Must always be called last.
     return player_builder_->GetPlayer();
   }
 
- private:
+private:
   PlayerBuilder* player_builder_;
 };
 

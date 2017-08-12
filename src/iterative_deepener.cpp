@@ -1,8 +1,8 @@
+#include "iterative_deepener.h"
 #include "board.h"
 #include "common.h"
 #include "eval.h"
 #include "extensions.h"
-#include "iterative_deepener.h"
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -17,8 +17,7 @@
 #include <iostream>
 #include <string>
 
-void IterativeDeepener::Search(const IDSParams& ids_params,
-                               Move* best_move,
+void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
                                int* best_move_score,
                                SearchStats* id_search_stats) {
   std::ostream& out = ids_params.thinking_output ? std::cout : nullstream;
@@ -133,9 +132,7 @@ void IterativeDeepener::FindBestMove(int max_depth) {
   for (unsigned int i = 0; i < root_move_array_.size(); ++i) {
     const Move& move = root_move_array_.get(i);
     board_->MakeMove(move);
-    int score = -search_algorithm_->NegaScout(max_depth - 1,
-                                              -INF,
-                                              INF,
+    int score = -search_algorithm_->NegaScout(max_depth - 1, -INF, INF,
                                               &istat.search_stats);
     board_->UnmakeLastMove();
 
@@ -161,10 +158,7 @@ void IterativeDeepener::FindBestMove(int max_depth) {
   // best known move before current iteration, which means any other move found
   // to be better at this depth is at least better than that.
   if (istat.root_moves_covered > 0) {
-    transpos_->Put(istat.score,
-                   EXACT_NODE,
-                   max_depth,
-                   board_->ZobristKey(),
+    transpos_->Put(istat.score, EXACT_NODE, max_depth, board_->ZobristKey(),
                    istat.best_move);
   }
   iteration_stats_.push_back(istat);
@@ -200,6 +194,6 @@ std::string IterativeDeepener::PV(const Move& root_move) {
     board_->UnmakeLastMove();
   }
 
-  board_->UnmakeLastMove();  // root move
+  board_->UnmakeLastMove(); // root move
   return pv;
 }

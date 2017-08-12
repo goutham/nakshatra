@@ -1,9 +1,9 @@
+#include "pn_search.h"
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
 #include "eval.h"
 #include "movegen.h"
-#include "pn_search.h"
 #include "stopwatch.h"
 #include "timer.h"
 
@@ -50,14 +50,11 @@ void PNSearch::Search(const PNSParams& pns_params, PNSResult* pns_result) {
         result = UNKNOWN;
       }
     }
-    pns_result->ordered_moves.push_back({
-        pns_node->move,
-        score,
-        pns_node->tree_size,
-        result});
+    pns_result->ordered_moves.push_back(
+        {pns_node->move, score, pns_node->tree_size, result});
   }
   sort(pns_result->ordered_moves.begin(), pns_result->ordered_moves.end(),
-       [] (const PNSResult::MoveStat& a, const PNSResult::MoveStat& b) {
+       [](const PNSResult::MoveStat& a, const PNSResult::MoveStat& b) {
          return a.score < b.score;
        });
   // Print the ordered moves.
@@ -86,11 +83,9 @@ void PNSearch::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
          (!timer_ || !timer_->timer_expired())) {
     if (pns_params.log_progress > 0 &&
         stop_watch.ElapsedTime() / 100 > log_progress_secs) {
-      std::cout << "# Progress: "
-           << (100.0 * num_nodes) / pns_params.max_nodes
-           << "% ("
-           << num_nodes << " / " << pns_params.max_nodes
-           << ")" << std::endl;
+      std::cout << "# Progress: " << (100.0 * num_nodes) / pns_params.max_nodes
+                << "% (" << num_nodes << " / " << pns_params.max_nodes << ")"
+                << std::endl;
       log_progress_secs += pns_params.log_progress;
     }
     PNSNode* mpn = FindMpn(cur_node, &depth);
@@ -101,25 +96,21 @@ void PNSearch::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
   while (cur_node != pns_root) {
     cur_node = cur_node->parent;
     --depth;
-    assert (board_->UnmakeLastMove());
+    assert(board_->UnmakeLastMove());
     UpdateTreeSize(cur_node);
   }
   assert(depth == 0);
 }
 
 bool PNSearch::RedundantMoves(PNSNode* pns_node) {
-  if (pns_node &&
-      pns_node->parent &&
-      pns_node->parent->parent &&
+  if (pns_node && pns_node->parent && pns_node->parent->parent &&
       pns_node->parent->parent->parent) {
     const Move& m1 = pns_node->move;
     const Move& m2 = pns_node->parent->move;
     const Move& m3 = pns_node->parent->parent->move;
     const Move& m4 = pns_node->parent->parent->parent->move;
-    if (m1.from_index() == m3.to_index() &&
-        m1.to_index() == m3.from_index() &&
-        m2.from_index() == m4.to_index() &&
-        m2.to_index() == m4.from_index()) {
+    if (m1.from_index() == m3.to_index() && m1.to_index() == m3.from_index() &&
+        m2.from_index() == m4.to_index() && m2.to_index() == m4.from_index()) {
       return true;
     }
   }
@@ -156,10 +147,8 @@ PNSNode* PNSearch::FindMpn(PNSNode* root, int* depth) {
   return mpn;
 }
 
-PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params,
-                                   PNSNode* mpn,
-                                   PNSNode* pns_root,
-                                   int* depth) {
+PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params, PNSNode* mpn,
+                                   PNSNode* pns_root, int* depth) {
   PNSNode* pns_node = mpn;
   while (true) {
     if (!pns_node->children.empty()) {
@@ -182,10 +171,8 @@ PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params,
       // tree. In PN^2, MPN will have unevaluated children due to
       // use of delayed evaluation so we must continue even if
       // proof/disproof don't change.
-      if (pns_node->proof == proof &&
-          pns_node->disproof == disproof &&
-          (pns_params.pns_type != PNSParams::PN2 ||
-           pns_node != mpn)) {
+      if (pns_node->proof == proof && pns_node->disproof == disproof &&
+          (pns_params.pns_type != PNSParams::PN2 || pns_node != mpn)) {
         return pns_node;
       }
       pns_node->proof = proof;
@@ -210,10 +197,8 @@ void PNSearch::UpdateTreeSize(PNSNode* pns_node) {
   }
 }
 
-void PNSearch::Expand(const PNSParams& pns_params,
-                      const int num_nodes,
-                      const int pns_node_depth,
-                      PNSNode* pns_node) {
+void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
+                      const int pns_node_depth, PNSNode* pns_node) {
   if (RedundantMoves(pns_node) || pns_node_depth >= PNS_MAX_DEPTH) {
     pns_node->proof = INF_NODES;
     pns_node->disproof = INF_NODES;
@@ -246,8 +231,7 @@ void PNSearch::Expand(const PNSParams& pns_params,
       child->parent = pns_node;
       board_->MakeMove(child->move);
       int result = evaluator_->Result();
-      if (result == UNKNOWN &&
-          egtb_ &&
+      if (result == UNKNOWN && egtb_ &&
           OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
           OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
         const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
@@ -274,14 +258,13 @@ void PNSearch::Expand(const PNSParams& pns_params,
   }
 }
 
-int PNSearch::PnNodes(const PNSParams& pns_params,
-                      const int num_nodes) {
+int PNSearch::PnNodes(const PNSParams& pns_params, const int num_nodes) {
   const double a = pns_params.pn2_max_nodes_fraction_a * pns_params.max_nodes;
   const double b = pns_params.pn2_max_nodes_fraction_b * pns_params.max_nodes;
   const double f_x = 1.0 / (1.0 + exp((a - num_nodes) / b));
   return static_cast<int>(
       std::min(ceil(std::max(num_nodes, 1) * f_x),
-                   static_cast<double>(pns_params.max_nodes - num_nodes)));
+               static_cast<double>(pns_params.max_nodes - num_nodes)));
 }
 
 void PNSearch::Delete(PNSNode* pns_node) {

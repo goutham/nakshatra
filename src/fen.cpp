@@ -1,6 +1,6 @@
+#include "fen.h"
 #include "board.h"
 #include "common.h"
-#include "fen.h"
 #include "move.h"
 #include "piece.h"
 
@@ -24,7 +24,7 @@ void GetPieces(const string& fen, std::vector<PieceIndexInfo>* pieces) {
       --row;
       col = 0;
       continue;
-    } else if(isalpha(fen[i])) {
+    } else if (isalpha(fen[i])) {
       PieceIndexInfo p;
       p.piece = CharToPiece(fen[i]);
       p.row = row;
@@ -49,7 +49,8 @@ int NumPieces(const string& fen) {
 
 Side PlayerColor(const string& fen) {
   unsigned i = 0;
-  for (; fen[i] != ' '; ++i) { }
+  for (; fen[i] != ' '; ++i) {
+  }
   ++i;
   if (fen[i] == 'w') {
     return Side::WHITE;
@@ -98,12 +99,12 @@ Side PlayerToMove(const string& fen) {
   }
   ++index;
   switch (fen[index]) {
-    case 'w':
-      return Side::WHITE;
-    case 'b':
-      return Side::BLACK;
-    default:
-      throw std::runtime_error("Malformed FEN string");
+  case 'w':
+    return Side::WHITE;
+  case 'b':
+    return Side::BLACK;
+  default:
+    throw std::runtime_error("Malformed FEN string");
   }
 }
 
@@ -123,10 +124,18 @@ unsigned char CastlingAvailability(const string& fen) {
   unsigned char castle = 0;
   while (fen[index] != ' ') {
     switch (fen[index]) {
-      case 'K': castle |= 0x1; break;
-      case 'Q': castle |= 0x2; break;
-      case 'k': castle |= 0x4; break;
-      case 'q': castle |= 0x8; break;
+    case 'K':
+      castle |= 0x1;
+      break;
+    case 'Q':
+      castle |= 0x2;
+      break;
+    case 'k':
+      castle |= 0x4;
+      break;
+    case 'q':
+      castle |= 0x8;
+      break;
     }
     ++index;
   }
@@ -149,10 +158,8 @@ int EnpassantIndex(const string& fen) {
   return Move::index(fen.substr(index, 2));
 }
 
-string MakeFEN(const Piece board_array[],
-               Side player_side,
-               const unsigned char castle,
-               int ep_index) {
+string MakeFEN(const Piece board_array[], Side player_side,
+               const unsigned char castle, int ep_index) {
   string fen;
   for (int i = 7; i >= 0; --i) {
     int empty_squares = 0;
@@ -209,5 +216,4 @@ string MakeFEN(const Piece board_array[],
 
   return fen;
 }
-
 }

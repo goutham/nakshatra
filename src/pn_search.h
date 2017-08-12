@@ -33,7 +33,7 @@ struct PNSNode {
 struct PNSResult {
   struct MoveStat {
     Move move;
-    double score;  // lower the better
+    double score; // lower the better
     uint64_t tree_size;
     int result;
   };
@@ -47,10 +47,7 @@ struct PNSResult {
 };
 
 struct PNSParams {
-  enum PNSearchType {
-    PN1,
-    PN2
-  };
+  enum PNSearchType { PN1, PN2 };
   PNSearchType pns_type = PN1;
 
   // Maximum number of nodes in PNS tree.
@@ -70,19 +67,13 @@ struct PNSParams {
 };
 
 class PNSearch {
- public:
+public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
-  PNSearch(Board* board,
-           MoveGenerator* movegen,
-           Evaluator* evaluator,
-           EGTB* egtb,
-           Timer* timer) :
-      board_(board),
-      movegen_(movegen),
-      evaluator_(evaluator),
-      egtb_(egtb),
-      timer_(timer) {}
+  PNSearch(Board* board, MoveGenerator* movegen, Evaluator* evaluator,
+           EGTB* egtb, Timer* timer)
+      : board_(board), movegen_(movegen), evaluator_(evaluator), egtb_(egtb),
+        timer_(timer) {}
 
   ~PNSearch() {
     if (pns_tree_) {
@@ -93,11 +84,9 @@ class PNSearch {
 
   void Search(const PNSParams& pns_params, PNSResult* pns_result);
 
- private:
-  void Expand(const PNSParams& pns_params,
-              const int num_nodes,
-              const int pns_node_depth,
-              PNSNode* pns_node);
+private:
+  void Expand(const PNSParams& pns_params, const int num_nodes,
+              const int pns_node_depth, PNSNode* pns_node);
 
   void Pns(const PNSParams& pns_params, PNSNode* pns_root);
 
@@ -107,10 +96,8 @@ class PNSearch {
 
   PNSNode* FindMpn(PNSNode* pns_node, int* depth);
 
-  PNSNode* UpdateAncestors(const PNSParams& pns_params,
-                           PNSNode* mpn,
-                           PNSNode* pns_root,
-                           int* depth);
+  PNSNode* UpdateAncestors(const PNSParams& pns_params, PNSNode* mpn,
+                           PNSNode* pns_root, int* depth);
 
   void UpdateTreeSize(PNSNode* pns_node);
 

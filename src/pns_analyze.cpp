@@ -9,9 +9,9 @@
 #include "san.h"
 
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
-#include <cstring>
 
 PNSParams::PNSearchType GetPNSType(const char* arg) {
   if (strcmp(arg, "pn1") == 0) {
@@ -61,11 +61,7 @@ int main(int argc, char* argv[]) {
   pns_params.pns_type = pns_type;
   pns_params.quiet = false;
   pns_params.log_progress = 10;
-  PNSearch pn_search(&board,
-                     &movegen,
-                     &eval,
-                     &egtb,
-                     nullptr);
+  PNSearch pn_search(&board, &movegen, &eval, &egtb, nullptr);
   PNSResult pns_result;
   pn_search.Search(pns_params, &pns_result);
   std::cout << "tree_size: " << pns_result.pns_tree->tree_size << "\n"

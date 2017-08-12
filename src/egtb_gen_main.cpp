@@ -1,9 +1,9 @@
+#include "egtb_gen.h"
 #include "board.h"
 #include "common.h"
-#include "egtb_gen.h"
+#include "move.h"
 #include "movegen.h"
 #include "piece.h"
-#include "move.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -41,8 +41,7 @@ void GeneratePermutations(const string& fen, const Piece piece,
   }
 }
 
-void GeneratePermutations(const list<string>& initial_list,
-                          const Piece piece,
+void GeneratePermutations(const list<string>& initial_list, const Piece piece,
                           const vector<Side> next_player_sides,
                           list<string>* permutations) {
   for (const string& fen : initial_list) {
@@ -50,25 +49,21 @@ void GeneratePermutations(const list<string>& initial_list,
   }
 }
 
-void CreateTwoPiecesEGTB(Side winning_side,
-                         Side losing_side,
+void CreateTwoPiecesEGTB(Side winning_side, Side losing_side,
                          EGTBStore* store) {
   Board empty_board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -");
 
   list<string> one_piece_positions;
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     GeneratePermutations(empty_board.ParseIntoFEN(),
-                         PieceOfSide(piece, losing_side),
-                         {winning_side},
+                         PieceOfSide(piece, losing_side), {winning_side},
                          &one_piece_positions);
   }
 
   list<string> two_piece_positions;
   for (Piece piece = KING; piece <= PAWN; ++piece) {
-    GeneratePermutations(one_piece_positions,
-                         PieceOfSide(piece, winning_side),
-                         {Side::WHITE, Side::BLACK},
-                         &two_piece_positions);
+    GeneratePermutations(one_piece_positions, PieceOfSide(piece, winning_side),
+                         {Side::WHITE, Side::BLACK}, &two_piece_positions);
   }
 
   list<string> all_positions;
@@ -81,7 +76,6 @@ void CreateTwoPiecesEGTB(Side winning_side,
 
   EGTBGenerate(all_positions, store);
 }
-
 
 int main() {
   EGTBStore store, store2;

@@ -18,9 +18,8 @@ struct EGTBIndexEntry {
 };
 
 class EGTB {
- public:
-  EGTB(const std::vector<std::string>& egtb_files,
-       const Board& board);
+public:
+  EGTB(const std::vector<std::string>& egtb_files, const Board& board);
   virtual ~EGTB() {}
   void Initialize();
 
@@ -28,7 +27,7 @@ class EGTB {
 
   void LogStats();
 
- private:
+private:
   const std::vector<std::string> egtb_files_;
   const Board& board_;
   bool initialized_;
