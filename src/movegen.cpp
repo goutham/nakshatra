@@ -321,7 +321,7 @@ void GenerateMoves_Normal(Board* board, MoveArray* move_array) {
     // Check if there are any pinned pieces. This is not an exact set of
     // pins but always a superset.
     const U64 potential_pins =
-        attacks::Attacks(board->BitBoard(), king_index, QUEEN) &
+        attacks::Attacks(board->BitBoard(king_piece), king_index, QUEEN) &
         opp_attack_map & board->BitBoard(side);
 
     for (size_t i = 0; i < pseudo_legal_move_array.size(); ++i) {
