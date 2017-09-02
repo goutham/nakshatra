@@ -16,52 +16,6 @@ using std::string;
 
 namespace FEN {
 
-void GetPieces(const string& fen, std::vector<PieceIndexInfo>* pieces) {
-  int row = 7;
-  int col = 0;
-  for (int i = 0; fen[i] != ' '; ++i) {
-    if (fen[i] == '/') {
-      --row;
-      col = 0;
-      continue;
-    } else if (isalpha(fen[i])) {
-      PieceIndexInfo p;
-      p.piece = CharToPiece(fen[i]);
-      p.row = row;
-      p.col = col;
-      pieces->push_back(p);
-      ++col;
-    } else if (isdigit(fen[i])) {
-      col += CharToDigit(fen[i]);
-    }
-  }
-}
-
-int NumPieces(const string& fen) {
-  int count = 0;
-  for (int i = 0; fen[i] != ' '; ++i) {
-    if (isalpha(fen[i])) {
-      ++count;
-    }
-  }
-  return count;
-}
-
-Side PlayerColor(const string& fen) {
-  unsigned i = 0;
-  for (; fen[i] != ' '; ++i) {
-  }
-  ++i;
-  if (fen[i] == 'w') {
-    return Side::WHITE;
-  } else if (fen[i] == 'b') {
-    return Side::BLACK;
-  } else {
-    std::cout << "FATAL ERROR" << std::endl;
-    exit(0);
-  }
-}
-
 void MakeBoardArray(const string& fen, Piece board_array[]) {
   for (int i = 0; i < BOARD_SIZE; ++i) {
     board_array[i] = NULLPIECE;

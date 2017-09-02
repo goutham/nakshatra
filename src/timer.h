@@ -11,7 +11,7 @@
 
 class Timer {
 public:
-  Timer() : timer_expired_(false) {
+  Timer() {
     struct sigevent sigx;
     sigx.sigev_notify = SIGEV_THREAD;
     sigx.sigev_value.sival_ptr = this;
@@ -23,11 +23,9 @@ public:
   }
 
   ~Timer() noexcept(false) {
-    if (!timer_expired_) {
-      Stop();
-      if (timer_delete(timer_id_) == -1) {
-        throw std::runtime_error("Error: timer_delete");
-      }
+    RemoveTimer();
+    if (timer_delete(timer_id_) == -1) {
+      throw std::runtime_error("Error: timer_delete");
     }
   }
 
@@ -37,10 +35,10 @@ public:
   }
 
   void Run(long centis) {
-    if (timer_expired_) {
+    if (Lapsed()) {
       return;
     }
-    if (centis == 0) {
+    if (centis <= 0) {
       timer_expired_ = true;
       return;
     }
@@ -54,19 +52,22 @@ public:
     }
   }
 
-  void Stop() {
-    if (timer_expired_) {
-      return;
-    }
-    RemoveTimer();
-    timer_expired_ = true;
+  void Invalidate() {
+    timer_invalidated_ = true;
   }
 
-  bool timer_expired() const { return timer_expired_; }
+  bool Lapsed() const {
+    return timer_expired_ || timer_invalidated_;
+  }
 
 private:
   static void Handler(sigval_t sival) {
-    reinterpret_cast<Timer*>(sival.sival_ptr)->Stop();
+    reinterpret_cast<Timer*>(sival.sival_ptr)->Expire();
+  }
+
+  void Expire() {
+    RemoveTimer();
+    timer_expired_ = true;
   }
 
   void RemoveTimer() {
@@ -81,7 +82,8 @@ private:
   }
 
   timer_t timer_id_;
-  bool timer_expired_;
+  bool timer_expired_ = false;
+  bool timer_invalidated_ = false;
 };
 
 #endif

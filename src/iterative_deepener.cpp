@@ -88,7 +88,7 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
     // If FindMove could not complete at least the first root move subtree
     // completely, don't report stats or update best_move as the results are
     // likely to be incorrect.
-    if (timer_->timer_expired() && last_istat.root_moves_covered == 0) {
+    if (timer_->Lapsed() && last_istat.root_moves_covered == 0) {
       break;
     }
 
@@ -110,8 +110,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
       std::cout << output << std::endl;
     }
 
-    // Don't go any deeper if a win is confirmed or timer has expired.
-    if (last_istat.score == WIN || timer_->timer_expired()) {
+    // Don't go any deeper if a win is confirmed or timer has lapsed.
+    if (last_istat.score == WIN || timer_->Lapsed()) {
       break;
     }
   }
@@ -142,7 +142,7 @@ void IterativeDeepener::FindBestMove(int max_depth) {
     // this, there is a possibility of iterative deepener not reporting any
     // moves at all in some extremely time constrained situations. Searching all
     // root moves at depth 1 is very quick (sub-millisecond latency).
-    if (timer_->timer_expired() && max_depth > 1) {
+    if (timer_->Lapsed() && max_depth > 1) {
       break;
     }
     if (score > istat.score) {
@@ -152,7 +152,7 @@ void IterativeDeepener::FindBestMove(int max_depth) {
     ++istat.root_moves_covered;
   }
   // Add move to transposition table if at least the first root move was
-  // completely searched to current depth before timer expired. Otherwise, we
+  // completely searched to current depth before timer lapsed. Otherwise, we
   // don't really have any valid move to update. Due to move ordering
   // guarantees, the first move in root_move_array_ is guaranteed to be the
   // best known move before current iteration, which means any other move found

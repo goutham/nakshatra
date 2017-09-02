@@ -21,7 +21,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
     return tentry->score;
   }
 
-  if (max_depth == 0 || (timer_ && timer_->timer_expired())) {
+  if (max_depth == 0 || (timer_ && timer_->Lapsed())) {
     ++search_stats->nodes_evaluated;
     int score = evaluator_->Evaluate();
     transpos_->Put(score, EXACT_NODE, 0, zkey, Move());
@@ -92,7 +92,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
     b = alpha + 1;
   }
 
-  if (!timer_ || !timer_->timer_expired()) {
+  if (!timer_ || !timer_->Lapsed()) {
     transpos_->Put(alpha, node_type, max_depth, zkey, best_move);
   }
   return alpha;

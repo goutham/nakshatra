@@ -42,7 +42,7 @@ private:
   void ReBuildPlayer();
   void ReBuildPonderer();
 
-  void StartPondering();
+  void StartPondering(double time_centis);
   void StopPondering();
 
   void MakeRandomMove(std::vector<std::string>* response);

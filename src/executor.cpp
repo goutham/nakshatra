@@ -161,34 +161,26 @@ void Executor::ReBuildPonderer() {
   assert(ponderer_ != nullptr);
 }
 
-void Executor::StartPondering() {
-  // If already pondering, then no-op.
-  if (pondering_thread_.get() != nullptr) {
+void Executor::StartPondering(double time_centis) {
+  // Don't ponder if too little time remaining or if already pondering.
+  if (time_centis < 500 || pondering_thread_) {
     return;
   }
   ReBuildPonderer();
   pondering_thread_.reset(new std::thread([this] {
-    // Ponder until stopped or no more moves can be made.
-    while (true) {
-      SearchParams ponder_params;
-      ponder_params.thinking_output = false;
-      const Move move = this->ponderer_->Search(ponder_params, 300 * 100);
-      if (move.is_valid() &&
-          !this->ponderer_builder_->GetTimer()->timer_expired()) {
-        this->ponderer_->GetBoard()->MakeMove(move);
-      } else {
-        break;
-      }
-    }
+    SearchParams ponder_params;
+    ponder_params.thinking_output = false;
+    // Just seeding transposition table for now.
+    this->ponderer_->Search(ponder_params, 300 * 100);
   }));
 }
 
 void Executor::StopPondering() {
   // If already not pondering, then no-op.
-  if (pondering_thread_.get() == nullptr) {
+  if (!pondering_thread_) {
     return;
   }
-  ponderer_builder_->GetTimer()->Stop();
+  ponderer_builder_->GetTimer()->Invalidate();
   pondering_thread_->join();
   pondering_thread_.reset(nullptr);
 }
@@ -245,7 +237,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     player_->GetBoard()->MakeMove(cmove);
     OutputFEN();
     response->push_back("move " + cmove.str());
-    StartPondering();
+    StartPondering(time_centis_);
   } break;
 
   case TIME:
@@ -284,7 +276,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     if (MatchResult(response)) {
       break;
     }
-    StartPondering();
+    StartPondering(time_centis_);
   } break;
 
   case FORCE:

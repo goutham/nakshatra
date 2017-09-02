@@ -7,14 +7,40 @@
 #include <string>
 #include <vector>
 
+struct PieceIndexInfo {
+  Piece piece;
+  int row;
+  int col;
+};
+
+void GetPieces(const std::string& fen, std::vector<PieceIndexInfo>* pieces) {
+  int row = 7;
+  int col = 0;
+  for (int i = 0; fen[i] != ' '; ++i) {
+    if (fen[i] == '/') {
+      --row;
+      col = 0;
+      continue;
+    } else if (isalpha(fen[i])) {
+      PieceIndexInfo p;
+      p.piece = CharToPiece(fen[i]);
+      p.row = row;
+      p.col = col;
+      pieces->push_back(p);
+      ++col;
+    } else if (isdigit(fen[i])) {
+      col += CharToDigit(fen[i]);
+    }
+  }
+}
+
 TEST(FENTest, VerifyFEN) {
   std::string s = "2Q4r/2R5/8/8/1kP2N2/8/8/8 w - -";
-  EXPECT_EQ(6, FEN::NumPieces(s));
-  std::vector<FEN::PieceIndexInfo> pieces;
-  FEN::GetPieces(s, &pieces);
+  std::vector<PieceIndexInfo> pieces;
+  GetPieces(s, &pieces);
   EXPECT_EQ(6, pieces.size());
   unsigned count = 0;
-  for (const FEN::PieceIndexInfo& piece_index_info : pieces) {
+  for (const PieceIndexInfo& piece_index_info : pieces) {
     if (piece_index_info.piece == ROOK) {
       EXPECT_EQ(6, piece_index_info.row);
       EXPECT_EQ(2, piece_index_info.col);

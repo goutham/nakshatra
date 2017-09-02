@@ -8,18 +8,6 @@
 
 namespace FEN {
 
-struct PieceIndexInfo {
-  Piece piece;
-  int row;
-  int col;
-};
-
-void GetPieces(const std::string& fen, std::vector<PieceIndexInfo>* pieces);
-
-int NumPieces(const std::string& fen);
-
-Side PlayerColor(const std::string& fen);
-
 void MakeBoardArray(const std::string& fen, Piece board_array[]);
 
 Side PlayerToMove(const std::string& fen);

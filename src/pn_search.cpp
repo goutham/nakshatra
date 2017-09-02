@@ -80,7 +80,7 @@ void PNSearch::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
   int log_progress_secs = pns_params.log_progress;
   while (num_nodes < pns_params.max_nodes &&
          (pns_root->proof != 0 && pns_root->disproof != 0) &&
-         (!timer_ || !timer_->timer_expired())) {
+         (!timer_ || !timer_->Lapsed())) {
     if (pns_params.log_progress > 0 &&
         stop_watch.ElapsedTime() / 100 > log_progress_secs) {
       std::cout << "# Progress: " << (100.0 * num_nodes) / pns_params.max_nodes
