@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unistd.h>
 
 int main(int argc, char** argv) {
   using std::cout;
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
   cout << "feature sigterm=0" << endl;
   cout << "feature done=1" << endl;
 
-  srand(time(NULL));
+  srand(time(NULL) ^ getpid());
 
   Executor executor(kNakshatra);
 

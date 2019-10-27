@@ -1,6 +1,6 @@
-#include "egtb_gen.h"
 #include "board.h"
 #include "common.h"
+#include "egtb_gen.h"
 #include "move.h"
 #include "movegen.h"
 #include "piece.h"

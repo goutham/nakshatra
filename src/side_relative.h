@@ -10,29 +10,18 @@ namespace side_relative {
 // Shifts left relative to the side (so, for Side::BLACK, relative left shift is
 // actual right shift).
 template <Side side>
-constexpr U64 LeftShift(U64 bitboard, int shift);
-
-template <>
-constexpr U64 LeftShift<Side::WHITE>(U64 bitboard, int shift) {
-  return bitboard << shift;
-}
-
-template <>
-constexpr U64 LeftShift<Side::BLACK>(U64 bitboard, int shift) {
-  return bitboard >> shift;
+constexpr U64 LeftShift(U64 bitboard, int shift) {
+  if constexpr (side == Side::WHITE) {
+    return bitboard << shift;
+  } else {
+    static_assert(side == Side::BLACK);
+    return bitboard >> shift;
+  }
 }
 
 template <Side side>
-constexpr U64 RightShift(U64 bitboard, int shift);
-
-template <>
-constexpr U64 RightShift<Side::WHITE>(U64 bitboard, int shift) {
-  return bitboard >> shift;
-}
-
-template <>
-constexpr U64 RightShift<Side::BLACK>(U64 bitboard, int shift) {
-  return bitboard << shift;
+constexpr U64 RightShift(U64 bitboard, int shift) {
+  return LeftShift<OppositeSide(side)>(bitboard, shift);
 }
 
 template <Side side>

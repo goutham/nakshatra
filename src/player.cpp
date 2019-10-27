@@ -19,14 +19,20 @@
 
 Player::Player(const Book* book, Board* board, MoveGenerator* movegen,
                IterativeDeepener* iterative_deepener, Timer* timer, EGTB* egtb,
-               Extensions* extensions)
+               Extensions* extensions, int rand_moves)
     : book_(book), board_(board), movegen_(movegen),
       iterative_deepener_(iterative_deepener), timer_(timer), egtb_(egtb),
-      extensions_(extensions) {}
+      extensions_(extensions), rand_moves_(rand_moves) {}
 
 Move Player::Search(const SearchParams& search_params,
                     long time_for_move_centis) {
   std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
+  if (rand_moves_ > 0) {
+    MoveArray move_array;
+    movegen_->GenerateMoves(&move_array);
+    --rand_moves_;
+    return move_array.get(rand() % move_array.size());
+  }
   if (book_) {
     Move book_move = book_->GetBookMove(*board_);
     if (book_move.is_valid()) {
@@ -55,8 +61,8 @@ Move Player::Search(const SearchParams& search_params,
   ids_params.thinking_output = search_params.thinking_output;
   ids_params.search_depth = search_params.search_depth;
 
-  const PNSExtension& pns_extension = extensions_->pns_extension;
-  if (pns_extension.pn_search) {
+  if (const auto& pns_extension = extensions_->pns_extension;
+      pns_extension.pn_search) {
     assert(pns_extension.pns_timer);
 
     pns_extension.pns_timer->Reset();

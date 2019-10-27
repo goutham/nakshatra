@@ -39,7 +39,7 @@ private:
   // false.
   bool MatchResult(std::vector<std::string>* response);
 
-  void ReBuildPlayer();
+  void ReBuildPlayer(int rand_moves);
   void ReBuildPonderer();
 
   void StartPondering(double time_centis);
@@ -48,6 +48,8 @@ private:
   void MakeRandomMove(std::vector<std::string>* response);
 
   void OutputFEN() const;
+
+  long AllocateTime() const;
 
   // Name of the computer player.
   std::string name_;
@@ -61,6 +63,11 @@ private:
   Variant variant_;
   bool quit_ = false;
   bool force_mode_ = false;
+  bool pns_ = true;
+  bool book_ = true;
+  bool ponder_ = true;
+  int rand_moves_ = 0;
+  int think_time_centis_ = -1;
 
   double time_centis_;
   double otime_centis_;

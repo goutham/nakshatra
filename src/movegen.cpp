@@ -50,7 +50,7 @@ void AddPawnPromotions(const int from_index, const int to_index,
   add_move(QUEEN);
   add_move(ROOK);
 
-  if (variant == Variant::SUICIDE) {
+  if constexpr (variant == Variant::SUICIDE) {
     add_move(KING);
   }
 }
@@ -99,15 +99,15 @@ void GeneratePawnMoves(const Board& board, const bool generate_captures_only,
   const U64 pawn_capturable = opp_bitboard | EnpassantBitBoard<side>(board);
 
   const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, side));
-  const U64 nw_captured =
-      side_relative::PushNorthWest<side>(pawn_bitboard) & pawn_capturable;
-  if (nw_captured) {
+  if (const U64 nw_captured =
+          side_relative::PushNorthWest<side>(pawn_bitboard) & pawn_capturable;
+      nw_captured) {
     AddPawnMoves<variant, side, NW_CAPTURE>(nw_captured, move_acc);
   }
 
-  const U64 ne_captured =
-      side_relative::PushNorthEast<side>(pawn_bitboard) & pawn_capturable;
-  if (ne_captured) {
+  if (const U64 ne_captured =
+          side_relative::PushNorthEast<side>(pawn_bitboard) & pawn_capturable;
+      ne_captured) {
     AddPawnMoves<variant, side, NE_CAPTURE>(ne_captured, move_acc);
   }
 

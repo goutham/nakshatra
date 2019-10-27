@@ -17,8 +17,7 @@ std::ostream nullstream(0);
 std::vector<string> SplitString(const string& s, char delim) {
   std::vector<string> vec;
   std::istringstream ss(s);
-  string item;
-  while (getline(ss, item, delim)) {
+  for (string item; getline(ss, item, delim);) {
     vec.push_back(item);
   }
   return vec;
@@ -77,8 +76,7 @@ unsigned PopCount(U64 x) {
 
 bool GlobFiles(const string& regex, vector<string>* filenames) {
   glob_t globbuf;
-  int err = glob(regex.c_str(), 0, NULL, &globbuf);
-  if (err != 0) {
+  if (int err = glob(regex.c_str(), 0, NULL, &globbuf); err != 0) {
     return false;
   }
   for (size_t i = 0; i < globbuf.gl_pathc; ++i) {

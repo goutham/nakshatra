@@ -1,7 +1,7 @@
-#include "movegen.h"
 #include "board.h"
 #include "common.h"
 #include "move_array.h"
+#include "movegen.h"
 #include "stopwatch.h"
 
 #include <cassert>

@@ -24,7 +24,7 @@ class Player {
 public:
   Player(const Book* book, Board* board, MoveGenerator* movegen,
          IterativeDeepener* iterative_deepener, Timer* timer, EGTB* egtb,
-         Extensions* extensions);
+         Extensions* extensions, int rand_moves);
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
@@ -38,6 +38,7 @@ private:
   Timer* timer_;
   EGTB* egtb_;
   Extensions* extensions_;
+  int rand_moves_ = 0;
 };
 
 #endif

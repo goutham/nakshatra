@@ -12,17 +12,19 @@ namespace {
 // Piece values.
 namespace pv {
 constexpr int KING = 10;
-constexpr int QUEEN = 3;
+constexpr int QUEEN = 6;
 constexpr int ROOK = 7;
-constexpr int BISHOP = 2;
+constexpr int BISHOP = 3;
 constexpr int KNIGHT = 3;
-constexpr int PAWN = 3;
+constexpr int PAWN = 2;
 } // namespace pv
 
 // Weight for mobility.
 constexpr int MOBILITY_FACTOR = 25;
 
-constexpr int TEMPO = 100;
+constexpr int PIECE_COUNT_FACTOR = -50;
+
+constexpr int TEMPO = 250;
 }
 
 int EvalSuicide::PieceValDifference() const {
@@ -41,6 +43,13 @@ int EvalSuicide::PieceValDifference() const {
 
   return (board_->SideToMove() == Side::WHITE) ? (white_val - black_val)
                                                : (black_val - white_val);
+}
+
+int EvalSuicide::PieceCountDiff() const {
+  const int white_count = PopCount(board_->BitBoard(Side::WHITE));
+  const int black_count = PopCount(board_->BitBoard(Side::BLACK));
+  return (board_->SideToMove() == Side::WHITE) ? (white_count - black_count)
+      : (black_count - white_count);
 }
 
 bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
@@ -107,7 +116,7 @@ int EvalSuicide::Evaluate() {
   }
 
   return (self_moves - opp_moves) * MOBILITY_FACTOR + PieceValDifference() +
-         TEMPO;
+      TEMPO + PIECE_COUNT_FACTOR * PieceCountDiff();
 }
 
 int EvalSuicide::Result() const {

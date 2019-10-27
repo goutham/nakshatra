@@ -36,6 +36,8 @@ struct BuildOptions {
   TranspositionTable* transpos = nullptr;
 
   bool build_book = true;
+
+  int rand_moves = 0;
 };
 
 class PlayerBuilder {
@@ -99,7 +101,7 @@ public:
   virtual void AddExtensions() = 0;
 
   virtual void BuildBook() = 0;
-  virtual void BuildPlayer() = 0;
+  virtual void BuildPlayer(int rand_moves) = 0;
 
   virtual Player* GetPlayer() const { return player_.get(); }
 
@@ -160,7 +162,7 @@ public:
     extensions_->move_orderer.reset(new CapturesFirstOrderer(board_.get()));
   }
 
-  void BuildPlayer() override {
+  void BuildPlayer(int rand_moves) override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
@@ -168,7 +170,7 @@ public:
     // For Normal player, extensions_ could be NULL as of now.
     player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
                              iterative_deepener_.get(), timer_.get(),
-                             egtb_.get(), extensions_.get()));
+                             egtb_.get(), extensions_.get(), rand_moves));
   }
 };
 
@@ -224,7 +226,7 @@ public:
     }
   }
 
-  void BuildPlayer() override {
+  void BuildPlayer(int rand_moves) override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
@@ -232,7 +234,7 @@ public:
     assert(extensions_ != nullptr);
     player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
                              iterative_deepener_.get(), timer_.get(),
-                             egtb_.get(), extensions_.get()));
+                             egtb_.get(), extensions_.get(), rand_moves));
   }
 
 private:
@@ -265,7 +267,7 @@ public:
     player_builder_->BuildTimer();
     player_builder_->BuildSearchAlgorithm();
     player_builder_->BuildIterativeDeepener();
-    player_builder_->BuildPlayer();
+    player_builder_->BuildPlayer(options.rand_moves);
     player_builder_->AddExtensions(); // Must always be called last.
     return player_builder_->GetPlayer();
   }

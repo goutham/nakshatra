@@ -21,6 +21,8 @@ public:
 private:
   int PieceValDifference() const;
 
+  int PieceCountDiff() const;
+
   int OpponentMobility(const MoveArray& move_array);
 
   int InspectResultOfMove();

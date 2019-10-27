@@ -1,8 +1,8 @@
-#include "move.h"
+#include "move_order.h"
 #include "board.h"
 #include "common.h"
+#include "move.h"
 #include "move_array.h"
-#include "move_order.h"
 #include "movegen.h"
 
 #include <algorithm>

@@ -40,8 +40,7 @@ Book::Book(Variant variant, const std::string& book_file)
 
 Move Book::GetBookMove(const Board& board) const {
   std::string fen = board.ParseIntoFEN();
-  const auto book_entry = book_.find(fen);
-  if (book_entry != book_.end()) {
+  if (const auto book_entry = book_.find(fen); book_entry != book_.end()) {
     srand(time(NULL));
     std::cout << "# Book moves:\n";
     int i = 1;

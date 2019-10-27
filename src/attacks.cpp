@@ -233,21 +233,31 @@ void GenerateAttackTable(const vector<Direction>& directions, const int index,
   attack_table->swap(table);
 }
 
-void Generate(const vector<Direction>& directions, const int shifts[],
-              const U64 magics[], std::array<U64, 64>* masks,
-              std::array<U64, 64>* offsets, vector<U64>* attack_table) {
+using Masks64 = std::array<U64, 64>;
+using Offsets64 = std::array<U64, 64>;
+using AttackTable = vector<U64>;
+
+std::tuple<Masks64, Offsets64, AttackTable>
+Generate(const vector<Direction>& directions, const int shifts[],
+         const U64 magics[]) {
+  Masks64 masks;
+  Offsets64 offsets;
+  AttackTable attack_table;
+
   for (int i = 0; i < 64; ++i) {
-    masks->at(i) = 0ULL;
+    masks.at(i) = 0ULL;
     for (const Direction& d : directions) {
-      masks->at(i) |= MaskBits(d, i);
+      masks.at(i) |= MaskBits(d, i);
     }
 
     vector<U64> tmp_attack_table;
     GenerateAttackTable(directions, i, shifts[i], magics[i], &tmp_attack_table);
-    offsets->at(i) = attack_table->size();
-    attack_table->insert(attack_table->end(), tmp_attack_table.begin(),
-                         tmp_attack_table.end());
+    offsets.at(i) = attack_table.size();
+    attack_table.insert(attack_table.end(), tmp_attack_table.begin(),
+                        tmp_attack_table.end());
   }
+
+  return std::make_tuple(masks, offsets, attack_table);
 }
 
 // clang-format off
@@ -346,47 +356,19 @@ constexpr int bishop_shifts[] = {
 };
 // clang-format on
 
-using _TmpTuple = std::tuple<std::array<U64, 64>, // masks
-                             std::array<U64, 64>, // offsets
-                             vector<U64>>;        // attack table
+const auto[rook_masks, rook_offsets, rook_attack_table] =
+    Generate({Direction(Direction::NORTH), Direction(Direction::SOUTH),
+              Direction(Direction::EAST), Direction(Direction::WEST)},
+             rook_shifts, rook_magics);
 
-_TmpTuple _tmp_rook_tuple = []() {
-  const vector<Direction> rook_directions = {
-      Direction(Direction::NORTH), Direction(Direction::SOUTH),
-      Direction(Direction::EAST), Direction(Direction::WEST)};
-  std::array<U64, 64> rook_masks, rook_offsets;
-  vector<U64> rook_attack_table;
-  Generate(rook_directions, rook_shifts, rook_magics, &rook_masks,
-           &rook_offsets, &rook_attack_table);
-  return std::make_tuple(rook_masks, rook_offsets, rook_attack_table);
-}();
-
-_TmpTuple _tmp_bishop_tuple = []() {
-  const vector<Direction> bishop_directions = {
-      Direction(Direction::NORTH_EAST), Direction(Direction::NORTH_WEST),
-      Direction(Direction::SOUTH_EAST), Direction(Direction::SOUTH_WEST)};
-  std::array<U64, 64> bishop_masks, bishop_offsets;
-  vector<U64> bishop_attack_table;
-  Generate(bishop_directions, bishop_shifts, bishop_magics, &bishop_masks,
-           &bishop_offsets, &bishop_attack_table);
-  return std::make_tuple(bishop_masks, bishop_offsets, bishop_attack_table);
-}();
-
-const std::array<U64, 64> rook_masks = std::move(std::get<0>(_tmp_rook_tuple));
-const std::array<U64, 64> rook_offsets =
-    std::move(std::get<1>(_tmp_rook_tuple));
-const vector<U64> rook_attack_table = std::move(std::get<2>(_tmp_rook_tuple));
-
-const std::array<U64, 64> bishop_masks =
-    std::move(std::get<0>(_tmp_bishop_tuple));
-const std::array<U64, 64> bishop_offsets =
-    std::move(std::get<1>(_tmp_bishop_tuple));
-const vector<U64> bishop_attack_table =
-    std::move(std::get<2>(_tmp_bishop_tuple));
+const auto[bishop_masks, bishop_offsets, bishop_attack_table] = Generate(
+    {Direction(Direction::NORTH_EAST), Direction(Direction::NORTH_WEST),
+     Direction(Direction::SOUTH_EAST), Direction(Direction::SOUTH_WEST)},
+    bishop_shifts, bishop_magics);
 
 // KING and KNIGHT attacks
 
-const std::array<U64, 64> knight_attacks_ = []() {
+const auto knight_attacks = []() {
   std::array<U64, 64> knight_attacks;
   for (int i = 0; i < 8; ++i) {
     for (int j = 0; j < 8; ++j) {
@@ -399,7 +381,7 @@ const std::array<U64, 64> knight_attacks_ = []() {
   return knight_attacks;
 }();
 
-const std::array<U64, 64> king_attacks_ = []() {
+const auto king_attacks = []() {
   std::array<U64, 64> king_attacks;
   for (int i = 0; i < 8; ++i) {
     for (int j = 0; j < 8; ++j) {
@@ -442,10 +424,10 @@ U64 Attacks(const U64 bitboard, const int index, const Piece piece) {
     return BishopAttacks(bitboard, index);
 
   case KING:
-    return king_attacks_[index];
+    return king_attacks[index];
 
   case KNIGHT:
-    return knight_attacks_[index];
+    return knight_attacks[index];
 
   case QUEEN:
     return QueenAttacks(bitboard, index);

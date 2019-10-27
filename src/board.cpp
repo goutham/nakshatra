@@ -97,9 +97,10 @@ void Board::MakeMove(const Move& move) {
       RemovePiece(INDX(from_row, to_col));
     }
 
-    PlacePiece(to_index, move.is_promotion()
-                             ? PieceOfSide(move.promoted_piece(), side_to_move_)
-                             : src_piece);
+    PlacePiece(to_index,
+               move.is_promotion()
+                   ? PieceOfSide(move.promoted_piece(), side_to_move_)
+                   : src_piece);
 
     FlipSideToMove();
     return;

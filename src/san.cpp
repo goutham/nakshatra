@@ -16,9 +16,9 @@ string SAN(const Board& board, const Move& move) {
 
   // Castling.
   if (PieceType(piece) == KING) {
-    const int squares_moved = abs(static_cast<int>(COL(move.to_index())) -
-                                  static_cast<int>(COL(move.from_index())));
-    if (squares_moved == 2) {
+    if (const int squares_moved = abs(static_cast<int>(COL(move.to_index())) -
+                                      static_cast<int>(COL(move.from_index())));
+        squares_moved == 2) {
       return "O-O"; // king side castling
     } else if (squares_moved == 3) {
       return "O-O-O"; // queen side castling
@@ -49,9 +49,9 @@ string SAN(const Board& board, const Move& move) {
     std::vector<int> indices;
     while (piece_bb) {
       const int lsb_index = Lsb1(piece_bb);
-      const U64 attacks =
-          attacks::Attacks(occupancy_bitboard, lsb_index, piece);
-      if (attacks & dest_sq_bb) {
+      if (const U64 attacks =
+              attacks::Attacks(occupancy_bitboard, lsb_index, piece);
+          attacks & dest_sq_bb) {
         indices.push_back(lsb_index);
       }
       piece_bb ^= (1ULL << lsb_index);
@@ -108,8 +108,7 @@ Move SANToMove(const string& move_san, const Board& board,
   MoveArray move_array;
   movegen->GenerateMoves(&move_array);
   for (size_t i = 0; i < move_array.size(); ++i) {
-    const Move& move = move_array.get(i);
-    if (SAN(board, move) == move_san) {
+    if (const Move& move = move_array.get(i); SAN(board, move) == move_san) {
       return move;
     }
   }

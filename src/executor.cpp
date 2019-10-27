@@ -32,6 +32,9 @@ enum CmdName {
   INVALID, // if command entered is invalid.
   MOVELIST,
   NEW,
+  NOBOOK,
+  NOPNS,
+  NOPONDER,
   NOPOST,
   OMOVELIST,
   OTIME,
@@ -39,9 +42,11 @@ enum CmdName {
   POST,
   QUIT,
   RESULT,
+  RANDMOVES,
   SEARCH_DEPTH,
   SETBOARD,
   SHOWBOARD,
+  THINKTIME,
   TIME,
   UNMAKE,
   USERMOVE,
@@ -55,21 +60,22 @@ struct Command {
 
 Command Interpret(const std::string& cmd) {
   static std::map<std::string, CmdName> cmd_map = {
-      {"Error", ERROR},       {"feature", FEATURE},
-      {"force", FORCE},       {"go", GO},
-      {"move", USERMOVE},     {"mlist", MOVELIST},
-      {"omlist", OMOVELIST},  {"new", NEW},
-      {"nopost", NOPOST},     {"otim", OTIME},
-      {"ping", PING},         {"post", POST},
-      {"quit", QUIT},         {"result", RESULT},
-      {"sd", SEARCH_DEPTH},   {"setboard", SETBOARD},
-      {"sb", SHOWBOARD},      {"time", TIME},
-      {"usermove", USERMOVE}, {"variant", VARIANT},
-      {"unmake", UNMAKE}};
+      {"Error", ERROR},      {"feature", FEATURE},
+      {"force", FORCE},      {"go", GO},
+      {"move", USERMOVE},    {"mlist", MOVELIST},
+      {"omlist", OMOVELIST}, {"new", NEW},
+      {"nobook", NOBOOK},    {"nopns", NOPNS},
+      {"nopost", NOPOST},    {"otim", OTIME},
+      {"ping", PING},        {"noponder", NOPONDER},
+      {"post", POST},        {"quit", QUIT},
+      {"result", RESULT},    {"randmoves", RANDMOVES},
+      {"sd", SEARCH_DEPTH},  {"setboard", SETBOARD},
+      {"sb", SHOWBOARD},     {"thinktime", THINKTIME},
+      {"time", TIME},        {"usermove", USERMOVE},
+      {"variant", VARIANT},  {"unmake", UNMAKE}};
   std::vector<std::string> parts = SplitString(cmd, ' ');
   Command command;
-  auto cmd_map_kv = cmd_map.find(parts[0]);
-  if (cmd_map_kv == cmd_map.end()) {
+  if (auto cmd_map_kv = cmd_map.find(parts[0]); cmd_map_kv == cmd_map.end()) {
     command.cmd_name = INVALID;
   } else {
     command.cmd_name = cmd_map_kv->second;
@@ -85,22 +91,6 @@ double Interpolate(double x1, double y1, double x2, double y2, double x3) {
   return y1 + ((y2 - y1) / (x2 - x1)) * (x3 - x1);
 }
 
-// Returns time (in centis) to allocate for search.
-long AllocateTime(long time_centis, long otime_centis) {
-  if (time_centis >= 60000) {
-    return 2250l;
-  }
-  if (time_centis >= 6000) {
-    return Interpolate(6000, 500, 60000, 2250, time_centis);
-  }
-  if (time_centis >= 1000) {
-    return Interpolate(1000, 200, 6000, 500, time_centis);
-  }
-  if (time_centis >= 200) {
-    return Interpolate(200, 20, 1000, 200, time_centis);
-  }
-  return 10l;
-}
 } // namespace
 
 bool Executor::MatchResult(vector<string>* response) {
@@ -122,19 +112,21 @@ bool Executor::MatchResult(vector<string>* response) {
   return true;
 }
 
-void Executor::ReBuildPlayer() {
+void Executor::ReBuildPlayer(int rand_moves) {
   switch (variant_) {
   case Variant::NORMAL:
     player_builder_.reset(new NormalPlayerBuilder());
     break;
   case Variant::SUICIDE:
-    player_builder_.reset(new SuicidePlayerBuilder());
+    player_builder_.reset(new SuicidePlayerBuilder(pns_));
     break;
   }
   assert(player_builder_.get() != nullptr);
   PlayerBuilderDirector director(player_builder_.get());
   BuildOptions options;
   options.init_fen = init_fen_;
+  options.build_book = book_;
+  options.rand_moves = rand_moves;
   player_ = director.Build(options);
   assert(player_ != nullptr);
 }
@@ -150,7 +142,7 @@ void Executor::ReBuildPonderer() {
   }
   assert(ponderer_builder_.get() != nullptr);
   if (!player_) {
-    ReBuildPlayer();
+    ReBuildPlayer(rand_moves_);
   }
   PlayerBuilderDirector director(ponderer_builder_.get());
   BuildOptions options;
@@ -162,6 +154,9 @@ void Executor::ReBuildPonderer() {
 }
 
 void Executor::StartPondering(double time_centis) {
+  if (!ponder_) {
+    return;
+  }
   // Don't ponder if too little time remaining or if already pondering.
   if (time_centis < 500 || pondering_thread_) {
     return;
@@ -186,14 +181,16 @@ void Executor::StopPondering() {
 }
 
 void Executor::Execute(const string& command_str, vector<string>* response) {
-  Command command = Interpret(command_str);
-  switch (command.cmd_name) {
+  switch (Command command = Interpret(command_str); command.cmd_name) {
   case NEW: {
     StopPondering();
     variant_ = Variant::NORMAL;
     force_mode_ = false;
+    pns_ = true;
+    book_ = true;
+    think_time_centis_ = -1;
     search_params_.search_depth = MAX_DEPTH;
-    ReBuildPlayer();
+    ReBuildPlayer(rand_moves_);
   } break;
 
   case VARIANT: {
@@ -204,7 +201,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
         command.arguments.at(0) == "S") {
       variant_ = Variant::SUICIDE;
     }
-    ReBuildPlayer();
+    ReBuildPlayer(rand_moves_);
   } break;
 
   case SEARCH_DEPTH: {
@@ -223,7 +220,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     if (!init_fen_.empty()) {
       init_fen_.erase(init_fen_.end() - 1);
     }
-    ReBuildPlayer();
+    ReBuildPlayer(rand_moves_);
   } break;
 
   case GO: {
@@ -232,13 +229,16 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       break;
     }
     force_mode_ = false;
-    Move cmove = player_->Search(search_params_,
-                                 AllocateTime(time_centis_, otime_centis_));
+    Move cmove = player_->Search(search_params_, AllocateTime());
     player_->GetBoard()->MakeMove(cmove);
     OutputFEN();
     response->push_back("move " + cmove.str());
     StartPondering(time_centis_);
   } break;
+
+  case THINKTIME:
+    think_time_centis_ = StringToInt(command.arguments.at(0));
+    break;
 
   case TIME:
     time_centis_ = StringToInt(command.arguments.at(0));
@@ -268,8 +268,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       break;
     }
 
-    Move cmove = player_->Search(search_params_,
-                                 AllocateTime(time_centis_, otime_centis_));
+    Move cmove = player_->Search(search_params_, AllocateTime());
     player_->GetBoard()->MakeMove(cmove);
     OutputFEN();
     response->push_back("move " + cmove.str());
@@ -310,6 +309,20 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     delete movegen;
   } break;
 
+  case NOBOOK:
+    book_ = false;
+    ReBuildPlayer(rand_moves_);
+    break;
+
+  case NOPNS:
+    pns_ = false;
+    ReBuildPlayer(rand_moves_);
+    break;
+
+  case NOPONDER:
+    ponder_ = false;
+    break;
+
   case NOPOST:
     search_params_.thinking_output = false;
     break;
@@ -320,6 +333,11 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
 
   case POST:
     search_params_.thinking_output = true;
+    break;
+
+  case RANDMOVES:
+    rand_moves_ = StringToInt(command.arguments.at(0));
+    ReBuildPlayer(rand_moves_);
     break;
 
   case QUIT:
@@ -342,6 +360,26 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       player_builder_->GetEGTB()->LogStats();
     }
   }
+}
+
+// Returns time (in centis) to allocate for search.
+long Executor::AllocateTime() const {
+  if (think_time_centis_ > 0) {
+    return think_time_centis_;
+  }
+  if (time_centis_ >= 60000) {
+    return 2250l;
+  }
+  if (time_centis_ >= 6000) {
+    return Interpolate(6000, 500, 60000, 2250, time_centis_);
+  }
+  if (time_centis_ >= 1000) {
+    return Interpolate(1000, 100, 6000, 500, time_centis_);
+  }
+  if (time_centis_ >= 300) {
+    return Interpolate(300, 10, 1000, 100, time_centis_);
+  }
+  return 5l;
 }
 
 void Executor::OutputFEN() const {

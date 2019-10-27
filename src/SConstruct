@@ -3,11 +3,11 @@
 #
 
 env = Environment(
-    CCFLAGS = ['-std=c++0x', '-O3', '-Wall'],
+    CCFLAGS = ['-std=c++17', '-O3', '-Wall'],
     CPPPATH = '.')
 
 test_env = Environment(
-    CCFLAGS = '-std=c++0x',
+    CCFLAGS = '-std=c++17',
     CPPPATH = ['.', 'gtest/include', 'gtest'])
 
 #

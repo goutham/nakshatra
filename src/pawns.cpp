@@ -10,33 +10,29 @@ namespace {
 
 // Shifts the bitboard one row to the front corresponding to the side.
 template <Side side>
-U64 ShiftFront(U64 bitboard);
-template <>
-U64 ShiftFront<Side::WHITE>(U64 bitboard) {
-  return bitboard << 8;
-}
-template <>
-U64 ShiftFront<Side::BLACK>(U64 bitboard) {
-  return bitboard >> 8;
+U64 ShiftFront(U64 bitboard) {
+  if constexpr (side == Side::WHITE) {
+    return bitboard << 8;
+  } else {
+    static_assert(side == Side::BLACK);
+    return bitboard >> 8;
+  }
 }
 
 template <Side side>
-U64 FrontFill(U64 bitboard);
-
-template <>
-U64 FrontFill<Side::WHITE>(U64 bitboard) {
-  bitboard |= (bitboard << 8);
-  bitboard |= (bitboard << 16);
-  bitboard |= (bitboard << 32);
-  return bitboard;
-}
-
-template <>
-U64 FrontFill<Side::BLACK>(U64 bitboard) {
-  bitboard |= (bitboard >> 8);
-  bitboard |= (bitboard >> 16);
-  bitboard |= (bitboard >> 32);
-  return bitboard;
+U64 FrontFill(U64 bitboard) {
+  if constexpr (side == Side::WHITE) {
+    bitboard |= (bitboard << 8);
+    bitboard |= (bitboard << 16);
+    bitboard |= (bitboard << 32);
+    return bitboard;
+  } else {
+    static_assert(side == Side::BLACK);
+    bitboard |= (bitboard >> 8);
+    bitboard |= (bitboard >> 16);
+    bitboard |= (bitboard >> 32);
+    return bitboard;
+  }
 }
 
 template <Side side>

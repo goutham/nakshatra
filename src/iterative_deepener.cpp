@@ -62,8 +62,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
     // highest quality. Also, this avoids transposition table moves that are
     // not in the list to be brought to the front.
     if (ids_params.pruned_ordered_moves.size() == 0) {
-      TranspositionTableEntry* tentry = transpos_->Get(board_->ZobristKey());
-      if (tentry && tentry->best_move.is_valid()) {
+      if (auto* tentry = transpos_->Get(board_->ZobristKey());
+          tentry && tentry->best_move.is_valid()) {
         root_move_array_.PushToFront(tentry->best_move);
       }
     } else if (!iteration_stats_.empty()) {
