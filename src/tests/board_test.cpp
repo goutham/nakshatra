@@ -12,21 +12,20 @@
 using std::string;
 
 class BoardTest : public testing::Test {
- public:
-  BoardTest() {
-  }
+public:
+  BoardTest() {}
 };
 
 TEST_F(BoardTest, VerifyFENInitializedBoard) {
   Piece expected_board[8][8] = {
-    { ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK },
-    { PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN },
-    { _, _, _, _, _, _, _, _ },
-    { _, _, _, _, _, _, _, _ },
-    { _, _, _, _, _, _, _, _ },
-    { _, _, _, _, _, _, _, _ },
-    { -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN },
-    { -ROOK, -KNIGHT, -BISHOP, -QUEEN, -KING, -BISHOP, -KNIGHT, -ROOK },
+      {ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK},
+      {PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN},
+      {_, _, _, _, _, _, _, _},
+      {_, _, _, _, _, _, _, _},
+      {_, _, _, _, _, _, _, _},
+      {_, _, _, _, _, _, _, _},
+      {-PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN},
+      {-ROOK, -KNIGHT, -BISHOP, -QUEEN, -KING, -BISHOP, -KNIGHT, -ROOK},
   };
 
   Board board(Variant::SUICIDE);
@@ -39,7 +38,8 @@ TEST_F(BoardTest, VerifyFENInitializedBoard) {
 }
 
 TEST_F(BoardTest, VerifyFENFunctionality) {
-  string expected_fen = "r2qr1k1/ppbn1pp1/4bn1p/PN1pp3/1P2P3/3P1N2/2Q1BPPP/R1B2RK1 b - -";
+  string expected_fen =
+      "r2qr1k1/ppbn1pp1/4bn1p/PN1pp3/1P2P3/3P1N2/2Q1BPPP/R1B2RK1 b - -";
   Board board(Variant::SUICIDE, expected_fen);
   string actual_fen = board.ParseIntoFEN();
   EXPECT_EQ(expected_fen, actual_fen);

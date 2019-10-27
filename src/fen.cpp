@@ -170,4 +170,4 @@ string MakeFEN(const Piece board_array[], Side player_side,
 
   return fen;
 }
-}
+} // namespace FEN

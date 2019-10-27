@@ -15,6 +15,6 @@ U64 Turn();
 U64 EP(int sq);
 
 U64 Castling(unsigned char castle);
-}
+} // namespace zobrist
 
 #endif

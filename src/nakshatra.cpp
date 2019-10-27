@@ -6,8 +6,8 @@
 #include <ctime>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unistd.h>
+#include <vector>
 
 int main(int argc, char** argv) {
   using std::cout;

@@ -52,13 +52,9 @@ public:
     }
   }
 
-  void Invalidate() {
-    timer_invalidated_ = true;
-  }
+  void Invalidate() { timer_invalidated_ = true; }
 
-  bool Lapsed() const {
-    return timer_expired_ || timer_invalidated_;
-  }
+  bool Lapsed() const { return timer_expired_ || timer_invalidated_; }
 
 private:
   static void Handler(sigval_t sival) {

@@ -25,7 +25,7 @@ constexpr int MOBILITY_FACTOR = 25;
 constexpr int PIECE_COUNT_FACTOR = -50;
 
 constexpr int TEMPO = 250;
-}
+} // namespace
 
 int EvalSuicide::PieceValDifference() const {
   const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
@@ -49,7 +49,7 @@ int EvalSuicide::PieceCountDiff() const {
   const int white_count = PopCount(board_->BitBoard(Side::WHITE));
   const int black_count = PopCount(board_->BitBoard(Side::BLACK));
   return (board_->SideToMove() == Side::WHITE) ? (white_count - black_count)
-      : (black_count - white_count);
+                                               : (black_count - white_count);
 }
 
 bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
@@ -116,7 +116,7 @@ int EvalSuicide::Evaluate() {
   }
 
   return (self_moves - opp_moves) * MOBILITY_FACTOR + PieceValDifference() +
-      TEMPO + PIECE_COUNT_FACTOR * PieceCountDiff();
+         TEMPO + PIECE_COUNT_FACTOR * PieceCountDiff();
 }
 
 int EvalSuicide::Result() const {

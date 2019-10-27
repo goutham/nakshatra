@@ -78,8 +78,9 @@ void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
   constexpr int promotion_count =
       variant == Variant::NORMAL
           ? 4
-          : (variant == Variant::SUICIDE ? 5 : throw std::logic_error(
-                                                   "Unknown variant"));
+          : (variant == Variant::SUICIDE
+                 ? 5
+                 : throw std::logic_error("Unknown variant"));
   const U64 mask_7th_row = side_relative::MaskRow<side>(7);
   *move_count += PopCount(pawn_bitboard & mask_7th_row) * promotion_count +
                  PopCount(pawn_bitboard & ~mask_7th_row);

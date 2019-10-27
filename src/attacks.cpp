@@ -356,12 +356,12 @@ constexpr int bishop_shifts[] = {
 };
 // clang-format on
 
-const auto[rook_masks, rook_offsets, rook_attack_table] =
+const auto [rook_masks, rook_offsets, rook_attack_table] =
     Generate({Direction(Direction::NORTH), Direction(Direction::SOUTH),
               Direction(Direction::EAST), Direction(Direction::WEST)},
              rook_shifts, rook_magics);
 
-const auto[bishop_masks, bishop_offsets, bishop_attack_table] = Generate(
+const auto [bishop_masks, bishop_offsets, bishop_attack_table] = Generate(
     {Direction(Direction::NORTH_EAST), Direction(Direction::NORTH_WEST),
      Direction(Direction::SOUTH_EAST), Direction(Direction::SOUTH_WEST)},
     bishop_shifts, bishop_magics);

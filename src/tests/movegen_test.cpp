@@ -9,9 +9,8 @@
 using std::string;
 
 class MoveGeneratorTest : public testing::Test {
- public:
-  MoveGeneratorTest() {
-  }
+public:
+  MoveGeneratorTest() {}
 };
 
 void DebugPrintMoveList(const MoveArray& move_array) {
@@ -41,11 +40,9 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
   EXPECT_EQ(5, move_array.size());
 
   string exp[] = {
-    "1Q6/8/8/8/8/8/8/8 b - -",
-    "1R6/8/8/8/8/8/8/8 b - -",
-    "1B6/8/8/8/8/8/8/8 b - -",
-    "1K6/8/8/8/8/8/8/8 b - -",
-    "1N6/8/8/8/8/8/8/8 b - -",
+      "1Q6/8/8/8/8/8/8/8 b - -", "1R6/8/8/8/8/8/8/8 b - -",
+      "1B6/8/8/8/8/8/8/8 b - -", "1K6/8/8/8/8/8/8/8 b - -",
+      "1N6/8/8/8/8/8/8/8 b - -",
   };
 
   for (unsigned i = 0; i < move_array.size(); ++i) {
@@ -73,11 +70,9 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotion) {
   EXPECT_EQ(5, move_array.size());
 
   string exp[] = {
-    "8/8/8/8/8/8/8/1q6 w - -",
-    "8/8/8/8/8/8/8/1r6 w - -",
-    "8/8/8/8/8/8/8/1k6 w - -",
-    "8/8/8/8/8/8/8/1b6 w - -",
-    "8/8/8/8/8/8/8/1n6 w - -",
+      "8/8/8/8/8/8/8/1q6 w - -", "8/8/8/8/8/8/8/1r6 w - -",
+      "8/8/8/8/8/8/8/1k6 w - -", "8/8/8/8/8/8/8/1b6 w - -",
+      "8/8/8/8/8/8/8/1n6 w - -",
   };
 
   for (unsigned i = 0; i < move_array.size(); ++i) {
@@ -105,16 +100,11 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotionHit) {
   EXPECT_EQ(10, move_array.size());
 
   string exp[] = {
-    "r1Q5/8/8/8/8/8/8/8 b - -",
-    "r1R5/8/8/8/8/8/8/8 b - -",
-    "r1B5/8/8/8/8/8/8/8 b - -",
-    "r1K5/8/8/8/8/8/8/8 b - -",
-    "r1N5/8/8/8/8/8/8/8 b - -",
-    "Q1q5/8/8/8/8/8/8/8 b - -",
-    "R1q5/8/8/8/8/8/8/8 b - -",
-    "B1q5/8/8/8/8/8/8/8 b - -",
-    "K1q5/8/8/8/8/8/8/8 b - -",
-    "N1q5/8/8/8/8/8/8/8 b - -",
+      "r1Q5/8/8/8/8/8/8/8 b - -", "r1R5/8/8/8/8/8/8/8 b - -",
+      "r1B5/8/8/8/8/8/8/8 b - -", "r1K5/8/8/8/8/8/8/8 b - -",
+      "r1N5/8/8/8/8/8/8/8 b - -", "Q1q5/8/8/8/8/8/8/8 b - -",
+      "R1q5/8/8/8/8/8/8/8 b - -", "B1q5/8/8/8/8/8/8/8 b - -",
+      "K1q5/8/8/8/8/8/8/8 b - -", "N1q5/8/8/8/8/8/8/8 b - -",
   };
 
   for (unsigned i = 0; i < move_array.size(); ++i) {
@@ -142,16 +132,11 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotionHit) {
   EXPECT_EQ(10, move_array.size());
 
   string exp[] = {
-    "8/8/8/8/8/8/8/q1Q5 w - -",
-    "8/8/8/8/8/8/8/r1Q5 w - -",
-    "8/8/8/8/8/8/8/b1Q5 w - -",
-    "8/8/8/8/8/8/8/k1Q5 w - -",
-    "8/8/8/8/8/8/8/n1Q5 w - -",
-    "8/8/8/8/8/8/8/R1q5 w - -",
-    "8/8/8/8/8/8/8/R1b5 w - -",
-    "8/8/8/8/8/8/8/R1r5 w - -",
-    "8/8/8/8/8/8/8/R1k5 w - -",
-    "8/8/8/8/8/8/8/R1n5 w - -",
+      "8/8/8/8/8/8/8/q1Q5 w - -", "8/8/8/8/8/8/8/r1Q5 w - -",
+      "8/8/8/8/8/8/8/b1Q5 w - -", "8/8/8/8/8/8/8/k1Q5 w - -",
+      "8/8/8/8/8/8/8/n1Q5 w - -", "8/8/8/8/8/8/8/R1q5 w - -",
+      "8/8/8/8/8/8/8/R1b5 w - -", "8/8/8/8/8/8/8/R1r5 w - -",
+      "8/8/8/8/8/8/8/R1k5 w - -", "8/8/8/8/8/8/8/R1n5 w - -",
   };
 
   for (unsigned i = 0; i < move_array.size(); ++i) {
@@ -191,10 +176,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(2, move_array.size());
 
-  string exp1[] = {
-    "8/8/1p6/2P5/8/8/8/8 w - -",
-    "8/8/8/1pP5/8/8/8/8 w - b6"
-  };
+  string exp1[] = {"8/8/1p6/2P5/8/8/8/8 w - -", "8/8/8/1pP5/8/8/8/8 w - b6"};
   int index = -1;
   for (int i = 0; i < 2; ++i) {
     board.MakeMove(move_array.get(i));
@@ -228,10 +210,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(2, move_array.size());
 
-  string exp1[] = {
-    "8/8/8/8/8/2p5/1P6/8 b - -",
-    "8/8/8/8/1Pp5/8/8/8 b - b3"
-  };
+  string exp1[] = {"8/8/8/8/8/2p5/1P6/8 b - -", "8/8/8/8/1Pp5/8/8/8 b - b3"};
   int index = -1;
   for (int i = 0; i < 2; ++i) {
     board.MakeMove(move_array.get(i));
@@ -261,28 +240,10 @@ TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
   MoveGeneratorNormal movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
-  static const string valid_moves[] = {
-      "a2a3",
-      "b2b3",
-      "c2c3",
-      "d2d3",
-      "e2e3",
-      "f2f3",
-      "g2g3",
-      "h2h3",
-      "a2a4",
-      "b2b4",
-      "c2c4",
-      "d2d4",
-      "e2e4",
-      "f2f4",
-      "g2g4",
-      "h2h4",
-      "b1a3",
-      "b1c3",
-      "g1f3",
-      "g1h3"
-  };
+  static const string valid_moves[] = {"a2a3", "b2b3", "c2c3", "d2d3", "e2e3",
+                                       "f2f3", "g2g3", "h2h3", "a2a4", "b2b4",
+                                       "c2c4", "d2d4", "e2e4", "f2f4", "g2g4",
+                                       "h2h4", "b1a3", "b1c3", "g1f3", "g1h3"};
   static const unsigned num_valid_moves = 20;
   EXPECT_EQ(num_valid_moves, move_array.size());
   for (int i = 0; i < num_valid_moves; ++i) {
@@ -304,14 +265,7 @@ TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   static const string valid_moves[] = {
-      "e2e3",
-      "e2e4",
-      "c3d2",
-      "c3b4",
-      "c3a5",
-      "e1d1",
-      "e1f1",
-      "e1d2",
+      "e2e3", "e2e4", "c3d2", "c3b4", "c3a5", "e1d1", "e1f1", "e1d2",
   };
   static const unsigned num_valid_moves = 8;
   EXPECT_EQ(num_valid_moves, move_array.size());
@@ -336,13 +290,7 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   DebugPrintMoveList(move_array);
-  static const string valid_moves[] = {
-      "d2e2",
-      "d2d3",
-      "d2e3",
-      "c2c3",
-      "b1c3"
-  };
+  static const string valid_moves[] = {"d2e2", "d2d3", "d2e3", "c2c3", "b1c3"};
   static const unsigned num_valid_moves = 5;
   EXPECT_EQ(num_valid_moves, move_array.size());
   for (int i = 0; i < num_valid_moves; ++i) {
@@ -364,27 +312,10 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
   MoveGeneratorNormal movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
-  static const string valid_moves[] = {
-      "a2a3",
-      "b2b3",
-      "g2g3",
-      "h2h3",
-      "c3c4",
-      "d4d5",
-      "a2a4",
-      "b2b4",
-      "g2g4",
-      "h2h4",
-      "d1e1",
-      "d1c2",
-      "d1b3",
-      "d1a4",
-      "b1a3",
-      "g1f3",
-      "g1h3",
-      "d2c2",
-      "d2d3"
-  };
+  static const string valid_moves[] = {"a2a3", "b2b3", "g2g3", "h2h3", "c3c4",
+                                       "d4d5", "a2a4", "b2b4", "g2g4", "h2h4",
+                                       "d1e1", "d1c2", "d1b3", "d1a4", "b1a3",
+                                       "g1f3", "g1h3", "d2c2", "d2d3"};
   static const unsigned num_valid_moves = 19;
   EXPECT_EQ(num_valid_moves, move_array.size());
   for (int i = 0; i < num_valid_moves; ++i) {

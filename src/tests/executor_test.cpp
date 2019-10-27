@@ -1,5 +1,5 @@
-#include "common.h"
 #include "board.h"
+#include "common.h"
 #include "executor.h"
 #include "movegen.h"
 
@@ -12,9 +12,8 @@ using std::string;
 using std::vector;
 
 class ExecutorTest : public testing::Test {
- public:
-  ExecutorTest() {
-  }
+public:
+  ExecutorTest() {}
 };
 
 void PrintResponse(const vector<string>& response) {
