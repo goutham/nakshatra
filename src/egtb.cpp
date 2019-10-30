@@ -43,6 +43,8 @@ int EGTBResult(const EGTBIndexEntry& entry) {
     return WIN;
   } else if (entry.result == -1) {
     return -WIN;
+  } else if (entry.result == 0) {
+    return DRAW;
   } else {
     assert(false); // no other values currently supported.
   }
@@ -110,8 +112,13 @@ void PrintEGTBIndexEntry(const EGTBIndexEntry& entry) {
   }
   std::cout << "# EGTB best move: " << entry.next_move.str() << std::endl;
   std::cout << "# Moves to end: " << entry.moves_to_end << std::endl;
-  std::cout << "# Result for side to move: "
-            << (entry.result == 1 ? "Win"
-                                  : (entry.result == -1 ? "Loss" : "Unknown"))
-            << std::endl;
+  std::string result = "Unknown";
+  if (entry.result == 1) {
+    result = "Win";
+  } else if (entry.result == -1) {
+    result = "Loss";
+  } else if (entry.result == 0) {
+    result = "Draw";
+  }
+  std::cout << "# Result for side to move: " << result << std::endl;
 }

@@ -74,8 +74,7 @@ void EGTBStore::Write() {
 }
 
 void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
-  for (list<string>::iterator iter = all_pos_list.begin();
-       iter != all_pos_list.end();) {
+  for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::SUICIDE, *iter);
     MoveGeneratorSuicide movegen(board);
     EvalSuicide eval(&board, &movegen, nullptr);
@@ -87,6 +86,7 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
       store->Put(board, 0, Move(), -1);
       iter = all_pos_list.erase(iter);
     } else if (result == DRAW) {
+      store->Put(board, 0, Move(), 0);
       iter = all_pos_list.erase(iter);
     } else {
       ++iter;
@@ -101,8 +101,7 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
     EGTBStore temp_store;
     bool deleted = false;
     double last_percent = 0.0;
-    for (list<string>::iterator iter = all_pos_list.begin();
-         iter != all_pos_list.end();) {
+    for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
       double percent =
           (static_cast<double>(progress) / all_pos_list_size) * 100;
       if (percent >= last_percent + 1 || percent + 0.1 >= 100) {
@@ -110,7 +109,6 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
         fflush(stdout);
         last_percent = percent;
       }
-      fflush(stdout);
       ++progress;
       Board board(Variant::SUICIDE, *iter);
       MoveGeneratorSuicide movegen(board);
@@ -118,10 +116,13 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
       movegen.GenerateMoves(&movelist);
       int count_winning = 0;
       int count_losing = 0;
+      int count_draw = 0;
       int best_winning = 10000;
       int best_losing = -1;
+      int best_draw = 10000;
       Move best_winning_move;
       Move best_losing_move;
+      Move best_draw_move;
       for (size_t i = 0; i < movelist.size(); ++i) {
         const Move& move = movelist.get(i);
         board.MakeMove(move);
@@ -139,6 +140,12 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
               best_losing_move = move;
             }
             ++count_losing;
+          } else if (e->result == 0) {
+            if (e->moves_to_end + 1 < best_draw) {
+              best_draw = e->moves_to_end + 1;
+              best_draw_move = move;
+            }
+            ++count_draw;
           } else {
             assert(false);
           }
@@ -155,6 +162,13 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
         if (best_losing > superbest)
           superbest = best_losing;
         temp_store.Put(board, best_losing, best_losing_move, -1);
+        iter = all_pos_list.erase(iter);
+        deleted = true;
+      } else if (count_draw >= 1 &&
+                 (count_losing + count_draw == int(movelist.size()))) {
+        if (best_draw > superbest)
+          superbest = best_draw;
+        temp_store.Put(board, best_draw, best_draw_move, 0);
         iter = all_pos_list.erase(iter);
         deleted = true;
       } else {
