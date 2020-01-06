@@ -14,11 +14,17 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
                                SearchStats* search_stats) {
   U64 zkey = board_->ZobristKey();
   TranspositionTableEntry* tentry = transpos_->Get(zkey);
-  if (tentry != nullptr && tentry->depth >= max_depth &&
-      (tentry->node_type == EXACT_NODE ||
-       (tentry->node_type == FAIL_HIGH_NODE && tentry->score >= beta) ||
-       (tentry->node_type == FAIL_LOW_NODE && tentry->score <= alpha))) {
-    return tentry->score;
+  if (tentry != nullptr) {
+    if (tentry->node_type == EXACT_NODE &&
+        (tentry->score == WIN || tentry->score == -WIN)) {
+      return tentry->score;
+    }
+    if (tentry->depth >= max_depth &&
+        (tentry->node_type == EXACT_NODE ||
+         (tentry->node_type == FAIL_HIGH_NODE && tentry->score >= beta) ||
+         (tentry->node_type == FAIL_LOW_NODE && tentry->score <= alpha))) {
+      return tentry->score;
+    }
   }
 
   if (max_depth == 0 || (timer_ && timer_->Lapsed())) {

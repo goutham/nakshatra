@@ -6,6 +6,7 @@
 #include "movegen.h"
 #include "stopwatch.h"
 #include "timer.h"
+#include "transpos.h"
 
 #include <algorithm>
 #include <cassert>
@@ -175,6 +176,11 @@ PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params, PNSNode* mpn,
           (pns_params.pns_type != PNSParams::PN2 || pns_node != mpn)) {
         return pns_node;
       }
+      if (proof == 0 && transpos_) {
+        transpos_->Put(WIN, EXACT_NODE, 0, board_->ZobristKey(), Move());
+      } else if (proof == INF_NODES && disproof == 0 && transpos_) {
+        transpos_->Put(-WIN, EXACT_NODE, 0, board_->ZobristKey(), Move());
+      }
       pns_node->proof = proof;
       pns_node->disproof = disproof;
     }
@@ -251,6 +257,9 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
       } else {
         child->proof = 1;
         child->disproof = movegen_->CountMoves();
+      }
+      if ((result == WIN || result == -WIN) && transpos_) {
+        transpos_->Put(result, EXACT_NODE, 0, board_->ZobristKey(), Move());
       }
       board_->UnmakeLastMove();
     }

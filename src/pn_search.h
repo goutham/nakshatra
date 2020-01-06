@@ -14,6 +14,7 @@ class EGTB;
 class Evaluator;
 class MoveGenerator;
 class Timer;
+class TranspositionTable;
 
 typedef int PNSNodeOffset;
 
@@ -71,9 +72,9 @@ public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
   PNSearch(Board* board, MoveGenerator* movegen, Evaluator* evaluator,
-           EGTB* egtb, Timer* timer)
+           EGTB* egtb, TranspositionTable* transpos, Timer* timer)
       : board_(board), movegen_(movegen), evaluator_(evaluator), egtb_(egtb),
-        timer_(timer) {}
+        transpos_(transpos), timer_(timer) {}
 
   ~PNSearch() {
     if (pns_tree_) {
@@ -108,6 +109,7 @@ private:
   MoveGenerator* movegen_;
   Evaluator* evaluator_;
   EGTB* egtb_;
+  TranspositionTable* transpos_;
   Timer* timer_;
 
   PNSNode* pns_tree_ = nullptr;

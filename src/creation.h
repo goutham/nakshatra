@@ -220,9 +220,9 @@ public:
                                    1 /* depth reduction factor */));
     if (enable_pns_) {
       extensions_->pns_extension.pns_timer.reset(new Timer);
-      extensions_->pns_extension.pn_search.reset(
-          new PNSearch(board_.get(), movegen_.get(), eval_.get(), egtb_.get(),
-                       extensions_->pns_extension.pns_timer.get()));
+      extensions_->pns_extension.pn_search.reset(new PNSearch(
+          board_.get(), movegen_.get(), eval_.get(), egtb_.get(),
+          transpos_.get(), extensions_->pns_extension.pns_timer.get()));
     }
   }
 
