@@ -3,7 +3,7 @@
 #
 
 env = Environment(
-    CCFLAGS = ['-std=c++17', '-O3', '-Wall'],
+    CCFLAGS = ['-std=c++17', '-flto', '-O3', '-Wall'],
     CPPPATH = '.')
 
 test_env = Environment(
@@ -50,7 +50,7 @@ player = env.Library(
 executor = env.Library(
     target = 'executor',
     source = ['executor.cpp'])
-                                  
+
 egtb_gen = env.Library(
     target = 'egtb_gen',
     source = ['egtb_gen.cpp'])
@@ -67,7 +67,7 @@ nakshatra = env.Program(
             evaluator,
             movegen,
             board,
-            common, 
+            common,
             'pthread',
             'rt'],
     LIBPATH = '.')

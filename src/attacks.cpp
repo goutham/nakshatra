@@ -414,28 +414,25 @@ U64 QueenAttacks(const U64 bitboard, const int index) {
   return RookAttacks(bitboard, index) | BishopAttacks(bitboard, index);
 }
 
+U64 KnightAttacks(const U64 unused_bitboard, const int index) {
+  return knight_attacks[index];
+}
+
+U64 KingAttacks(const U64 unused_bitboard, const int index) {
+  return king_attacks[index];
+}
+
+using AttacksFn = U64 (*)(const U64, const int);
+
+AttacksFn attacks_fns[6] = {nullptr,     KingAttacks,   QueenAttacks,
+                            RookAttacks, BishopAttacks, KnightAttacks};
+
 } // namespace
 
 namespace attacks {
 
 U64 Attacks(const U64 bitboard, const int index, const Piece piece) {
-  switch (PieceType(piece)) {
-  case BISHOP:
-    return BishopAttacks(bitboard, index);
-
-  case KING:
-    return king_attacks[index];
-
-  case KNIGHT:
-    return knight_attacks[index];
-
-  case QUEEN:
-    return QueenAttacks(bitboard, index);
-
-  case ROOK:
-    return RookAttacks(bitboard, index);
-  }
-  throw std::runtime_error("Unknown piece type");
+  return attacks_fns[PieceType(piece)](bitboard, index);
 }
 
 } // namespace attacks

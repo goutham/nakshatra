@@ -174,12 +174,12 @@ void BitBoardToMoves(const int unused_index, U64 bitboard, int* move_count) {
 template <Side side>
 void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
                            MoveArray* move_array) {
-  constexpr Side opp_side = OppositeSide(side);
-  const int row = (side == Side::WHITE) ? 0 : 7;
 
-  auto is_square_empty = [&](const int row, const int col) {
-    return board.PieceAt(row, col) == NULLPIECE;
-  };
+  constexpr int row = (side == Side::WHITE) ? 0 : 7;
+  constexpr U64 mask_fg = SetBit(row, FILE_F) | SetBit(row, FILE_G);
+  constexpr U64 mask_cd = SetBit(row, FILE_C) | SetBit(row, FILE_D);
+  constexpr U64 mask_bcd = SetBit(row, FILE_B) | mask_cd;
+  constexpr Side opp_side = OppositeSide(side);
 
   const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, opp_side));
   const U64 pawn_capturable_empty_squares =
@@ -190,16 +190,13 @@ void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
   const U64 restricted_squares = opp_attack_map | pawn_capturable_empty_squares;
 
   if (board.CanCastle(side, KING)) {
-    if (is_square_empty(row, FILE_F) && is_square_empty(row, FILE_G) &&
-        !(restricted_squares & (SetBit(row, FILE_F) | SetBit(row, FILE_G)))) {
+    if (!(board.BitBoard() & mask_fg) && !(restricted_squares & mask_fg)) {
       move_array->Add(Move(INDX(row, FILE_E), INDX(row, FILE_G)));
     }
   }
 
   if (board.CanCastle(side, QUEEN)) {
-    if (is_square_empty(row, FILE_C) && is_square_empty(row, FILE_D) &&
-        is_square_empty(row, FILE_B) &&
-        !(restricted_squares & (SetBit(row, FILE_C) | SetBit(row, FILE_D)))) {
+    if (!(mask_bcd & board.BitBoard()) && !(restricted_squares & mask_cd)) {
       move_array->Add(Move(INDX(row, FILE_E), INDX(row, FILE_C)));
     }
   }
