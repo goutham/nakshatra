@@ -28,7 +28,7 @@ TEST_F(BoardTest, VerifyFENInitializedBoard) {
       {-ROOK, -KNIGHT, -BISHOP, -QUEEN, -KING, -BISHOP, -KNIGHT, -ROOK},
   };
 
-  Board board(Variant::SUICIDE);
+  Board board(Variant::ANTICHESS);
   for (int i = 0; i < 8; ++i) {
     for (int j = 0; j < 8; ++j) {
       EXPECT_EQ(expected_board[i][j], board.PieceAt(i, j));
@@ -40,7 +40,7 @@ TEST_F(BoardTest, VerifyFENInitializedBoard) {
 TEST_F(BoardTest, VerifyFENFunctionality) {
   string expected_fen =
       "r2qr1k1/ppbn1pp1/4bn1p/PN1pp3/1P2P3/3P1N2/2Q1BPPP/R1B2RK1 b - -";
-  Board board(Variant::SUICIDE, expected_fen);
+  Board board(Variant::ANTICHESS, expected_fen);
   string actual_fen = board.ParseIntoFEN();
   EXPECT_EQ(expected_fen, actual_fen);
   EXPECT_EQ(Side::BLACK, board.SideToMove());
@@ -48,7 +48,7 @@ TEST_F(BoardTest, VerifyFENFunctionality) {
 
 TEST_F(BoardTest, VerifyPieceMovements) {
   string init_board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -";
-  Board board(Variant::SUICIDE, init_board);
+  Board board(Variant::ANTICHESS, init_board);
 
   board.MakeMove(Move("e2e4"));
   string after_e4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b - e3";
@@ -72,7 +72,7 @@ TEST_F(BoardTest, VerifyPieceMovements) {
 }
 
 TEST_F(BoardTest, VerifyNumPieces) {
-  Board board(Variant::SUICIDE, "8/8/1r1q4/2P5/8/8/8/8 w - -");
+  Board board(Variant::ANTICHESS, "8/8/1r1q4/2P5/8/8/8/8 w - -");
   board.DebugPrintBoard();
   EXPECT_EQ(1, board.NumPieces(Side::WHITE));
   EXPECT_EQ(2, board.NumPieces(Side::BLACK));
@@ -88,7 +88,7 @@ TEST_F(BoardTest, VerifyNumPieces) {
 }
 
 TEST_F(BoardTest, Pawn2SpaceMoves) {
-  Board board(Variant::SUICIDE, "8/3p/8/8/8/8/1P6/8 w - -");
+  Board board(Variant::ANTICHESS, "8/3p/8/8/8/8/1P6/8 w - -");
   EXPECT_TRUE(board.EnpassantTarget() == -1);
   board.MakeMove(Move("b2b4"));
   EXPECT_TRUE(board.EnpassantTarget() != -1);
@@ -101,7 +101,7 @@ TEST_F(BoardTest, Pawn2SpaceMoves) {
 }
 
 TEST_F(BoardTest, EnpassantCapture) {
-  Board board(Variant::SUICIDE, "8/8/8/8/2p5/8/1P6/8 w - -");
+  Board board(Variant::ANTICHESS, "8/8/8/8/2p5/8/1P6/8 w - -");
   EXPECT_TRUE(board.EnpassantTarget() == -1);
   board.MakeMove(Move("b2b4"));
   EXPECT_TRUE(board.EnpassantTarget() != -1);
@@ -118,7 +118,7 @@ TEST_F(BoardTest, EnpassantCapture) {
 
 TEST_F(BoardTest, ZobristTest1) {
   string init_board = "8/8/8/8/8/8/1P6/8 w - -";
-  Board board(Variant::SUICIDE, init_board);
+  Board board(Variant::ANTICHESS, init_board);
   board.MakeMove(Move("b2b4"));
   U64 z1 = board.ZobristKey();
   string b1 = board.ParseIntoFEN();
@@ -139,14 +139,14 @@ TEST_F(BoardTest, ZobristTest1) {
 // compared to same position of board without 2 space pawn move. Further also
 // verifies that this does not have any side-effect on subsequent moves.
 TEST_F(BoardTest, Zobrist2) {
-  Board board(Variant::SUICIDE, "8/1p6/8/8/8/8/1P6/8 w - -");
+  Board board(Variant::ANTICHESS, "8/1p6/8/8/8/8/1P6/8 w - -");
   board.MakeMove(Move("b2b4"));
   U64 z1 = board.ZobristKey();
   string b1 = board.ParseIntoFEN();
   board.MakeMove(Move("b7b6"));
   U64 z2 = board.ZobristKey();
   string b2 = board.ParseIntoFEN();
-  board = Board(Variant::SUICIDE, "8/1p6/8/8/8/1P6/8/8 w - -");
+  board = Board(Variant::ANTICHESS, "8/1p6/8/8/8/1P6/8/8 w - -");
   board.MakeMove(Move("b3b4"));
   U64 z3 = board.ZobristKey();
   string b3 = board.ParseIntoFEN();
@@ -162,7 +162,7 @@ TEST_F(BoardTest, Zobrist2) {
 
 TEST_F(BoardTest, CastlingTest) {
   string init_board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
-  Board board(Variant::NORMAL, init_board);
+  Board board(Variant::STANDARD, init_board);
   board.MakeMove(Move("e2e4"));
   board.MakeMove(Move("e7e5"));
   board.MakeMove(Move("f1c4"));
@@ -241,7 +241,7 @@ TEST_F(BoardTest, CastlingTest) {
 }
 
 TEST_F(BoardTest, BitBoardVerification) {
-  Board board(Variant::SUICIDE);
+  Board board(Variant::ANTICHESS);
 
   U64 black, white, white_pawns, white_kings, white_queens, white_rooks,
       white_bishops, white_knights, black_pawns, black_kings, black_queens,
@@ -315,7 +315,7 @@ TEST_F(BoardTest, BitBoardVerification) {
 }
 
 TEST_F(BoardTest, PawnPromotions) {
-  Board board(Variant::SUICIDE, "8/8/8/P7/8/2p5/3ppp2/8 b - -");
+  Board board(Variant::ANTICHESS, "8/8/8/P7/8/2p5/3ppp2/8 b - -");
 
   U64 white_pawns, black_pawns, black_kings, black_rooks, white_queens,
       bitboard, black, white;
@@ -409,7 +409,7 @@ TEST_F(BoardTest, PawnPromotions) {
 }
 
 TEST_F(BoardTest, SANTest1) {
-  Board board(Variant::SUICIDE);
+  Board board(Variant::ANTICHESS);
   EXPECT_EQ("e3", SAN(board, Move("e2e3")));
   EXPECT_EQ("g4", SAN(board, Move("g2g4")));
   EXPECT_EQ("Nf3", SAN(board, Move("g1f3")));
@@ -419,7 +419,7 @@ TEST_F(BoardTest, SANTest1) {
 }
 
 TEST_F(BoardTest, SANTest2) {
-  Board board(Variant::NORMAL, "8/2k5/4r3/3P2N1/8/R7/7p/3R2N1 w - -");
+  Board board(Variant::STANDARD, "8/2k5/4r3/3P2N1/8/R7/7p/3R2N1 w - -");
   EXPECT_EQ("N1f3", SAN(board, Move("g1f3")));
   EXPECT_EQ("N5f3", SAN(board, Move("g5f3")));
   EXPECT_EQ("Ne2", SAN(board, Move("g1e2")));
@@ -431,15 +431,15 @@ TEST_F(BoardTest, SANTest2) {
 }
 
 TEST_F(BoardTest, SANTest3) {
-  Board board(Variant::NORMAL, "8/2k5/4r3/3P2N1/8/R7/7p/3R2N1 b - -");
+  Board board(Variant::STANDARD, "8/2k5/4r3/3P2N1/8/R7/7p/3R2N1 b - -");
   EXPECT_EQ("h1Q", SAN(board, Move("h2h1q")));
   EXPECT_EQ("hxg1Q", SAN(board, Move("h2g1q")));
   EXPECT_EQ("Kb7", SAN(board, Move("c7b7")));
 }
 
 TEST_F(BoardTest, SANToMoveTest1) {
-  Board board(Variant::SUICIDE);
-  MoveGeneratorSuicide movegen(board);
+  Board board(Variant::ANTICHESS);
+  MoveGeneratorAntichess movegen(board);
   EXPECT_EQ("e2e3", SANToMove("e3", board, &movegen).str());
   EXPECT_EQ("g2g4", SANToMove("g4", board, &movegen).str());
   EXPECT_EQ("g1f3", SANToMove("Nf3", board, &movegen).str());

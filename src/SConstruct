@@ -32,8 +32,8 @@ movegen = env.Library(
 
 evaluator = env.Library(
     target = 'evaluator',
-    source = ['eval_suicide.cpp',
-              'eval_normal.cpp',
+    source = ['eval_antichess.cpp',
+              'eval_standard.cpp',
               'egtb.cpp',
               'pawns.cpp'])
 

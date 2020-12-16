@@ -5,8 +5,8 @@
 #include "common.h"
 #include "egtb.h"
 #include "eval.h"
-#include "eval_normal.h"
-#include "eval_suicide.h"
+#include "eval_antichess.h"
+#include "eval_standard.h"
 #include "extensions.h"
 #include "iterative_deepener.h"
 #include "lmr.h"
@@ -131,17 +131,17 @@ protected:
   bool external_transpos_;
 };
 
-class NormalPlayerBuilder : public PlayerBuilder {
+class StandardPlayerBuilder : public PlayerBuilder {
 public:
-  void BuildBoard() override { board_.reset(new Board(Variant::NORMAL)); }
+  void BuildBoard() override { board_.reset(new Board(Variant::STANDARD)); }
 
   void BuildBoard(const std::string& fen) override {
-    board_.reset(new Board(Variant::NORMAL, fen));
+    board_.reset(new Board(Variant::STANDARD, fen));
   }
 
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
-    movegen_.reset(new MoveGeneratorNormal(board_.get()));
+    movegen_.reset(new MoveGeneratorStandard(board_.get()));
   }
 
   void BuildEGTB() override {}
@@ -149,11 +149,11 @@ public:
   void BuildEvaluator() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
-    eval_.reset(new EvalNormal(board_.get(), movegen_.get()));
+    eval_.reset(new EvalStandard(board_.get(), movegen_.get()));
   }
 
   void BuildBook() override {
-    book_.reset(new Book(Variant::NORMAL, "nbook.txt"));
+    book_.reset(new Book(Variant::STANDARD, "nbook.txt"));
   }
 
   void AddExtensions() override {
@@ -167,27 +167,27 @@ public:
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
     assert(timer_ != nullptr);
-    // For Normal player, extensions_ could be NULL as of now.
+    // For standard player, extensions_ could be NULL as of now.
     player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
                              iterative_deepener_.get(), timer_.get(),
                              egtb_.get(), extensions_.get(), rand_moves));
   }
 };
 
-class SuicidePlayerBuilder : public PlayerBuilder {
+class AntichessPlayerBuilder : public PlayerBuilder {
 public:
-  SuicidePlayerBuilder(const bool enable_pns = true)
+  AntichessPlayerBuilder(const bool enable_pns = true)
       : enable_pns_(enable_pns) {}
 
-  void BuildBoard() override { board_.reset(new Board(Variant::SUICIDE)); }
+  void BuildBoard() override { board_.reset(new Board(Variant::ANTICHESS)); }
 
   void BuildBoard(const std::string& fen) override {
-    board_.reset(new Board(Variant::SUICIDE, fen));
+    board_.reset(new Board(Variant::ANTICHESS, fen));
   }
 
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
-    movegen_.reset(new MoveGeneratorSuicide(*board_.get()));
+    movegen_.reset(new MoveGeneratorAntichess(*board_.get()));
   }
 
   void BuildEGTB() override {
@@ -201,11 +201,11 @@ public:
   void BuildEvaluator() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
-    eval_.reset(new EvalSuicide(board_.get(), movegen_.get(), egtb_.get()));
+    eval_.reset(new EvalAntichess(board_.get(), movegen_.get(), egtb_.get()));
   }
 
   void BuildBook() override {
-    book_.reset(new Book(Variant::SUICIDE, "sbook.txt"));
+    book_.reset(new Book(Variant::ANTICHESS, "sbook.txt"));
   }
 
   void AddExtensions() override {

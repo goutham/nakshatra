@@ -20,7 +20,7 @@
 typedef uint64_t U64;
 extern std::ostream nullstream;
 
-enum class Variant { NORMAL, SUICIDE };
+enum class Variant { STANDARD, ANTICHESS };
 
 enum class Side { NONE, WHITE, BLACK };
 

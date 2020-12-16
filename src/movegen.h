@@ -21,10 +21,10 @@ protected:
   MoveGenerator() {}
 };
 
-// Move generator for normal chess.
-class MoveGeneratorNormal : public MoveGenerator {
+// Move generator for standard chess.
+class MoveGeneratorStandard : public MoveGenerator {
 public:
-  MoveGeneratorNormal(Board* board) : board_(board) {}
+  MoveGeneratorStandard(Board* board) : board_(board) {}
 
   void GenerateMoves(MoveArray* move_array) final;
 
@@ -36,10 +36,10 @@ private:
   Board* board_;
 };
 
-// Move generator for suicide chess.
-class MoveGeneratorSuicide : public MoveGenerator {
+// Move generator for antichess.
+class MoveGeneratorAntichess : public MoveGenerator {
 public:
-  MoveGeneratorSuicide(const Board& board) : board_(board) {}
+  MoveGeneratorAntichess(const Board& board) : board_(board) {}
 
   void GenerateMoves(MoveArray* move_array) final;
 

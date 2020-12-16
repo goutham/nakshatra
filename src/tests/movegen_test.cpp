@@ -20,8 +20,8 @@ void DebugPrintMoveList(const MoveArray& move_array) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyValidMove) {
-  Board board(Variant::SUICIDE);
-  MoveGeneratorSuicide movegen(board);
+  Board board(Variant::ANTICHESS);
+  MoveGeneratorAntichess movegen(board);
 
   Move move("e2e3");
   EXPECT_TRUE(movegen.IsValidMove(move));
@@ -32,9 +32,9 @@ TEST_F(MoveGeneratorTest, VerifyValidMove) {
 
 TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
   string initial = "8/1P6/8/8/8/8/8/8 w - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(5, move_array.size());
@@ -62,9 +62,9 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
 
 TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotion) {
   string initial = "8/8/8/8/8/8/1p6/8 b - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(5, move_array.size());
@@ -92,9 +92,9 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotion) {
 
 TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotionHit) {
   string initial = "r1q5/1P6/8/8/8/8/8/8 w - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(10, move_array.size());
@@ -124,9 +124,9 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotionHit) {
 
 TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotionHit) {
   string initial = "8/8/8/8/8/8/1p6/R1Q5 b - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(10, move_array.size());
@@ -156,9 +156,9 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotionHit) {
 
 TEST_F(MoveGeneratorTest, VerifyPawnFirstMove) {
   string initial = "8/1p6/1p6/8/8/8/8/8 b - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(1, move_array.size());
@@ -169,9 +169,9 @@ TEST_F(MoveGeneratorTest, VerifyPawnFirstMove) {
 
 TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
   string initial = "8/1p6/8/2P5/8/8/8/8 b - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(2, move_array.size());
@@ -188,7 +188,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
   ASSERT_TRUE(index > -1);
   board.MakeMove(move_array.get(index));
 
-  MoveGeneratorSuicide movegen2(board);
+  MoveGeneratorAntichess movegen2(board);
   MoveArray move_array2;
   movegen2.GenerateMoves(&move_array2);
   EXPECT_EQ(1, move_array2.size());
@@ -203,9 +203,9 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
 
 TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
   string initial = "8/8/8/8/2p5/8/1P6/8 w - -";
-  Board board(Variant::SUICIDE, initial);
+  Board board(Variant::ANTICHESS, initial);
 
-  MoveGeneratorSuicide movegen(board);
+  MoveGeneratorAntichess movegen(board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   EXPECT_EQ(2, move_array.size());
@@ -222,7 +222,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
   ASSERT_TRUE(index > -1);
   board.MakeMove(move_array.get(index));
 
-  MoveGeneratorSuicide movegen2(board);
+  MoveGeneratorAntichess movegen2(board);
   MoveArray move_array2;
   movegen2.GenerateMoves(&move_array2);
   EXPECT_EQ(1, move_array2.size());
@@ -236,8 +236,8 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
-  Board board(Variant::NORMAL);
-  MoveGeneratorNormal movegen(&board);
+  Board board(Variant::STANDARD);
+  MoveGeneratorStandard movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   static const string valid_moves[] = {"a2a3", "b2b3", "c2c3", "d2d3", "e2e3",
@@ -260,8 +260,8 @@ TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
-  Board board(Variant::NORMAL, "8/8/4r3/b7/3b4/2Q2p2/4P3/4K3 w - -");
-  MoveGeneratorNormal movegen(&board);
+  Board board(Variant::STANDARD, "8/8/4r3/b7/3b4/2Q2p2/4P3/4K3 w - -");
+  MoveGeneratorStandard movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   static const string valid_moves[] = {
@@ -283,10 +283,10 @@ TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
-  Board board(Variant::NORMAL,
+  Board board(Variant::STANDARD,
               "rnb1kbnr/pppp1p1p/6p1/4P3/1q2P3/8/PPPK1PPP/RNBQ1BNR w KQkq -");
   board.DebugPrintBoard();
-  MoveGeneratorNormal movegen(&board);
+  MoveGeneratorStandard movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   DebugPrintMoveList(move_array);
@@ -307,9 +307,9 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
 }
 
 TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
-  Board board(Variant::NORMAL,
+  Board board(Variant::STANDARD,
               "rnb1kbnr/pppp1ppp/4p3/8/3P4/2P5/PP1KPqPP/RNBQ1BNR w KQkq -");
-  MoveGeneratorNormal movegen(&board);
+  MoveGeneratorStandard movegen(&board);
   MoveArray move_array;
   movegen.GenerateMoves(&move_array);
   static const string valid_moves[] = {"a2a3", "b2b3", "g2g3", "h2h3", "c3c4",
@@ -332,7 +332,7 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
 }
 
 TEST_F(MoveGeneratorTest, VerifySlidingAttackMaps) {
-  Board board(Variant::SUICIDE,
+  Board board(Variant::ANTICHESS,
               "R7/1P1PPP1P/N2B3R/2P1P3/PP4P1/3p1pp1/1p1ppp2/1n1qkb2 w - -");
   const U64 bitboard = board.BitBoard();
   U64 attack_map = attacks::Attacks(bitboard, INDX(7, 6), QUEEN);
@@ -382,10 +382,10 @@ TEST_F(MoveGeneratorTest, CountMoves) {
   /*
    * This position at depth = 7 has 94,854,874,131 nodes.
    */
-  Board board(Variant::NORMAL,
+  Board board(Variant::STANDARD,
               "rnbqkb1r/pp1p1ppp/2p5/4P3/2B5/8/PPP1NnPP/RNBQK2R w KQkq -");
 
-  MoveGeneratorNormal movegen(&board);
+  MoveGeneratorStandard movegen(&board);
 
   EXPECT_EQ(42, CountLeafMoves(&movegen, &board, 1));
   EXPECT_EQ(1352, CountLeafMoves(&movegen, &board, 2));

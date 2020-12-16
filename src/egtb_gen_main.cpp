@@ -37,7 +37,7 @@ void GeneratePermutations(const std::vector<Piece>& pieces,
 }
 
 void All1p(std::set<std::string>* positions) {
-  Board board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -");
+  Board board(Variant::ANTICHESS, "8/8/8/8/8/8/8/8 w - -");
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     GeneratePermutations({piece}, {Side::BLACK}, 0, &board, positions);
     GeneratePermutations({-piece}, {Side::WHITE}, 0, &board, positions);
@@ -45,7 +45,7 @@ void All1p(std::set<std::string>* positions) {
 }
 
 void All2p(std::set<std::string>* positions) {
-  Board board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -");
+  Board board(Variant::ANTICHESS, "8/8/8/8/8/8/8/8 w - -");
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     for (Piece piece2 = KING; piece2 <= PAWN; ++piece2) {
       GeneratePermutations({piece, piece2}, {Side::BLACK}, 0, &board,
@@ -59,7 +59,7 @@ void All2p(std::set<std::string>* positions) {
 }
 
 void All3p(std::set<std::string>* positions) {
-  Board board(Variant::SUICIDE, "8/8/8/8/8/8/8/8 w - -");
+  Board board(Variant::ANTICHESS, "8/8/8/8/8/8/8/8 w - -");
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     for (Piece piece2 = KING; piece2 <= PAWN; ++piece2) {
       for (Piece piece3 = KING; piece3 <= PAWN; ++piece3) {

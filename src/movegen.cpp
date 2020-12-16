@@ -50,7 +50,7 @@ void AddPawnPromotions(const int from_index, const int to_index,
   add_move(QUEEN);
   add_move(ROOK);
 
-  if constexpr (variant == Variant::SUICIDE) {
+  if constexpr (variant == Variant::ANTICHESS) {
     add_move(KING);
   }
 }
@@ -76,9 +76,9 @@ void AddPawnMoves(U64 pawn_bitboard, MoveArray* move_array) {
 template <Variant variant, Side side, PawnMoveType>
 void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
   constexpr int promotion_count =
-      variant == Variant::NORMAL
+      variant == Variant::STANDARD
           ? 4
-          : (variant == Variant::SUICIDE
+          : (variant == Variant::ANTICHESS
                  ? 5
                  : throw std::logic_error("Unknown variant"));
   const U64 mask_7th_row = side_relative::MaskRow<side>(7);
@@ -253,11 +253,11 @@ bool Captures(const Board& board) {
 }
 
 template <Side side, typename MoveAccumulatorType>
-void GenerateMoves_Suicide(const Board& board, MoveAccumulatorType move_acc) {
+void GenerateMoves_Antichess(const Board& board, MoveAccumulatorType move_acc) {
   const bool generate_captures_only = Captures<side>(board);
 
   auto generate = [&](const Piece piece_type) {
-    GeneratePieceMoves<Variant::SUICIDE, side>(
+    GeneratePieceMoves<Variant::ANTICHESS, side>(
         board, PieceOfSide(piece_type, side), generate_captures_only, move_acc);
   };
 
@@ -270,11 +270,11 @@ void GenerateMoves_Suicide(const Board& board, MoveAccumulatorType move_acc) {
 }
 
 template <Side side>
-void GenerateMoves_Normal(Board* board, MoveArray* move_array) {
+void GenerateMoves_Standard(Board* board, MoveArray* move_array) {
   MoveArray pseudo_legal_move_array;
 
   auto generate = [&](const Piece piece_type) {
-    GeneratePieceMoves<Variant::NORMAL, side>(
+    GeneratePieceMoves<Variant::STANDARD, side>(
         *board, PieceOfSide(piece_type, side), false, &pseudo_legal_move_array);
   };
 
@@ -366,14 +366,14 @@ U64 ComputeAttackMap(const Board& board, const Side attacker_side) {
   return attack_map;
 }
 
-void MoveGeneratorSuicide::GenerateMoves(MoveArray* move_array) {
+void MoveGeneratorAntichess::GenerateMoves(MoveArray* move_array) {
   switch (board_.SideToMove()) {
   case Side::BLACK:
-    GenerateMoves_Suicide<Side::BLACK>(board_, move_array);
+    GenerateMoves_Antichess<Side::BLACK>(board_, move_array);
     break;
 
   case Side::WHITE:
-    GenerateMoves_Suicide<Side::WHITE>(board_, move_array);
+    GenerateMoves_Antichess<Side::WHITE>(board_, move_array);
     break;
 
   default:
@@ -381,16 +381,16 @@ void MoveGeneratorSuicide::GenerateMoves(MoveArray* move_array) {
   }
 }
 
-int MoveGeneratorSuicide::CountMoves() {
+int MoveGeneratorAntichess::CountMoves() {
   int move_count = 0;
 
   switch (board_.SideToMove()) {
   case Side::BLACK:
-    GenerateMoves_Suicide<Side::BLACK>(board_, &move_count);
+    GenerateMoves_Antichess<Side::BLACK>(board_, &move_count);
     break;
 
   case Side::WHITE:
-    GenerateMoves_Suicide<Side::WHITE>(board_, &move_count);
+    GenerateMoves_Antichess<Side::WHITE>(board_, &move_count);
     break;
 
   default:
@@ -400,20 +400,20 @@ int MoveGeneratorSuicide::CountMoves() {
   return move_count;
 }
 
-bool MoveGeneratorSuicide::IsValidMove(const Move& move) {
+bool MoveGeneratorAntichess::IsValidMove(const Move& move) {
   MoveArray move_array;
   GenerateMoves(&move_array);
   return move_array.Contains(move);
 }
 
-void MoveGeneratorNormal::GenerateMoves(MoveArray* move_array) {
+void MoveGeneratorStandard::GenerateMoves(MoveArray* move_array) {
   switch (board_->SideToMove()) {
   case Side::BLACK:
-    GenerateMoves_Normal<Side::BLACK>(board_, move_array);
+    GenerateMoves_Standard<Side::BLACK>(board_, move_array);
     break;
 
   case Side::WHITE:
-    GenerateMoves_Normal<Side::WHITE>(board_, move_array);
+    GenerateMoves_Standard<Side::WHITE>(board_, move_array);
     break;
 
   default:
@@ -421,13 +421,13 @@ void MoveGeneratorNormal::GenerateMoves(MoveArray* move_array) {
   }
 }
 
-int MoveGeneratorNormal::CountMoves() {
+int MoveGeneratorStandard::CountMoves() {
   MoveArray move_array;
   GenerateMoves(&move_array);
   return move_array.size();
 }
 
-bool MoveGeneratorNormal::IsValidMove(const Move& move) {
+bool MoveGeneratorStandard::IsValidMove(const Move& move) {
   MoveArray move_array;
   GenerateMoves(&move_array);
   return move_array.Contains(move);

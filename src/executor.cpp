@@ -3,8 +3,8 @@
 #include "common.h"
 #include "creation.h"
 #include "eval.h"
-#include "eval_normal.h"
-#include "eval_suicide.h"
+#include "eval_antichess.h"
+#include "eval_standard.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
@@ -114,11 +114,11 @@ bool Executor::MatchResult(vector<string>* response) {
 
 void Executor::ReBuildPlayer(int rand_moves) {
   switch (variant_) {
-  case Variant::NORMAL:
-    player_builder_.reset(new NormalPlayerBuilder());
+  case Variant::STANDARD:
+    player_builder_.reset(new StandardPlayerBuilder());
     break;
-  case Variant::SUICIDE:
-    player_builder_.reset(new SuicidePlayerBuilder(pns_));
+  case Variant::ANTICHESS:
+    player_builder_.reset(new AntichessPlayerBuilder(pns_));
     break;
   }
   assert(player_builder_.get() != nullptr);
@@ -133,11 +133,11 @@ void Executor::ReBuildPlayer(int rand_moves) {
 
 void Executor::ReBuildPonderer() {
   switch (variant_) {
-  case Variant::NORMAL:
-    ponderer_builder_.reset(new NormalPlayerBuilder());
+  case Variant::STANDARD:
+    ponderer_builder_.reset(new StandardPlayerBuilder());
     break;
-  case Variant::SUICIDE:
-    ponderer_builder_.reset(new SuicidePlayerBuilder(false));
+  case Variant::ANTICHESS:
+    ponderer_builder_.reset(new AntichessPlayerBuilder(false));
     break;
   }
   assert(ponderer_builder_.get() != nullptr);
@@ -184,7 +184,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   switch (Command command = Interpret(command_str); command.cmd_name) {
   case NEW: {
     StopPondering();
-    variant_ = Variant::NORMAL;
+    variant_ = Variant::STANDARD;
     force_mode_ = false;
     pns_ = true;
     book_ = true;
@@ -196,10 +196,10 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   case VARIANT: {
     StopPondering();
     force_mode_ = false;
-    variant_ = Variant::NORMAL;
+    variant_ = Variant::STANDARD;
     if (command.arguments.at(0) == "suicide" ||
         command.arguments.at(0) == "S") {
-      variant_ = Variant::SUICIDE;
+      variant_ = Variant::ANTICHESS;
     }
     ReBuildPlayer(rand_moves_);
   } break;
@@ -294,11 +294,11 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   case MOVELIST: {
     MoveGenerator* movegen = nullptr;
     switch (variant_) {
-    case Variant::NORMAL:
-      movegen = new MoveGeneratorNormal(player_->GetBoard());
+    case Variant::STANDARD:
+      movegen = new MoveGeneratorStandard(player_->GetBoard());
       break;
-    case Variant::SUICIDE:
-      movegen = new MoveGeneratorSuicide(*player_->GetBoard());
+    case Variant::ANTICHESS:
+      movegen = new MoveGeneratorAntichess(*player_->GetBoard());
       break;
     }
     MoveArray move_array;

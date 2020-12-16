@@ -2,7 +2,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "eval_suicide.h"
+#include "eval_antichess.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
@@ -75,9 +75,9 @@ void EGTBStore::Write() {
 
 void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
-    Board board(Variant::SUICIDE, *iter);
-    MoveGeneratorSuicide movegen(board);
-    EvalSuicide eval(&board, &movegen, nullptr);
+    Board board(Variant::ANTICHESS, *iter);
+    MoveGeneratorAntichess movegen(board);
+    EvalAntichess eval(&board, &movegen, nullptr);
     int result = eval.Result();
     if (result == WIN) {
       store->Put(board, 0, Move(), 1);
@@ -110,8 +110,8 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
         last_percent = percent;
       }
       ++progress;
-      Board board(Variant::SUICIDE, *iter);
-      MoveGeneratorSuicide movegen(board);
+      Board board(Variant::ANTICHESS, *iter);
+      MoveGeneratorAntichess movegen(board);
       MoveArray movelist;
       movegen.GenerateMoves(&movelist);
       int count_winning = 0;

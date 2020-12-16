@@ -1,5 +1,5 @@
-#ifndef EVAL_SUICIDE_H
-#define EVAL_SUICIDE_H
+#ifndef EVAL_ANTICHESS_H
+#define EVAL_ANTICHESS_H
 
 #include "common.h"
 #include "eval.h"
@@ -9,9 +9,9 @@ class EGTB;
 class MoveArray;
 class MoveGenerator;
 
-class EvalSuicide : public Evaluator {
+class EvalAntichess : public Evaluator {
 public:
-  EvalSuicide(Board* board, MoveGenerator* movegen, EGTB* egtb)
+  EvalAntichess(Board* board, MoveGenerator* movegen, EGTB* egtb)
       : board_(board), movegen_(movegen), egtb_(egtb) {}
 
   int Evaluate() override;

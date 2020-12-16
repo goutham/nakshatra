@@ -2,7 +2,7 @@
 #include "common.h"
 #include "egtb.h"
 #include "eval.h"
-#include "eval_suicide.h"
+#include "eval_antichess.h"
 #include "move.h"
 #include "movegen.h"
 #include "pn_search.h"
@@ -24,8 +24,8 @@ PNSParams::PNSearchType GetPNSType(const char* arg) {
 }
 
 std::string GetPosition(const char* arg) {
-  Board board(Variant::SUICIDE);
-  MoveGeneratorSuicide movegen(board);
+  Board board(Variant::ANTICHESS);
+  MoveGeneratorAntichess movegen(board);
   const auto move_str_vec = SplitString(arg, ' ');
   for (const auto& move_str : move_str_vec) {
     const Move move = SANToMove(move_str, board, &movegen);
@@ -47,14 +47,14 @@ int main(int argc, char* argv[]) {
   const int max_nodes = atoi(argv[2]);
   const std::string position = GetPosition(argv[3]);
 
-  Board board(Variant::SUICIDE, position);
-  MoveGeneratorSuicide movegen(board);
+  Board board(Variant::ANTICHESS, position);
+  MoveGeneratorAntichess movegen(board);
 
   std::vector<std::string> egtb_filenames;
   assert(GlobFiles("egtb/*.egtb", &egtb_filenames));
   EGTB egtb(egtb_filenames, board);
   egtb.Initialize();
-  EvalSuicide eval(&board, &movegen, &egtb);
+  EvalAntichess eval(&board, &movegen, &egtb);
 
   PNSParams pns_params;
   pns_params.max_nodes = max_nodes;

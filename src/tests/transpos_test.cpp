@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 TEST(TransposTest, VerifyEntries) {
-  Board board(Variant::SUICIDE,
+  Board board(Variant::ANTICHESS,
               "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -");
   TranspositionTable t(1024);
   U64 zkey = board.ZobristKey();

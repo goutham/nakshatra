@@ -1,4 +1,4 @@
-#include "eval_suicide.h"
+#include "eval_antichess.h"
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
@@ -27,7 +27,7 @@ constexpr int PIECE_COUNT_FACTOR = -50;
 constexpr int TEMPO = 250;
 } // namespace
 
-int EvalSuicide::PieceValDifference() const {
+int EvalAntichess::PieceValDifference() const {
   const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
                         PopCount(board_->BitBoard(QUEEN)) * pv::QUEEN +
                         PopCount(board_->BitBoard(PAWN)) * pv::PAWN +
@@ -45,14 +45,14 @@ int EvalSuicide::PieceValDifference() const {
                                                : (black_val - white_val);
 }
 
-int EvalSuicide::PieceCountDiff() const {
+int EvalAntichess::PieceCountDiff() const {
   const int white_count = PopCount(board_->BitBoard(Side::WHITE));
   const int black_count = PopCount(board_->BitBoard(Side::BLACK));
   return (board_->SideToMove() == Side::WHITE) ? (white_count - black_count)
                                                : (black_count - white_count);
 }
 
-bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
+bool EvalAntichess::RivalBishopsOnOppositeColoredSquares() const {
   static const U64 WHITE_SQUARES = 0xAA55AA55AA55AA55ULL;
   static const U64 BLACK_SQUARES = 0x55AA55AA55AA55AAULL;
 
@@ -64,7 +64,7 @@ bool EvalSuicide::RivalBishopsOnOppositeColoredSquares() const {
            ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES))));
 }
 
-int EvalSuicide::Evaluate() {
+int EvalAntichess::Evaluate() {
   const Side side = board_->SideToMove();
   const int self_pieces = board_->NumPieces(side);
   const int opp_pieces = board_->NumPieces(OppositeSide(side));
@@ -119,7 +119,7 @@ int EvalSuicide::Evaluate() {
          TEMPO + PIECE_COUNT_FACTOR * PieceCountDiff();
 }
 
-int EvalSuicide::Result() const {
+int EvalAntichess::Result() const {
   const Side side = board_->SideToMove();
   const int self_pieces = board_->NumPieces(side);
   const int opp_pieces = board_->NumPieces(OppositeSide(side));
