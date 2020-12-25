@@ -132,7 +132,7 @@ void IterativeDeepener::FindBestMove(int max_depth) {
   for (unsigned int i = 0; i < root_move_array_.size(); ++i) {
     const Move& move = root_move_array_.get(i);
     board_->MakeMove(move);
-    int score = -search_algorithm_->NegaScout(max_depth - 1, -INF, INF,
+    int score = -search_algorithm_->NegaScout(max_depth - 1, istat.score, INF,
                                               &istat.search_stats);
     board_->UnmakeLastMove();
 
