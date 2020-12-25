@@ -99,11 +99,17 @@ bool Executor::MatchResult(vector<string>* response) {
     return false;
   }
   string match_result;
-  if (result == WIN || result == -WIN) {
+  if (result == WIN) {
     if (player_->GetBoard()->SideToMove() == Side::WHITE) {
       match_result = "1-0 {White Wins}";
     } else {
       match_result = "0-1 {Black Wins}";
+    }
+  } else if (result == -WIN) {
+    if (player_->GetBoard()->SideToMove() == Side::WHITE) {
+      match_result = "0-1 {Black Wins}";
+    } else {
+      match_result = "1-0 {White Wins}";
     }
   } else {
     match_result = "1/2-1/2 {Draw}";
