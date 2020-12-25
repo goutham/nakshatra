@@ -230,6 +230,9 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   } break;
 
   case GO: {
+    if (player_ == nullptr) {
+      ReBuildPlayer(rand_moves_);
+    }
     StopPondering();
     if (MatchResult(response)) {
       break;
@@ -255,6 +258,9 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     break;
 
   case USERMOVE: {
+    if (player_ == nullptr) {
+      ReBuildPlayer(rand_moves_);
+    }
     StopPondering();
     Move move(command.arguments.at(0));
     if (force_mode_) {

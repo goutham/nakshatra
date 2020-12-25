@@ -61,7 +61,6 @@ TEST(ExecutorTest, VerifyResultWhiteWins_Standard) {
   const string fen = "8/7k/8/7R/6Q1/8/8/1K6 b - -";
   Executor executor("nakshatra-test", fen, Variant::STANDARD);
   vector<string> response;
-  executor.Execute("new", &response);
   executor.Execute("go", &response);
   EXPECT_EQ(1, response.size());
   EXPECT_EQ("1-0 {White Wins}", response.at(0));
@@ -71,7 +70,6 @@ TEST(ExecutorTest, VerifyResultBlackWins_Standard) {
   const string fen = "5k2/8/8/8/7R/2n5/8/K1q5 w - -";
   Executor executor("nakshatra-test", fen, Variant::STANDARD);
   vector<string> response;
-  executor.Execute("new", &response);
   executor.Execute("go", &response);
   EXPECT_EQ(1, response.size());
   EXPECT_EQ("0-1 {Black Wins}", response.at(0));
