@@ -2,6 +2,7 @@
 #include "common.h"
 #include "eval.h"
 #include "eval_antichess.h"
+#include "move_order.h"
 #include "movegen.h"
 #include "search_algorithm.h"
 #include "stats.h"
@@ -24,10 +25,12 @@ TEST_F(SearchAlgorithmTest, NegaScout) {
   std::unique_ptr<MoveGenerator> movegen(new MoveGeneratorAntichess(board));
   std::unique_ptr<Evaluator> eval(
       new EvalAntichess(&board, movegen.get(), nullptr));
+  AntichessMoveOrderer orderer(&board, movegen.get());
 
   TranspositionTable transpos(1U << 20); // 1 MB
-  SearchAlgorithm search_algorithm(&board, movegen.get(), eval.get(), nullptr,
-                                   &transpos, nullptr);
+  SearchAlgorithm search_algorithm(Variant::ANTICHESS, &board, movegen.get(),
+                                   eval.get(), nullptr, &transpos, &orderer,
+                                   nullptr);
   // Not a win up to depth 6.
   for (int depth = 1; depth <= 6; ++depth) {
     SearchStats search_stats;

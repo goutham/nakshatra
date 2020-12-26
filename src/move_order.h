@@ -10,35 +10,46 @@
 class Board;
 class MoveGenerator;
 
+// Container for any preferred moves supplied by caller that need to be treated
+// with special care.
+struct PrefMoves {
+  Move tt_move = Move();
+  Move killer1 = Move();
+  Move killer2 = Move();
+};
+
 class MoveOrderer {
 public:
   virtual ~MoveOrderer() {}
 
-  virtual void Order(MoveArray* move_array) = 0;
+  virtual void Order(MoveArray* move_array,
+                     const PrefMoves* pref_moves = nullptr) = 0;
 
 protected:
   MoveOrderer() {}
 };
 
-class MobilityOrderer : public MoveOrderer {
+class AntichessMoveOrderer : public MoveOrderer {
 public:
-  MobilityOrderer(Board* board, MoveGenerator* movegen)
+  AntichessMoveOrderer(Board* board, MoveGenerator* movegen)
       : board_(board), movegen_(movegen) {}
-  ~MobilityOrderer() override {}
+  ~AntichessMoveOrderer() override {}
 
-  void Order(MoveArray* move_array) override;
+  void Order(MoveArray* move_array,
+             const PrefMoves* pref_moves = nullptr) override;
 
 private:
   Board* board_;
   MoveGenerator* movegen_;
 };
 
-class CapturesFirstOrderer : public MoveOrderer {
+class StandardMoveOrderer : public MoveOrderer {
 public:
-  CapturesFirstOrderer(Board* board) : board_(board) {}
-  ~CapturesFirstOrderer() override {}
+  StandardMoveOrderer(Board* board) : board_(board) {}
+  ~StandardMoveOrderer() override {}
 
-  void Order(MoveArray* move_array) override;
+  void Order(MoveArray* move_array,
+             const PrefMoves* pref_moves = nullptr) override;
 
 private:
   Board* board_;

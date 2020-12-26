@@ -4,7 +4,6 @@
 #include <memory>
 
 class LMR;
-class MoveOrderer;
 class PNSearch;
 class Timer;
 
@@ -15,7 +14,6 @@ struct PNSExtension {
 };
 
 struct Extensions {
-  std::unique_ptr<MoveOrderer> move_orderer;
   std::unique_ptr<LMR> lmr;
   PNSExtension pns_extension;
 };

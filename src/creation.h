@@ -42,7 +42,8 @@ struct BuildOptions {
 
 class PlayerBuilder {
 public:
-  PlayerBuilder() : external_transpos_(false) {}
+  PlayerBuilder(Variant variant)
+      : variant_(variant), external_transpos_(false) {}
 
   virtual ~PlayerBuilder() {
     if (external_transpos_) {
@@ -50,9 +51,12 @@ public:
     }
   }
 
-  virtual void BuildBoard() = 0;
-  virtual void BuildBoard(const std::string& fen) = 0;
+  virtual void BuildBoard() { board_.reset(new Board(variant_)); }
+  virtual void BuildBoard(const std::string& fen) {
+    board_.reset(new Board(variant_, fen));
+  }
   virtual void BuildMoveGenerator() = 0;
+  virtual void BuildMoveOrderer() = 0;
   virtual void BuildEGTB() = 0;
   virtual void BuildEvaluator() = 0;
 
@@ -72,10 +76,11 @@ public:
     assert(eval_ != nullptr);
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
+    assert(move_orderer_ != nullptr);
     assert(extensions_ != nullptr);
-    search_algorithm_.reset(
-        new SearchAlgorithm(board_.get(), movegen_.get(), eval_.get(),
-                            timer_.get(), transpos_.get(), extensions_.get()));
+    search_algorithm_.reset(new SearchAlgorithm(
+        variant_, board_.get(), movegen_.get(), eval_.get(), timer_.get(),
+        transpos_.get(), move_orderer_.get(), extensions_.get()));
   }
   virtual void BuildIterativeDeepener() {
     assert(board_ != nullptr);
@@ -83,10 +88,10 @@ public:
     assert(search_algorithm_ != nullptr);
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
-    assert(extensions_ != nullptr);
+    assert(move_orderer_ != nullptr);
     iterative_deepener_.reset(new IterativeDeepener(
         board_.get(), movegen_.get(), search_algorithm_.get(), timer_.get(),
-        transpos_.get(), extensions_.get()));
+        transpos_.get(), move_orderer_.get()));
   }
 
   // BuildExtensions only allocates memory for the extensions_ object. The
@@ -98,7 +103,7 @@ public:
   // side-effect of this is that none of the constructors which take extensions_
   // as an argument can refer to its contents.
   virtual void BuildExtensions() { extensions_.reset(new Extensions()); }
-  virtual void AddExtensions() = 0;
+  virtual void AddExtensions() {}
 
   virtual void BuildBook() = 0;
   virtual void BuildPlayer(int rand_moves) = 0;
@@ -116,9 +121,11 @@ public:
   virtual Timer* GetTimer() const { return timer_.get(); }
 
 protected:
+  const Variant variant_;
   const std::map<std::string, std::string> config_map_;
   std::unique_ptr<Board> board_;
   std::unique_ptr<MoveGenerator> movegen_;
+  std::unique_ptr<MoveOrderer> move_orderer_;
   std::unique_ptr<SearchAlgorithm> search_algorithm_;
   std::unique_ptr<IterativeDeepener> iterative_deepener_;
   std::unique_ptr<Evaluator> eval_;
@@ -133,15 +140,16 @@ protected:
 
 class StandardPlayerBuilder : public PlayerBuilder {
 public:
-  void BuildBoard() override { board_.reset(new Board(Variant::STANDARD)); }
-
-  void BuildBoard(const std::string& fen) override {
-    board_.reset(new Board(Variant::STANDARD, fen));
-  }
+  StandardPlayerBuilder() : PlayerBuilder(Variant::STANDARD) {}
 
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
     movegen_.reset(new MoveGeneratorStandard(board_.get()));
+  }
+
+  void BuildMoveOrderer() override {
+    assert(board_ != nullptr);
+    move_orderer_.reset(new StandardMoveOrderer(board_.get()));
   }
 
   void BuildEGTB() override {}
@@ -154,12 +162,6 @@ public:
 
   void BuildBook() override {
     book_.reset(new Book(Variant::STANDARD, "nbook.txt"));
-  }
-
-  void AddExtensions() override {
-    assert(extensions_ != nullptr);
-    assert(board_ != nullptr);
-    extensions_->move_orderer.reset(new CapturesFirstOrderer(board_.get()));
   }
 
   void BuildPlayer(int rand_moves) override {
@@ -177,17 +179,17 @@ public:
 class AntichessPlayerBuilder : public PlayerBuilder {
 public:
   AntichessPlayerBuilder(const bool enable_pns = true)
-      : enable_pns_(enable_pns) {}
-
-  void BuildBoard() override { board_.reset(new Board(Variant::ANTICHESS)); }
-
-  void BuildBoard(const std::string& fen) override {
-    board_.reset(new Board(Variant::ANTICHESS, fen));
-  }
+      : PlayerBuilder(Variant::ANTICHESS), enable_pns_(enable_pns) {}
 
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
     movegen_.reset(new MoveGeneratorAntichess(*board_.get()));
+  }
+
+  void BuildMoveOrderer() override {
+    assert(board_ != nullptr);
+    assert(movegen_ != nullptr);
+    move_orderer_.reset(new AntichessMoveOrderer(board_.get(), movegen_.get()));
   }
 
   void BuildEGTB() override {
@@ -213,8 +215,6 @@ public:
     assert(movegen_ != nullptr);
     assert(eval_ != nullptr);
     assert(extensions_ != nullptr);
-    extensions_->move_orderer.reset(
-        new MobilityOrderer(board_.get(), movegen_.get()));
     extensions_->lmr.reset(new LMR(4 /* full depth moves */,
                                    2 /* reduction limit */,
                                    1 /* depth reduction factor */));
@@ -262,6 +262,7 @@ public:
     }
     player_builder_->BuildExtensions(); // Must always be called first.
     player_builder_->BuildMoveGenerator();
+    player_builder_->BuildMoveOrderer();
     player_builder_->BuildEGTB();
     player_builder_->BuildEvaluator();
     player_builder_->BuildTimer();

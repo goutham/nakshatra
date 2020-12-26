@@ -2,7 +2,6 @@
 #include "board.h"
 #include "common.h"
 #include "eval.h"
-#include "extensions.h"
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -13,6 +12,7 @@
 #include "timer.h"
 #include "transpos.h"
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -40,8 +40,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
   // Caller provided move ordering and pruning takes priority over move orderer.
   if (ids_params.pruned_ordered_moves.size()) {
     root_move_array_ = ids_params.pruned_ordered_moves;
-  } else if (extensions_->move_orderer) {
-    extensions_->move_orderer->Order(&root_move_array_);
+  } else {
+    move_orderer_->Order(&root_move_array_);
   }
   assert(root_move_array_.size() > 0);
   out << "# Number of root moves being searched: " << root_move_array_.size()
@@ -57,17 +57,26 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
 
   // Iterative deepening starts here.
   for (unsigned depth = 1; depth <= ids_params.search_depth; ++depth) {
-    // Do not use transposition table moves at the root if ordered/pruned
-    // movelist is passed by the caller as we expect input ordering to be of
-    // highest quality. Also, this avoids transposition table moves that are
-    // not in the list to be brought to the front.
-    if (ids_params.pruned_ordered_moves.size() == 0) {
+    if (!iteration_stats_.empty()) {
+      auto& move_stats = iteration_stats_.back().move_stats;
+      // A common technique for root move ordering: sort moves by size of their
+      // search trees in previous iteration (largest to smallest). The heuristic
+      // being that moves with larger search trees are harder to refute.
+      std::sort(move_stats.begin(), move_stats.end(),
+                [](const std::pair<Move, SearchStats>& a,
+                   const std::pair<Move, SearchStats>& b) -> bool {
+                  return a.second.nodes_searched > b.second.nodes_searched;
+                });
+      root_move_array_.clear();
+      for (const auto& stat : move_stats) {
+        root_move_array_.Add(stat.first);
+      }
+      root_move_array_.PushToFront(iteration_stats_.back().best_move);
+    } else if (ids_params.pruned_ordered_moves.size() == 0) {
       if (auto* tentry = transpos_->Get(board_->ZobristKey());
           tentry && tentry->best_move.is_valid()) {
         root_move_array_.PushToFront(tentry->best_move);
       }
-    } else if (!iteration_stats_.empty()) {
-      root_move_array_.PushToFront(iteration_stats_.back().best_move);
     }
 
     // This will return immediately when timer expires but updates the
@@ -95,11 +104,12 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
     // Update best_move and stats.
     *best_move = last_istat.best_move;
     *best_move_score = last_istat.score;
-    id_search_stats->nodes_searched += last_istat.search_stats.nodes_searched;
-    id_search_stats->nodes_researched +=
-        last_istat.search_stats.nodes_researched;
-    id_search_stats->nodes_evaluated += last_istat.search_stats.nodes_evaluated;
-    id_search_stats->search_depth = last_istat.depth;
+    for (const auto& stat : last_istat.move_stats) {
+      id_search_stats->nodes_searched += stat.second.nodes_searched;
+      id_search_stats->nodes_researched += stat.second.nodes_researched;
+      id_search_stats->nodes_evaluated += stat.second.nodes_evaluated;
+      id_search_stats->search_depth = stat.second.search_depth;
+    }
 
     // XBoard style thinking output.
     if (ids_params.thinking_output) {
@@ -132,9 +142,11 @@ void IterativeDeepener::FindBestMove(int max_depth) {
   for (unsigned int i = 0; i < root_move_array_.size(); ++i) {
     const Move& move = root_move_array_.get(i);
     board_->MakeMove(move);
+    SearchStats search_stats;
     int score = -search_algorithm_->NegaScout(max_depth - 1, istat.score, INF,
-                                              &istat.search_stats);
+                                              &search_stats);
     board_->UnmakeLastMove();
+    istat.move_stats.push_back(std::make_pair(move, search_stats));
 
     // Return on timer expiry only if we are not searching at depth 1. If
     // searching at depth 1, we should at least quickly find a meaningful move

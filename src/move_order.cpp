@@ -6,64 +6,64 @@
 #include "movegen.h"
 
 #include <algorithm>
-#include <cstdio>
-#include <cstring>
 
-void MobilityOrderer::Order(MoveArray* move_array) {
-  struct OpponentMoves {
-    unsigned opp_moves;
-    unsigned index;
-  };
-  OpponentMoves num_opponent_moves[256];
-  for (unsigned i = 0; i < move_array->size(); ++i) {
-    board_->MakeMove(move_array->get(i));
-    const unsigned num_moves = movegen_->CountMoves();
-    num_opponent_moves[i] = {num_moves, i};
-    board_->UnmakeLastMove();
-  }
-  std::sort(num_opponent_moves, num_opponent_moves + move_array->size(),
-            [](const OpponentMoves& a, const OpponentMoves& b) {
-              return a.opp_moves < b.opp_moves;
-            });
-  MoveArray new_move_array;
-  for (unsigned i = 0; i < move_array->size(); ++i) {
-    new_move_array.Add(move_array->get(num_opponent_moves[i].index));
-  }
-  memcpy(move_array, &new_move_array, sizeof(MoveArray));
-}
+struct MoveInfo {
+  Move move;
+  int score;
+};
 
-void CapturesFirstOrderer::Order(MoveArray* move_array) {
+void AntichessMoveOrderer::Order(MoveArray* move_array,
+                                 const PrefMoves* pref_moves) {
   const size_t num_moves = move_array->size();
-  struct CapturesDiff {
-    Move move;
-    int diff;
-  };
-  auto diff = [&](const Move& move) -> int {
-    return abs(PieceType(board_->PieceAt(move.from_index()))) -
-           abs(PieceType(board_->PieceAt(move.to_index())));
-  };
-  CapturesDiff captures_diff[256];
-  int j = 0;
-  MoveArray non_captures;
+  MoveInfo move_infos[256];
   for (size_t i = 0; i < num_moves; ++i) {
-    const Move& move = move_array->get(i);
-    if (board_->PieceAt(move.to_index()) != NULLPIECE) {
-      captures_diff[j] = {move, diff(move)};
-      ++j;
+    const Move move = move_array->get(i);
+    if (pref_moves && pref_moves->tt_move == move) {
+      move_infos[i] = {move, INF};
+    } else if (pref_moves && pref_moves->killer1 == move) {
+      move_infos[i] = {move, INF - 1};
+    } else if (pref_moves && pref_moves->killer2 == move) {
+      move_infos[i] = {move, INF - 2};
     } else {
-      non_captures.Add(move);
+      board_->MakeMove(move);
+      const int opp_moves = movegen_->CountMoves();
+      move_infos[i] = {move, -opp_moves};
+      board_->UnmakeLastMove();
     }
   }
-  std::sort(captures_diff, captures_diff + j,
-            [](const CapturesDiff& a, const CapturesDiff& b) -> bool {
-              return a.diff < b.diff;
+  std::sort(move_infos, move_infos + num_moves,
+            [](const MoveInfo& a, const MoveInfo& b) -> bool {
+              return a.score > b.score;
             });
   move_array->clear();
-  for (int i = 0; i < j; ++i) {
-    move_array->Add(captures_diff[i].move);
+  for (size_t i = 0; i < num_moves; ++i) {
+    move_array->Add(move_infos[i].move);
   }
-  for (size_t i = 0; i < non_captures.size(); ++i) {
-    move_array->Add(non_captures.get(i));
+}
+
+void StandardMoveOrderer::Order(MoveArray* move_array,
+                                const PrefMoves* pref_moves) {
+  const size_t num_moves = move_array->size();
+  MoveInfo move_infos[256];
+  for (size_t i = 0; i < num_moves; ++i) {
+    const Move move = move_array->get(i);
+    if (pref_moves && pref_moves->tt_move == move) {
+      move_infos[i] = {move, INF};
+    } else if (pref_moves && pref_moves->killer1 == move) {
+      // TODO: Make this lower prio than good captures once we have SEE.
+      move_infos[i] = {move, -1};
+    } else if (pref_moves && pref_moves->killer2 == move) {
+      move_infos[i] = {move, -2};
+    } else {
+      move_infos[i] = {move, -3};
+    }
   }
-  assert(num_moves == move_array->size());
+  std::sort(move_infos, move_infos + num_moves,
+            [](const MoveInfo& a, const MoveInfo& b) -> bool {
+              return a.score > b.score;
+            });
+  move_array->clear();
+  for (size_t i = 0; i < num_moves; ++i) {
+    move_array->Add(move_infos[i].move);
+  }
 }

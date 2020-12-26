@@ -4,6 +4,7 @@
 #include "eval.h"
 #include "extensions.h"
 #include "lmr.h"
+#include "move.h"
 #include "move_order.h"
 #include "movegen.h"
 #include "stats.h"
@@ -12,8 +13,14 @@
 
 int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
                                SearchStats* search_stats) {
+  return NegaScoutInternal(max_depth, alpha, beta, 0, search_stats);
+}
+
+int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
+                                       int ply, SearchStats* search_stats) {
   U64 zkey = board_->ZobristKey();
   TranspositionTableEntry* tentry = transpos_->Get(zkey);
+  Move tt_move = Move();
   if (tentry != nullptr) {
     if (tentry->node_type == EXACT_NODE &&
         (tentry->score == WIN || tentry->score == -WIN)) {
@@ -25,6 +32,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
          (tentry->node_type == FAIL_LOW_NODE && tentry->score <= alpha))) {
       return tentry->score;
     }
+    tt_move = tentry->best_move;
   }
 
   if (max_depth == 0 || (timer_ && timer_->Lapsed())) {
@@ -36,18 +44,16 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
 
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
-  if (extensions_ && extensions_->move_orderer) {
-    extensions_->move_orderer->Order(&move_array);
-  }
+  PrefMoves pref_moves;
+  pref_moves.tt_move = tt_move;
+  pref_moves.killer1 = killers_[ply][0];
+  pref_moves.killer2 = killers_[ply][1];
+  move_orderer_->Order(&move_array, &pref_moves);
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
     ++search_stats->nodes_evaluated;
     return evaluator_->Evaluate();
-  }
-  // Bring up the transposition entry to the top (if available).
-  if (tentry != nullptr && tentry->best_move.is_valid()) {
-    move_array.PushToFront(tentry->best_move);
   }
 
   Move best_move;
@@ -64,22 +70,24 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
     bool lmr_triggered = false;
     if (extensions_ && extensions_->lmr &&
         extensions_->lmr->CanReduce(index, max_depth)) {
-      value =
-          -NegaScout(max_depth - (1 + extensions_->lmr->DepthReductionFactor()),
-                     -alpha - 1, -alpha, search_stats);
+      value = -NegaScoutInternal(
+          max_depth - (1 + extensions_->lmr->DepthReductionFactor()),
+          -alpha - 1, -alpha, ply + 1, search_stats);
       lmr_triggered = true;
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal
     // search.
     if (!lmr_triggered || value > alpha) {
-      value = -NegaScout(max_depth - 1, -b, -alpha, search_stats);
+      value =
+          -NegaScoutInternal(max_depth - 1, -b, -alpha, ply + 1, search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
       ++search_stats->nodes_researched;
-      value = -NegaScout(max_depth - 1, -beta, -alpha, search_stats);
+      value = -NegaScoutInternal(max_depth - 1, -beta, -alpha, ply + 1,
+                                 search_stats);
     }
 
     board_->UnmakeLastMove();
@@ -92,6 +100,14 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
 
     if (alpha >= beta) {
       node_type = FAIL_HIGH_NODE;
+      // TODO: Restrict only to non-captures in standard chess once SEE is
+      // implemented and good captures can be placed before killer moves.
+      // TODO: Enable for ANTICHESS after testing.
+      if (variant_ == Variant::STANDARD && move != tt_move &&
+          move != killers_[ply][0]) {
+        killers_[ply][1] = killers_[ply][0];
+        killers_[ply][0] = move;
+      }
       break;
     }
 

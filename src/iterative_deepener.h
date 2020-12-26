@@ -3,12 +3,13 @@
 
 #include "move.h"
 #include "move_array.h"
+#include "move_order.h"
 #include "stats.h"
 
+#include <utility>
 #include <vector>
 
 class Board;
-class Extensions;
 class MoveGenerator;
 class SearchAlgorithm;
 class Timer;
@@ -25,9 +26,9 @@ class IterativeDeepener {
 public:
   IterativeDeepener(Board* board, MoveGenerator* movegen,
                     SearchAlgorithm* search_algorithm, Timer* timer,
-                    TranspositionTable* transpos, Extensions* extensions)
+                    TranspositionTable* transpos, MoveOrderer* move_orderer)
       : board_(board), movegen_(movegen), search_algorithm_(search_algorithm),
-        timer_(timer), transpos_(transpos), extensions_(extensions) {}
+        timer_(timer), transpos_(transpos), move_orderer_(move_orderer) {}
 
   void Search(const IDSParams& ids_params, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);
@@ -45,7 +46,7 @@ private:
   SearchAlgorithm* search_algorithm_;
   Timer* timer_;
   TranspositionTable* transpos_;
-  Extensions* extensions_;
+  MoveOrderer* move_orderer_;
 
   // Maintains list of moves at the root node.
   MoveArray root_move_array_;
@@ -70,7 +71,7 @@ private:
     int root_moves_covered;
 
     // Stats for searching to this depth.
-    SearchStats search_stats;
+    std::vector<std::pair<Move, SearchStats>> move_stats;
   };
 
   std::vector<IterationStat> iteration_stats_;
