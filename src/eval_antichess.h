@@ -14,11 +14,13 @@ public:
   EvalAntichess(Board* board, MoveGenerator* movegen, EGTB* egtb)
       : board_(board), movegen_(movegen), egtb_(egtb) {}
 
-  int Evaluate() override;
+  int Evaluate(int alpha, int beta) override;
 
   int Result() const override;
 
 private:
+  int EvaluateInternal(int alpha, int beta, int max_depth);
+
   int PieceValDifference() const;
 
   int PieceCountDiff() const;

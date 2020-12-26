@@ -37,7 +37,7 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
 
   if (max_depth == 0 || (timer_ && timer_->Lapsed())) {
     ++search_stats->nodes_evaluated;
-    int score = evaluator_->Evaluate();
+    int score = evaluator_->Evaluate(alpha, beta);
     transpos_->Put(score, EXACT_NODE, 0, zkey, Move());
     return score;
   }
@@ -53,7 +53,7 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
     ++search_stats->nodes_evaluated;
-    return evaluator_->Evaluate();
+    return evaluator_->Evaluate(alpha, beta);
   }
 
   Move best_move;

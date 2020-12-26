@@ -13,7 +13,7 @@ public:
   EvalStandard(Board* board, MoveGenerator* movegen)
       : board_(board), movegen_(movegen) {}
 
-  int Evaluate() override;
+  int Evaluate(int alpha, int beta) override;
 
   int Result() const override;
 

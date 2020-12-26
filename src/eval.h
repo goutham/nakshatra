@@ -8,7 +8,7 @@ public:
   virtual ~Evaluator() {}
 
   // Returns the score for current position of the board.
-  virtual int Evaluate() = 0;
+  virtual int Evaluate(int alpha, int beta) = 0;
 
   // Returns WIN, -WIN or DRAW if game is over; else returns -1.
   virtual int Result() const = 0;

@@ -64,7 +64,7 @@ bool EvalAntichess::RivalBishopsOnOppositeColoredSquares() const {
            ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES))));
 }
 
-int EvalAntichess::Evaluate() {
+int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
   const Side side = board_->SideToMove();
   const int self_pieces = board_->NumPieces(side);
   const int opp_pieces = board_->NumPieces(OppositeSide(side));
@@ -91,9 +91,23 @@ int EvalAntichess::Evaluate() {
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
     board_->MakeMove(move_array.get(0));
-    const int eval_val = -Evaluate();
+    const int eval_val = -EvaluateInternal(-beta, -alpha, max_depth);
     board_->UnmakeLastMove();
     return eval_val;
+  }
+  if (self_moves <= 3 && max_depth > 0) {
+    MoveArray move_array;
+    movegen_->GenerateMoves(&move_array);
+    int score = -INF;
+    for (size_t i = 0; i < move_array.size(); ++i) {
+      board_->MakeMove(move_array.get(i));
+      const int eval_val = -EvaluateInternal(-beta, -alpha, max_depth - (self_moves - 1));
+      board_->UnmakeLastMove();
+      if (eval_val > score) {
+        score = eval_val;
+      }
+    }
+    return score;
   }
 
   board_->FlipSideToMove();
@@ -106,7 +120,7 @@ int EvalAntichess::Evaluate() {
     for (size_t i = 0; i < move_array.size(); ++i) {
       const Move& move = move_array.get(i);
       board_->MakeMove(move);
-      const int eval_val = -Evaluate();
+      const int eval_val = -Evaluate(-beta, -alpha);
       board_->UnmakeLastMove();
       if (max_eval < eval_val) {
         max_eval = eval_val;
@@ -117,6 +131,10 @@ int EvalAntichess::Evaluate() {
 
   return (self_moves - opp_moves) * MOBILITY_FACTOR + PieceValDifference() +
          TEMPO + PIECE_COUNT_FACTOR * PieceCountDiff();
+}
+
+int EvalAntichess::Evaluate(int alpha, int beta) {
+  return EvaluateInternal(alpha, beta, 5);
 }
 
 int EvalAntichess::Result() const {

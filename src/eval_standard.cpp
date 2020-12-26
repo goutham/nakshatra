@@ -37,7 +37,7 @@ int EvalStandard::PieceValDifference() const {
   return white_val - black_val;
 }
 
-int EvalStandard::Evaluate() {
+int EvalStandard::Evaluate(int alpha, int beta) {
   const Side side = board_->SideToMove();
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
