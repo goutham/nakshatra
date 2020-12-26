@@ -15,6 +15,18 @@ const Piece BISHOP = 4;
 const Piece KNIGHT = 5;
 const Piece PAWN = 6;
 
+namespace standard_chess {
+namespace piece_value {
+const int KING = 20000;
+const int QUEEN = 900;
+const int ROOK = 500;
+const int BISHOP = 300;
+const int KNIGHT = 300;
+const int PAWN = 100;
+constexpr int value[] = {0, KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN};
+} // namespace piece_value
+} // namespace standard_chess
+
 constexpr bool IsValidPiece(Piece piece) {
   return piece != NULLPIECE && -7 < piece && piece < 7;
 }

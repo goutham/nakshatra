@@ -100,11 +100,9 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
 
     if (alpha >= beta) {
       node_type = FAIL_HIGH_NODE;
-      // TODO: Restrict only to non-captures in standard chess once SEE is
-      // implemented and good captures can be placed before killer moves.
-      // TODO: Enable for ANTICHESS after testing.
-      if (variant_ == Variant::STANDARD && move != tt_move &&
-          move != killers_[ply][0]) {
+      if (move != tt_move && move != killers_[ply][0] &&
+          (variant_ == Variant::ANTICHESS ||
+           board_->PieceAt(move.to_index()) == NULLPIECE)) {
         killers_[ply][1] = killers_[ply][0];
         killers_[ply][0] = move;
       }

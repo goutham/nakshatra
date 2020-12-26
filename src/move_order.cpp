@@ -4,6 +4,7 @@
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
+#include "see.h"
 
 #include <algorithm>
 
@@ -49,9 +50,10 @@ void StandardMoveOrderer::Order(MoveArray* move_array,
     const Move move = move_array->get(i);
     if (pref_moves && pref_moves->tt_move == move) {
       move_infos[i] = {move, INF};
+    } else if (board_->PieceAt(move.to_index()) != NULLPIECE) {
+      move_infos[i] = {move, SEE(move, *board_)};
     } else if (pref_moves && pref_moves->killer1 == move) {
-      // TODO: Make this lower prio than good captures once we have SEE.
-      move_infos[i] = {move, -1};
+      move_infos[i] = {move, -1}; // lower prio than good captures
     } else if (pref_moves && pref_moves->killer2 == move) {
       move_infos[i] = {move, -2};
     } else {

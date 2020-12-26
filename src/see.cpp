@@ -16,17 +16,6 @@
 //        << endl;
 // }
 
-// TODO: These are for testing only, not actually used by eval. Merge them.
-namespace pv {
-constexpr int KING = 20000;
-constexpr int QUEEN = 900;
-constexpr int ROOK = 500;
-constexpr int BISHOP = 300;
-constexpr int KNIGHT = 300;
-constexpr int PAWN = 100;
-constexpr int value[] = {0, KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN};
-} // namespace pv
-
 bool LeastValuableAttacker(const int sq, const Side side, const U64 occ,
                            const Board& board, U64* attacker, Piece* piece) {
   for (Piece p = PAWN; p >= KING; --p) {
@@ -43,6 +32,7 @@ bool LeastValuableAttacker(const int sq, const Side side, const U64 occ,
 }
 
 int SEE(const Move move, const Board& board) {
+  namespace pv = standard_chess::piece_value;
   const int from_sq = move.from_index();
   const int to_sq = move.to_index();
   Piece capturing_piece = board.PieceAt(from_sq);

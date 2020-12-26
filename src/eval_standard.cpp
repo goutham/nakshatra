@@ -6,38 +6,22 @@
 #include "stopwatch.h"
 
 namespace {
-// Piece values.
-namespace pv {
-const int KING = 0;
-const int QUEEN = 9;
-const int ROOK = 5;
-const int BISHOP = 3;
-const int KNIGHT = 3;
-const int PAWN = 1;
-} // namespace pv
-
-const int MATERIAL_FACTOR = 25;
-
-// These values are basically crap.
-const int OPENING_PAWNS_STRENGTH_FACTOR = 4;
-const int MIDDLE_PAWNS_STRENGTH_FACTOR = 2;
-
 // clang-format off
-const int sq_strength[] = {
-  1, 1, 1, 1, 1, 1, 1, 1,
-  1, 2, 2, 2, 2, 2, 2, 1,
-  1, 2, 3, 3, 3, 3, 2, 1,
-  1, 2, 3, 5, 5, 3, 2, 1,
-  1, 2, 3, 5, 5, 3, 2, 1,
-  1, 2, 3, 3, 3, 3, 3, 1,
-  1, 2, 2, 2, 2, 2, 2, 1,
-  1, 1, 1, 1, 1, 1, 1, 1
+const int PSTPawn[64] = {
+   0,  0,   0,   0,   0,   0,  0,  0,
+  50, 50,  50,  50,  50,  50, 50, 50,
+  10, 10,  20,  30,  30,  20, 10, 10,
+   5,  5,  10,  25,  25,  10,  5,  5,
+   0,  0,   0,  20,  20,   0,  0,  0,
+   5, -5, -10,   0,   0, -10, -5,  5,
+   5, 10,  10, -20, -20,  10, 10,  5,
+   0,  0,   0,   0,   0,   0,  0,  0
 };
 // clang-format on
-
 } // namespace
 
 int EvalStandard::PieceValDifference() const {
+  namespace pv = standard_chess::piece_value;
   const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
                         PopCount(board_->BitBoard(QUEEN)) * pv::QUEEN +
                         PopCount(board_->BitBoard(PAWN)) * pv::PAWN +
@@ -50,9 +34,7 @@ int EvalStandard::PieceValDifference() const {
                         PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
                         PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
                         PopCount(board_->BitBoard(-ROOK)) * pv::ROOK;
-
-  return (board_->SideToMove() == Side::WHITE) ? (white_val - black_val)
-                                               : (black_val - white_val);
+  return white_val - black_val;
 }
 
 int EvalStandard::Evaluate() {
@@ -67,7 +49,7 @@ int EvalStandard::Evaluate() {
       return DRAW; // stalemate
     }
   }
-  int score = MATERIAL_FACTOR * PieceValDifference();
+  int score = 0;
   for (size_t i = 0; i < move_array.size(); ++i) {
     const Move& move = move_array.get(i);
     board_->MakeMove(move);
@@ -85,43 +67,27 @@ int EvalStandard::Evaluate() {
     return score;
   }
 
-  U64 self_pawns = board_->BitBoard(PieceOfSide(PAWN, side));
-  int self_pawns_strength = 0;
-  while (self_pawns) {
-    const int lsb_index = Lsb1(self_pawns);
-    self_pawns_strength += sq_strength[lsb_index];
-    self_pawns ^= (1ULL << lsb_index);
+  score += PieceValDifference();
+
+  U64 w_pawns = board_->BitBoard(PieceOfSide(PAWN, Side::WHITE));
+  while (w_pawns) {
+    const int lsb_index = Lsb1(w_pawns);
+    const int sq = INDX(7 - ROW(lsb_index), COL(lsb_index));
+    score += PSTPawn[sq];
+    w_pawns ^= (1ULL << lsb_index);
   }
 
-  U64 opp_pawns = board_->BitBoard(PieceOfSide(PAWN, OppositeSide(side)));
-  int opp_pawns_strength = 0;
-  while (opp_pawns) {
-    const int lsb_index = Lsb1(opp_pawns);
-    opp_pawns_strength += sq_strength[lsb_index];
-    opp_pawns ^= (1ULL << lsb_index);
+  U64 b_pawns = board_->BitBoard(PieceOfSide(PAWN, Side::BLACK));
+  while (b_pawns) {
+    const int lsb_index = Lsb1(b_pawns);
+    score -= PSTPawn[lsb_index];
+    b_pawns ^= (1ULL << lsb_index);
   }
 
-  const int pawns_strength =
-      (self_pawns_strength - opp_pawns_strength) *
-      ((board_->Ply() <= 10) ? OPENING_PAWNS_STRENGTH_FACTOR
-                             : MIDDLE_PAWNS_STRENGTH_FACTOR);
-
-  if (board_->Ply() > 8) {
-    const int main_row = ((side == Side::WHITE) ? 0 : 7);
-    // Better to move the bishop.
-    if ((board_->BitBoard(PieceOfSide(BISHOP, side)) &
-         ((1ULL << INDX(main_row, 2)) | (1ULL << INDX(main_row, 5))))) {
-      score -= 5;
-    }
-
-    // Better to move the knight.
-    if ((board_->BitBoard(PieceOfSide(KNIGHT, side)) &
-         ((1ULL << INDX(main_row, 1)) | (1ULL << INDX(main_row, 6))))) {
-      score -= 5;
-    }
+  if (board_->SideToMove() == Side::BLACK) {
+    score = -score;
   }
-
-  return score + pawns_strength + (move_array.size() / 15);
+  return score;
 }
 
 int EvalStandard::Result() const {
