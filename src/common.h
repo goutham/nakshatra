@@ -44,8 +44,18 @@ inline int Lsb1(const U64 v) { return log2U(v); }
 // Number of set bits in a U64 integer.
 unsigned PopCount(U64 x);
 
+constexpr int CharToDigit(const char c) {
+  return (c >= '0' && c <= '9')
+             ? (c - 48)
+             : throw std::logic_error("Expected char between '0' and '9'");
+}
+
 constexpr unsigned INDX(const unsigned row, const unsigned col) {
   return row * 8 + col;
+}
+
+constexpr unsigned INDX(const char* sq) {
+  return INDX(CharToDigit(sq[1]) - 1, sq[0] - 'a');
 }
 
 constexpr unsigned ROW(const unsigned index) { return index / 8; }
@@ -69,18 +79,16 @@ constexpr char DigitToChar(const int digit) {
                                     : throw std::logic_error("Expected digit");
 }
 
-constexpr int CharToDigit(const char c) {
-  return (c >= '0' && c <= '9')
-             ? (c - 48)
-             : throw std::logic_error("Expected char between '0' and '9'");
-}
-
 constexpr bool IsOnBoard(const int row, const int col) {
   return row >= 0 && row <= 7 && col >= 0 && col <= 7;
 }
 
 constexpr U64 SetBit(int row, int col) {
   return IsOnBoard(row, col) ? (1ULL << INDX(row, col)) : 0ULL;
+}
+
+constexpr U64 SetBit(const char* sq) {
+  return SetBit(CharToDigit(sq[1]) - 1, sq[0] - 'a');
 }
 
 std::vector<std::string> SplitString(const std::string& s, char delim);

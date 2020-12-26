@@ -27,6 +27,7 @@ board = env.Library(
 movegen = env.Library(
     target = 'movegen',
     source = ['movegen.cpp',
+              'see.cpp',
               'attacks.cpp',
               'san.cpp'])
 

@@ -1,5 +1,6 @@
 #include "attacks.h"
 #include "common.h"
+#include "side_relative.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -433,6 +434,30 @@ namespace attacks {
 
 U64 Attacks(const U64 bitboard, const int index, const Piece piece) {
   return attacks_fns[PieceType(piece)](bitboard, index);
+}
+
+U64 SquareAttackers(const int square, const Piece attacking_piece,
+                    const U64 occ, const U64 attacking_side_piece_occ) {
+  const Side attacking_side = PieceSide(attacking_piece);
+  const U64 bb = (1ULL << square);
+  U64 attack_bb = 0ULL;
+  if (PieceType(attacking_piece) == PAWN) {
+    switch (attacking_side) {
+    case Side::WHITE:
+      attack_bb = side_relative::PushNorthEast<Side::BLACK>(bb) |
+                  side_relative::PushNorthWest<Side::BLACK>(bb);
+      break;
+    case Side::BLACK:
+      attack_bb = side_relative::PushNorthEast<Side::WHITE>(bb) |
+                  side_relative::PushNorthWest<Side::WHITE>(bb);
+      break;
+    default:
+      throw std::logic_error("cannot process side");
+    }
+  } else {
+    attack_bb = Attacks(occ, square, attacking_piece);
+  }
+  return attack_bb & attacking_side_piece_occ;
 }
 
 } // namespace attacks
