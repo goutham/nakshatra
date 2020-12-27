@@ -1,4 +1,5 @@
 #include "attacks.h"
+#include "board.h"
 #include "common.h"
 #include "side_relative.h"
 
@@ -458,6 +459,26 @@ U64 SquareAttackers(const int square, const Piece attacking_piece,
     attack_bb = Attacks(occ, square, attacking_piece);
   }
   return attack_bb & attacking_side_piece_occ;
+}
+
+bool IsKingInCheck(const Board& board, const Side side) {
+  const U64 king_bb = board.BitBoard(PieceOfSide(KING, side));
+  if (!king_bb) {
+    return false;
+  }
+  const int sq = Lsb1(king_bb);
+  const U64 occ = board.BitBoard();
+  const Side opp_side = OppositeSide(side);
+  const Piece queen = PieceOfSide(QUEEN, opp_side);
+  const Piece rook = PieceOfSide(ROOK, opp_side);
+  const Piece bishop = PieceOfSide(BISHOP, opp_side);
+  const Piece knight = PieceOfSide(KNIGHT, opp_side);
+  const Piece pawn = PieceOfSide(PAWN, opp_side);
+  return attacks::SquareAttackers(sq, queen, occ, board.BitBoard(queen)) ||
+         attacks::SquareAttackers(sq, rook, occ, board.BitBoard(rook)) ||
+         attacks::SquareAttackers(sq, bishop, occ, board.BitBoard(bishop)) ||
+         attacks::SquareAttackers(sq, knight, occ, board.BitBoard(knight)) ||
+         attacks::SquareAttackers(sq, pawn, occ, board.BitBoard(pawn));
 }
 
 } // namespace attacks

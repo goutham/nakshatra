@@ -1,4 +1,5 @@
 #include "eval_standard.h"
+#include "attacks.h"
 #include "board.h"
 #include "common.h"
 #include "movegen.h"
@@ -37,37 +38,22 @@ int EvalStandard::PieceValDifference() const {
   return white_val - black_val;
 }
 
-int EvalStandard::Evaluate(int alpha, int beta) {
+int EvalStandard::StaticEval() const {
   const Side side = board_->SideToMove();
-  MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
-  if (move_array.size() == 0) {
-    const U64 attack_map = ComputeAttackMap(*board_, OppositeSide(side));
-    if (attack_map & board_->BitBoard(PieceOfSide(KING, side))) {
+  if (attacks::IsKingInCheck(*board_, side)) {
+    MoveArray move_array;
+    movegen_->GenerateMoves(&move_array);
+    const int self_moves = move_array.size();
+    if (self_moves == 0) {
       return -WIN;
-    } else {
-      return DRAW; // stalemate
     }
   }
-  int score = 0;
-  for (size_t i = 0; i < move_array.size(); ++i) {
-    const Move& move = move_array.get(i);
-    board_->MakeMove(move);
-    U64 attack_map = ComputeAttackMap(*board_, side);
-    if (attack_map & board_->BitBoard(PieceOfSide(KING, OppositeSide(side)))) {
-      MoveArray opp_move_array;
-      movegen_->GenerateMoves(&opp_move_array);
-      if (opp_move_array.size() == 0) {
-        score = WIN;
-      }
-    }
-    board_->UnmakeLastMove();
-  }
-  if (score == WIN) {
-    return score;
+  const Side opp_side = OppositeSide(side);
+  if (attacks::IsKingInCheck(*board_, opp_side)) {
+    return WIN;
   }
 
-  score += PieceValDifference();
+  int score = PieceValDifference();
 
   U64 w_pawns = board_->BitBoard(PieceOfSide(PAWN, Side::WHITE));
   while (w_pawns) {
@@ -90,6 +76,39 @@ int EvalStandard::Evaluate(int alpha, int beta) {
   return score;
 }
 
+int EvalStandard::Quiesce(int alpha, int beta) {
+  // TODO: Handle checks.
+  int standing_pat = StaticEval();
+  if (standing_pat >= beta) {
+    return standing_pat;
+  }
+  if (standing_pat > alpha) {
+    alpha = standing_pat;
+  }
+  MoveArray move_array;
+  movegen_->GenerateMoves(&move_array);
+  orderer_.Order(&move_array);
+  for (size_t i = 0; i < move_array.size(); ++i) {
+    const Move& move = move_array.get(i);
+    if (board_->PieceAt(move.to_index()) != NULLPIECE) {
+      board_->MakeMove(move);
+      int score = -Quiesce(-beta, -alpha);
+      board_->UnmakeLastMove();
+      if (score >= beta) {
+        return score;
+      }
+      if (score > alpha) {
+        alpha = score;
+      }
+    } else {
+      break;
+    }
+  }
+  return alpha;
+}
+
+int EvalStandard::Evaluate(int alpha, int beta) { return Quiesce(alpha, beta); }
+
 int EvalStandard::Result() const {
   const Side side = board_->SideToMove();
   MoveArray move_array;
@@ -102,5 +121,12 @@ int EvalStandard::Result() const {
       return DRAW; // stalemate
     }
   }
-  return -1;
+  for (size_t i = 0; i < move_array.size(); ++i) {
+    const Move move = move_array.get(i);
+    if (board_->PieceAt(move.to_index()) ==
+        PieceOfSide(KING, OppositeSide(side))) {
+      return WIN;
+    }
+  }
+  return UNKNOWN;
 }
