@@ -88,10 +88,11 @@ public:
     assert(search_algorithm_ != nullptr);
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
-    assert(move_orderer_ != nullptr);
+    assert(eval_ != nullptr);
+    root_move_orderer_.reset(new EvalScoreOrderer(eval_.get()));
     iterative_deepener_.reset(new IterativeDeepener(
         board_.get(), movegen_.get(), search_algorithm_.get(), timer_.get(),
-        transpos_.get(), move_orderer_.get()));
+        transpos_.get(), root_move_orderer_.get()));
   }
 
   // BuildExtensions only allocates memory for the extensions_ object. The
@@ -126,6 +127,7 @@ protected:
   std::unique_ptr<Board> board_;
   std::unique_ptr<MoveGenerator> movegen_;
   std::unique_ptr<MoveOrderer> move_orderer_;
+  std::unique_ptr<MoveOrderer> root_move_orderer_;
   std::unique_ptr<SearchAlgorithm> search_algorithm_;
   std::unique_ptr<IterativeDeepener> iterative_deepener_;
   std::unique_ptr<Evaluator> eval_;

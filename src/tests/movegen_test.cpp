@@ -392,3 +392,22 @@ TEST_F(MoveGeneratorTest, CountMoves) {
   EXPECT_EQ(53392, CountLeafMoves(&movegen, &board, 3));
   EXPECT_EQ(1761505, CountLeafMoves(&movegen, &board, 4));
 }
+
+// U64 P(U64 bb) {
+//   for (int i = 7; i >= 0; --i) {
+//     for (int j = 0; j < 8; ++j) {
+//       cout << ((bb & (1ULL << (INDX(i, j)))) ? 1 : 0) << " ";
+//     }
+//     cout << endl;
+//   }
+//   return bb;
+// }
+
+TEST(ComputeAttackMapTest, ComputeAttackMap) {
+  Board board(Variant::STANDARD,
+              "r3kb1r/ppq1pp1p/2n3p1/3n4/8/4PP2/P5PP/RN1QKBNR w KQkq - ");
+  EXPECT_EQ(SetBit("d5"),
+            ComputeAttackMap(board, Side::WHITE) & board.BitBoard(Side::BLACK));
+  EXPECT_EQ(SetBit("e3") | SetBit("h2"),
+            ComputeAttackMap(board, Side::BLACK) & board.BitBoard(Side::WHITE));
+}

@@ -1,6 +1,7 @@
 #include "move_order.h"
 #include "board.h"
 #include "common.h"
+#include "eval.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
@@ -59,6 +60,25 @@ void StandardMoveOrderer::Order(MoveArray* move_array,
     } else {
       move_infos[i] = {move, -3};
     }
+  }
+  std::sort(move_infos, move_infos + num_moves,
+            [](const MoveInfo& a, const MoveInfo& b) -> bool {
+              return a.score > b.score;
+            });
+  move_array->clear();
+  for (size_t i = 0; i < num_moves; ++i) {
+    move_array->Add(move_infos[i].move);
+  }
+}
+
+void EvalScoreOrderer::Order(MoveArray* move_array,
+                             const PrefMoves* pref_moves) {
+  assert(pref_moves == nullptr);
+  const size_t num_moves = move_array->size();
+  MoveInfo move_infos[256];
+  for (size_t i = 0; i < num_moves; ++i) {
+    const Move move = move_array->get(i);
+    move_infos[i] = {move, eval_->Evaluate(-INF, +INF)};
   }
   std::sort(move_infos, move_infos + num_moves,
             [](const MoveInfo& a, const MoveInfo& b) -> bool {

@@ -9,6 +9,7 @@
 
 class Board;
 class MoveGenerator;
+class Evaluator;
 
 // Container for any preferred moves supplied by caller that need to be treated
 // with special care.
@@ -53,6 +54,18 @@ public:
 
 private:
   Board* board_;
+};
+
+class EvalScoreOrderer : public MoveOrderer {
+public:
+  EvalScoreOrderer(Evaluator* eval) : eval_(eval) {}
+  ~EvalScoreOrderer() override {}
+
+  void Order(MoveArray* move_array,
+             const PrefMoves* pref_moves = nullptr) override;
+
+private:
+  Evaluator* eval_;
 };
 
 #endif

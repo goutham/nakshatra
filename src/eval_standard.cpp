@@ -2,41 +2,14 @@
 #include "attacks.h"
 #include "board.h"
 #include "common.h"
+#include "move_array.h"
+#include "move_order.h"
 #include "movegen.h"
 #include "piece.h"
 #include "stopwatch.h"
 
-namespace {
-// clang-format off
-const int PSTPawn[64] = {
-   0,  0,   0,   0,   0,   0,  0,  0,
-  50, 50,  50,  50,  50,  50, 50, 50,
-  10, 10,  20,  30,  30,  20, 10, 10,
-   5,  5,  10,  25,  25,  10,  5,  5,
-   0,  0,   0,  20,  20,   0,  0,  0,
-   5, -5, -10,   0,   0, -10, -5,  5,
-   5, 10,  10, -20, -20,  10, 10,  5,
-   0,  0,   0,   0,   0,   0,  0,  0
-};
-// clang-format on
-} // namespace
-
-int EvalStandard::PieceValDifference() const {
-  namespace pv = standard_chess::piece_value;
-  const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
-                        PopCount(board_->BitBoard(QUEEN)) * pv::QUEEN +
-                        PopCount(board_->BitBoard(PAWN)) * pv::PAWN +
-                        PopCount(board_->BitBoard(BISHOP)) * pv::BISHOP +
-                        PopCount(board_->BitBoard(KNIGHT)) * pv::KNIGHT +
-                        PopCount(board_->BitBoard(ROOK)) * pv::ROOK;
-  const int black_val = PopCount(board_->BitBoard(-KING)) * pv::KING +
-                        PopCount(board_->BitBoard(-QUEEN)) * pv::QUEEN +
-                        PopCount(board_->BitBoard(-PAWN)) * pv::PAWN +
-                        PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
-                        PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
-                        PopCount(board_->BitBoard(-ROOK)) * pv::ROOK;
-  return white_val - black_val;
-}
+namespace sc = standard_chess;
+namespace pv = standard_chess::piece_value;
 
 int EvalStandard::StaticEval() const {
   const Side side = board_->SideToMove();
@@ -53,24 +26,37 @@ int EvalStandard::StaticEval() const {
     return WIN;
   }
 
-  int score = PieceValDifference();
+  const U64 w_king = board_->BitBoard(KING);
+  const U64 w_queen = board_->BitBoard(QUEEN);
+  const U64 w_rook = board_->BitBoard(ROOK);
+  const U64 w_bishop = board_->BitBoard(BISHOP);
+  const U64 w_knight = board_->BitBoard(KNIGHT);
+  const U64 w_pawn = board_->BitBoard(PAWN);
 
-  U64 w_pawns = board_->BitBoard(PieceOfSide(PAWN, Side::WHITE));
-  while (w_pawns) {
-    const int lsb_index = Lsb1(w_pawns);
-    const int sq = INDX(7 - ROW(lsb_index), COL(lsb_index));
-    score += PSTPawn[sq];
-    w_pawns ^= (1ULL << lsb_index);
-  }
+  const U64 b_king = board_->BitBoard(-KING);
+  const U64 b_queen = board_->BitBoard(-QUEEN);
+  const U64 b_rook = board_->BitBoard(-ROOK);
+  const U64 b_bishop = board_->BitBoard(-BISHOP);
+  const U64 b_knight = board_->BitBoard(-KNIGHT);
+  const U64 b_pawn = board_->BitBoard(-PAWN);
 
-  U64 b_pawns = board_->BitBoard(PieceOfSide(PAWN, Side::BLACK));
-  while (b_pawns) {
-    const int lsb_index = Lsb1(b_pawns);
-    score -= PSTPawn[lsb_index];
-    b_pawns ^= (1ULL << lsb_index);
-  }
+  int score = 0;
 
-  if (board_->SideToMove() == Side::BLACK) {
+  score += PopCount(w_king) * pv::KING + sc::PSTVal<KING>(w_king);
+  score += PopCount(w_queen) * pv::QUEEN + sc::PSTVal<QUEEN>(w_queen);
+  score += PopCount(w_rook) * pv::ROOK + sc::PSTVal<ROOK>(w_rook);
+  score += PopCount(w_bishop) * pv::BISHOP + sc::PSTVal<BISHOP>(w_bishop);
+  score += PopCount(w_knight) * pv::KNIGHT + sc::PSTVal<KNIGHT>(w_knight);
+  score += PopCount(w_pawn) * pv::PAWN + sc::PSTVal<PAWN>(w_pawn);
+
+  score -= PopCount(b_king) * pv::KING + sc::PSTVal<-KING>(b_king);
+  score -= PopCount(b_queen) * pv::QUEEN + sc::PSTVal<-QUEEN>(b_queen);
+  score -= PopCount(b_rook) * pv::ROOK + sc::PSTVal<-ROOK>(b_rook);
+  score -= PopCount(b_bishop) * pv::BISHOP + sc::PSTVal<-BISHOP>(b_bishop);
+  score -= PopCount(b_knight) * pv::KNIGHT + sc::PSTVal<-KNIGHT>(b_knight);
+  score -= PopCount(b_pawn) * pv::PAWN + sc::PSTVal<-PAWN>(b_pawn);
+
+  if (side == Side::BLACK) {
     score = -score;
   }
   return score;
