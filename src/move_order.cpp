@@ -7,85 +7,71 @@
 #include "movegen.h"
 #include "see.h"
 
-#include <algorithm>
-
-struct MoveInfo {
-  Move move;
-  int score;
-};
-
-void AntichessMoveOrderer::Order(MoveArray* move_array,
-                                 const PrefMoves* pref_moves) {
-  const size_t num_moves = move_array->size();
-  MoveInfo move_infos[256];
+void AntichessMoveOrderer::Order(const MoveArray& move_array,
+                                 const PrefMoves* pref_moves,
+                                 MoveInfoArray* move_info_array) {
+  const size_t num_moves = move_array.size();
+  move_info_array->size = num_moves;
   for (size_t i = 0; i < num_moves; ++i) {
-    const Move move = move_array->get(i);
+    const Move move = move_array.get(i);
     if (pref_moves && pref_moves->tt_move == move) {
-      move_infos[i] = {move, INF};
+      move_info_array->moves[i] = {move, MoveType::TT, 0};
     } else if (pref_moves && pref_moves->killer1 == move) {
-      move_infos[i] = {move, INF - 1};
+      move_info_array->moves[i] = {move, MoveType::KILLER, 1};
     } else if (pref_moves && pref_moves->killer2 == move) {
-      move_infos[i] = {move, INF - 2};
+      move_info_array->moves[i] = {move, MoveType::KILLER, 0};
     } else {
       board_->MakeMove(move);
       const int opp_moves = movegen_->CountMoves();
-      move_infos[i] = {move, -opp_moves};
+      move_info_array->moves[i] = {move, MoveType::UNCATEGORIZED, -opp_moves};
       board_->UnmakeLastMove();
     }
   }
-  std::sort(move_infos, move_infos + num_moves,
-            [](const MoveInfo& a, const MoveInfo& b) -> bool {
-              return a.score > b.score;
-            });
-  move_array->clear();
-  for (size_t i = 0; i < num_moves; ++i) {
-    move_array->Add(move_infos[i].move);
-  }
+  move_info_array->Sort();
 }
 
-void StandardMoveOrderer::Order(MoveArray* move_array,
-                                const PrefMoves* pref_moves) {
-  const size_t num_moves = move_array->size();
-  MoveInfo move_infos[256];
+void StandardMoveOrderer::Order(const MoveArray& move_array,
+                                const PrefMoves* pref_moves,
+                                MoveInfoArray* move_info_array) {
+  const size_t num_moves = move_array.size();
+  move_info_array->size = num_moves;
   for (size_t i = 0; i < num_moves; ++i) {
-    const Move move = move_array->get(i);
+    const Move move = move_array.get(i);
     if (pref_moves && pref_moves->tt_move == move) {
-      move_infos[i] = {move, INF};
+      move_info_array->moves[i] = {move, MoveType::TT, 0};
     } else if (board_->PieceAt(move.to_index()) != NULLPIECE) {
-      move_infos[i] = {move, SEE(move, *board_)};
+      const int see_val = SEE(move, *board_);
+      const auto type = (see_val >= 0) ? MoveType::SEE_GOOD_CAPTURE
+                                       : MoveType::SEE_BAD_CAPTURE;
+      move_info_array->moves[i] = {move, type, see_val};
     } else if (pref_moves && pref_moves->killer1 == move) {
-      move_infos[i] = {move, -1}; // lower prio than good captures
+      move_info_array->moves[i] = {move, MoveType::KILLER, 1};
     } else if (pref_moves && pref_moves->killer2 == move) {
-      move_infos[i] = {move, -2};
+      move_info_array->moves[i] = {move, MoveType::KILLER, 0};
     } else {
-      move_infos[i] = {move, -3};
+      const int from_sq = move.from_index();
+      const int to_sq = move.to_index();
+      const Side side = board_->SideToMove();
+      const Piece piece = board_->PieceAt(from_sq);
+      move_info_array->moves[i] = {
+          move, MoveType::QUIET,
+          standard_chess::PSTVal(side, piece, to_sq) -
+              standard_chess::PSTVal(side, piece, from_sq)};
     }
   }
-  std::sort(move_infos, move_infos + num_moves,
-            [](const MoveInfo& a, const MoveInfo& b) -> bool {
-              return a.score > b.score;
-            });
-  move_array->clear();
-  for (size_t i = 0; i < num_moves; ++i) {
-    move_array->Add(move_infos[i].move);
-  }
+  move_info_array->Sort();
 }
 
-void EvalScoreOrderer::Order(MoveArray* move_array,
-                             const PrefMoves* pref_moves) {
+void EvalScoreOrderer::Order(const MoveArray& move_array,
+                             const PrefMoves* pref_moves,
+                             MoveInfoArray* move_info_array) {
   assert(pref_moves == nullptr);
-  const size_t num_moves = move_array->size();
-  MoveInfo move_infos[256];
+  const size_t num_moves = move_array.size();
+  move_info_array->size = num_moves;
   for (size_t i = 0; i < num_moves; ++i) {
-    const Move move = move_array->get(i);
-    move_infos[i] = {move, eval_->Evaluate(-INF, +INF)};
+    const Move move = move_array.get(i);
+    move_info_array->moves[i] = {move, MoveType::UNCATEGORIZED,
+                                 eval_->Evaluate(-INF, +INF)};
   }
-  std::sort(move_infos, move_infos + num_moves,
-            [](const MoveInfo& a, const MoveInfo& b) -> bool {
-              return a.score > b.score;
-            });
-  move_array->clear();
-  for (size_t i = 0; i < num_moves; ++i) {
-    move_array->Add(move_infos[i].move);
-  }
+  move_info_array->Sort();
 }

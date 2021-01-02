@@ -4,7 +4,6 @@
 #include "common.h"
 #include "eval.h"
 #include "extensions.h"
-#include "lmr.h"
 #include "move.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -54,17 +53,19 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
 
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
-  PrefMoves pref_moves;
-  pref_moves.tt_move = tt_move;
-  pref_moves.killer1 = killers_[ply][0];
-  pref_moves.killer2 = killers_[ply][1];
-  move_orderer_->Order(&move_array, &pref_moves);
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
     ++search_stats->nodes_evaluated;
     return evaluator_->Evaluate(alpha, beta);
   }
+
+  MoveInfoArray move_info_array;
+  PrefMoves pref_moves;
+  pref_moves.tt_move = tt_move;
+  pref_moves.killer1 = killers_[ply][0];
+  pref_moves.killer2 = killers_[ply][1];
+  move_orderer_->Order(move_array, &pref_moves, &move_info_array);
 
   // Decide whether to use null move pruning. Disabled for ANTICHESS where
   // zugzwangs are common.
@@ -86,21 +87,22 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
   Move best_move;
   NodeType node_type = FAIL_LOW_NODE;
   int b = beta;
-  for (size_t index = 0; index < move_array.size(); ++index) {
+  for (size_t index = 0; index < move_info_array.size; ++index) {
     ++search_stats->nodes_searched;
-    const Move& move = move_array.get(index);
+    const MoveInfo& move_info = move_info_array.moves[index];
+    const Move move = move_info.move;
     board_->MakeMove(move);
 
     int value = -INF;
 
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;
-    if (extensions_ && extensions_->lmr &&
-        extensions_->lmr->CanReduce(index, max_depth)) {
-      value = -NegaScoutInternal(
-          max_depth - (1 + extensions_->lmr->DepthReductionFactor()),
-          -alpha - 1, -alpha, ply + 1, true, search_stats);
-      lmr_triggered = true;
+    if (variant_ == Variant::ANTICHESS) {
+      if (index >= 4 && max_depth >= 2) {
+        value = -NegaScoutInternal(max_depth - 2, -alpha - 1, -alpha, ply + 1,
+                                   true, search_stats);
+        lmr_triggered = true;
+      }
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal

@@ -181,7 +181,7 @@ constexpr const int* PST[] = {nullptr,    PST_KING,   PST_QUEEN, PST_ROOK,
                               PST_BISHOP, PST_KNIGHT, PST_PAWN};
 
 template <Piece piece>
-constexpr int PSTVal(U64 bb) {
+constexpr int PSTScore(U64 bb) {
   constexpr const int* pst = PST[PieceType(piece)];
   constexpr Side side = PieceSide(piece);
   int val = 0;
@@ -189,12 +189,17 @@ constexpr int PSTVal(U64 bb) {
     const int sq = Lsb1(bb);
     int index = sq;
     if constexpr (side == Side::WHITE) {
-      index = INDX(7 - ROW(index), COL(index));
+      index = INDX(7 - ROW(sq), COL(sq));
     }
     val += pst[index];
     bb ^= (1ULL << sq);
   }
   return val;
+}
+
+constexpr int PSTVal(Side side, Piece piece, int sq) {
+  return PST[PieceType(piece)]
+            [(side == Side::WHITE) ? INDX(7 - ROW(sq), COL(sq)) : sq];
 }
 
 } // namespace standard_chess

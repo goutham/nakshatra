@@ -42,19 +42,19 @@ int EvalStandard::StaticEval() const {
 
   int score = 0;
 
-  score += PopCount(w_king) * pv::KING + sc::PSTVal<KING>(w_king);
-  score += PopCount(w_queen) * pv::QUEEN + sc::PSTVal<QUEEN>(w_queen);
-  score += PopCount(w_rook) * pv::ROOK + sc::PSTVal<ROOK>(w_rook);
-  score += PopCount(w_bishop) * pv::BISHOP + sc::PSTVal<BISHOP>(w_bishop);
-  score += PopCount(w_knight) * pv::KNIGHT + sc::PSTVal<KNIGHT>(w_knight);
-  score += PopCount(w_pawn) * pv::PAWN + sc::PSTVal<PAWN>(w_pawn);
+  score += PopCount(w_king) * pv::KING + sc::PSTScore<KING>(w_king);
+  score += PopCount(w_queen) * pv::QUEEN + sc::PSTScore<QUEEN>(w_queen);
+  score += PopCount(w_rook) * pv::ROOK + sc::PSTScore<ROOK>(w_rook);
+  score += PopCount(w_bishop) * pv::BISHOP + sc::PSTScore<BISHOP>(w_bishop);
+  score += PopCount(w_knight) * pv::KNIGHT + sc::PSTScore<KNIGHT>(w_knight);
+  score += PopCount(w_pawn) * pv::PAWN + sc::PSTScore<PAWN>(w_pawn);
 
-  score -= PopCount(b_king) * pv::KING + sc::PSTVal<-KING>(b_king);
-  score -= PopCount(b_queen) * pv::QUEEN + sc::PSTVal<-QUEEN>(b_queen);
-  score -= PopCount(b_rook) * pv::ROOK + sc::PSTVal<-ROOK>(b_rook);
-  score -= PopCount(b_bishop) * pv::BISHOP + sc::PSTVal<-BISHOP>(b_bishop);
-  score -= PopCount(b_knight) * pv::KNIGHT + sc::PSTVal<-KNIGHT>(b_knight);
-  score -= PopCount(b_pawn) * pv::PAWN + sc::PSTVal<-PAWN>(b_pawn);
+  score -= PopCount(b_king) * pv::KING + sc::PSTScore<-KING>(b_king);
+  score -= PopCount(b_queen) * pv::QUEEN + sc::PSTScore<-QUEEN>(b_queen);
+  score -= PopCount(b_rook) * pv::ROOK + sc::PSTScore<-ROOK>(b_rook);
+  score -= PopCount(b_bishop) * pv::BISHOP + sc::PSTScore<-BISHOP>(b_bishop);
+  score -= PopCount(b_knight) * pv::KNIGHT + sc::PSTScore<-KNIGHT>(b_knight);
+  score -= PopCount(b_pawn) * pv::PAWN + sc::PSTScore<-PAWN>(b_pawn);
 
   if (side == Side::BLACK) {
     score = -score;
@@ -73,10 +73,13 @@ int EvalStandard::Quiesce(int alpha, int beta) {
   }
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
-  orderer_.Order(&move_array);
-  for (size_t i = 0; i < move_array.size(); ++i) {
-    const Move& move = move_array.get(i);
-    if (board_->PieceAt(move.to_index()) != NULLPIECE) {
+  MoveInfoArray move_info_array;
+  orderer_.Order(move_array, nullptr, &move_info_array);
+  for (size_t i = 0; i < move_info_array.size; ++i) {
+    const MoveInfo& move_info = move_info_array.moves[i];
+    const Move move = move_info.move;
+    if (move_info.type == MoveType::SEE_GOOD_CAPTURE ||
+        move_info.type == MoveType::SEE_BAD_CAPTURE) {
       board_->MakeMove(move);
       int score = -Quiesce(-beta, -alpha);
       board_->UnmakeLastMove();

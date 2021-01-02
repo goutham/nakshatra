@@ -9,20 +9,6 @@ public:
 
   void Add(const Move& move) { moves_[n_++] = move; }
 
-  void SwapToFront(const Move& move) {
-    size_t index_to_swap = 0;
-    for (size_t i = 0; i < n_; ++i) {
-      if (moves_[i] == move) {
-        index_to_swap = i;
-        break;
-      }
-    }
-    if (index_to_swap != 0) {
-      moves_[index_to_swap] = moves_[0];
-      moves_[0] = move;
-    }
-  }
-
   void PushToFront(const Move& move) {
     size_t index = 0;
     for (size_t i = 0; i < n_; ++i) {

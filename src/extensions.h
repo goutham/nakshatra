@@ -3,7 +3,6 @@
 
 #include <memory>
 
-class LMR;
 class PNSearch;
 class Timer;
 
@@ -14,7 +13,6 @@ struct PNSExtension {
 };
 
 struct Extensions {
-  std::unique_ptr<LMR> lmr;
   PNSExtension pns_extension;
 };
 

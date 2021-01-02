@@ -5,11 +5,39 @@
 #include "move.h"
 #include "move_array.h"
 
+#include <algorithm>
 #include <vector>
 
 class Board;
 class MoveGenerator;
 class Evaluator;
+
+enum class MoveType {
+  TT,
+  SEE_GOOD_CAPTURE,
+  KILLER,
+  QUIET,
+  SEE_BAD_CAPTURE,
+  UNCATEGORIZED
+};
+
+struct MoveInfo {
+  Move move;
+  MoveType type;
+  int score;
+};
+
+struct MoveInfoArray {
+  MoveInfo moves[256];
+  size_t size;
+
+  void Sort() {
+    std::sort(
+        moves, moves + size, [](const MoveInfo& a, const MoveInfo& b) -> bool {
+          return a.type < b.type || (a.type == b.type && a.score > b.score);
+        });
+  }
+};
 
 // Container for any preferred moves supplied by caller that need to be treated
 // with special care.
@@ -23,8 +51,8 @@ class MoveOrderer {
 public:
   virtual ~MoveOrderer() {}
 
-  virtual void Order(MoveArray* move_array,
-                     const PrefMoves* pref_moves = nullptr) = 0;
+  virtual void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
+                     MoveInfoArray* move_info_array) = 0;
 
 protected:
   MoveOrderer() {}
@@ -36,8 +64,8 @@ public:
       : board_(board), movegen_(movegen) {}
   ~AntichessMoveOrderer() override {}
 
-  void Order(MoveArray* move_array,
-             const PrefMoves* pref_moves = nullptr) override;
+  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
+             MoveInfoArray* move_info_array) override;
 
 private:
   Board* board_;
@@ -49,8 +77,8 @@ public:
   StandardMoveOrderer(Board* board) : board_(board) {}
   ~StandardMoveOrderer() override {}
 
-  void Order(MoveArray* move_array,
-             const PrefMoves* pref_moves = nullptr) override;
+  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
+             MoveInfoArray* move_info_array) override;
 
 private:
   Board* board_;
@@ -61,8 +89,8 @@ public:
   EvalScoreOrderer(Evaluator* eval) : eval_(eval) {}
   ~EvalScoreOrderer() override {}
 
-  void Order(MoveArray* move_array,
-             const PrefMoves* pref_moves = nullptr) override;
+  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
+             MoveInfoArray* move_info_array) override;
 
 private:
   Evaluator* eval_;

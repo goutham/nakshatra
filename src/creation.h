@@ -9,7 +9,6 @@
 #include "eval_standard.h"
 #include "extensions.h"
 #include "iterative_deepener.h"
-#include "lmr.h"
 #include "move_order.h"
 #include "movegen.h"
 #include "player.h"
@@ -217,9 +216,6 @@ public:
     assert(movegen_ != nullptr);
     assert(eval_ != nullptr);
     assert(extensions_ != nullptr);
-    extensions_->lmr.reset(new LMR(4 /* full depth moves */,
-                                   2 /* reduction limit */,
-                                   1 /* depth reduction factor */));
     if (enable_pns_) {
       extensions_->pns_extension.pns_timer.reset(new Timer);
       extensions_->pns_extension.pn_search.reset(new PNSearch(

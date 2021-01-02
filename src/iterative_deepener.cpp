@@ -41,7 +41,12 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
   if (ids_params.pruned_ordered_moves.size()) {
     root_move_array_ = ids_params.pruned_ordered_moves;
   } else {
-    move_orderer_->Order(&root_move_array_);
+    MoveInfoArray move_info_array;
+    move_orderer_->Order(root_move_array_, nullptr, &move_info_array);
+    root_move_array_.clear();
+    for (size_t i = 0; i < move_info_array.size; ++i) {
+      root_move_array_.Add(move_info_array.moves[i].move);
+    }
   }
   assert(root_move_array_.size() > 0);
   out << "# Number of root moves being searched: " << root_move_array_.size()
