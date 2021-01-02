@@ -5,77 +5,91 @@
 
 #include <iostream>
 
-TranspositionTable::TranspositionTable(int size)
-    : size_(size), transpos1_hits_(0U), transpos2_hits_(0U),
-      transpos_misses_(0U) {
+TranspositionTable::TranspositionTable(int size) : size_(size) {
   std::cout << "# Transposition table memory usage: "
-            << (size_ * sizeof(TranspositionTable2Entry)) / (1U << 20) << " MB"
-            << std::endl;
-  tentries_ = new TranspositionTable2Entry[size_];
+            << (size_ * sizeof(TTBucket)) / (1U << 20) << " MB" << std::endl;
+  tt_buckets_ = new TTBucket[size_];
 }
 
-TranspositionTable::~TranspositionTable() { Reset(); }
+TranspositionTable::~TranspositionTable() { delete tt_buckets_; }
 
-TranspositionTableEntry* TranspositionTable::Get(U64 zkey) {
-  TranspositionTable2Entry* tentry = &tentries_[hash(zkey)];
-  if (tentry->t1.valid && tentry->t1.zkey == zkey) {
-    ++transpos1_hits_;
-    return &tentry->t1;
+TTEntry* TranspositionTable::Get(U64 zkey) {
+  TTBucket& bucket = tt_buckets_[hash(zkey)];
+  for (int i = 0; i < 4; ++i) {
+    TTEntry& tt_entry = bucket.tt_entries[i];
+    if (tt_entry.is_valid() && tt_entry.zkey == zkey) {
+      tt_entry.epoch = epoch_;
+      ++hits_;
+      return &tt_entry;
+    }
   }
-  if (tentry->t2.valid && tentry->t2.zkey == zkey) {
-    ++transpos2_hits_;
-    return &tentry->t2;
-  }
-  ++transpos_misses_;
+  ++misses_;
   return nullptr;
 }
 
 void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
                              Move best_move) {
-  TranspositionTable2Entry* tentry = &tentries_[hash(zkey)];
-  TranspositionTableEntry* t = nullptr;
-  if (!tentry->t1.valid || tentry->t1.depth < depth) {
-    t = &tentry->t1;
-  } else {
-    t = &tentry->t2;
+  TTBucket& bucket = tt_buckets_[hash(zkey)];
+  for (int i = 0; i < 4; ++i) {
+    TTEntry& tt_entry = bucket.tt_entries[i];
+    if (!tt_entry.is_valid() || tt_entry.zkey == zkey) {
+      ++new_puts_;
+      Set(score, node_type, depth, zkey, best_move, &tt_entry);
+      return;
+    }
   }
-  Set(score, node_type, depth, zkey, best_move, t);
+  for (int i = 0; i < 4; ++i) {
+    TTEntry& tt_entry = bucket.tt_entries[i];
+    if (tt_entry.epoch < epoch_) {
+      ++old_replace_;
+      Set(score, node_type, depth, zkey, best_move, &tt_entry);
+      return;
+    }
+  }
+  TTEntry* shallow_entry = &bucket.tt_entries[0];
+  for (int i = 1; i < 4; ++i) {
+    TTEntry& tt_entry = bucket.tt_entries[i];
+    if (tt_entry.depth < shallow_entry->depth) {
+      shallow_entry = &tt_entry;
+    }
+  }
+  ++depth_replace_;
+  Set(score, node_type, depth, zkey, best_move, shallow_entry);
 }
 
 void TranspositionTable::Set(int score, NodeType node_type, int depth, U64 zkey,
-                             Move best_move, TranspositionTableEntry* t) {
-  t->valid = true;
-  t->score = score;
-  t->node_type = node_type;
-  t->depth = depth;
-  t->zkey = zkey;
-  t->best_move = best_move;
+                             Move best_move, TTEntry* tt_entry) {
+  tt_entry->zkey = zkey;
+  tt_entry->best_move = best_move;
+  tt_entry->score = score;
+  tt_entry->depth = depth;
+  tt_entry->epoch = epoch_;
+  tt_entry->flags = (uint16_t(node_type) << 1) | (0x1);
 }
-
-void TranspositionTable::Reset() { delete tentries_; }
 
 double TranspositionTable::UtilizationFactor() const {
   unsigned int num_filled_entries = 0;
   for (int i = 0; i < size_; ++i) {
-    if (tentries_[i].t1.valid || tentries_[i].t2.valid) {
-      ++num_filled_entries;
+    for (int j = 0; j < 4; ++j) {
+      if (tt_buckets_[i].tt_entries[j].is_valid()) {
+        ++num_filled_entries;
+      }
     }
   }
-  return (100.0 * num_filled_entries) / size_;
+  return (100.0 * num_filled_entries) / (size_ * 4);
 }
 
 void TranspositionTable::LogStats() const {
   using std::cout;
   using std::endl;
-  cout << "# Transpos 1 hits:\t" << transpos1_hits_ << endl;
-  cout << "# Transpos 2 hits:\t" << transpos2_hits_ << endl;
-  cout << "# Transpos misses:\t" << transpos_misses_ << endl;
-  cout << "# Transpos utilization factor:\t" << UtilizationFactor() << " %"
-       << endl;
-  if (transpos1_hits_ + transpos2_hits_ + transpos_misses_ > 0) {
-    cout << "# Percentage of hits:\t"
-         << (100.0 * (transpos1_hits_ + transpos2_hits_)) /
-                (transpos1_hits_ + transpos2_hits_ + transpos_misses_)
-         << " %" << endl;
+  cout << "# Transpos hits:\t" << hits_ << endl;
+  cout << "# Transpos misses:\t" << misses_ << endl;
+  cout << "# Transpos util %:\t" << UtilizationFactor() << endl;
+  if (hits_ + misses_ > 0) {
+    cout << "# Transpos hits %:\t" << (100.0 * (hits_)) / (hits_ + misses_)
+         << endl;
   }
+  cout << "# Transpos new entries:\t" << new_puts_ << endl;
+  cout << "# Transpos old replace:\t" << old_replace_ << endl;
+  cout << "# Transpos depth replace:\t" << depth_replace_ << endl;
 }

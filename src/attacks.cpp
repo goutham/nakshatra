@@ -461,7 +461,7 @@ U64 SquareAttackers(const int square, const Piece attacking_piece,
   return attack_bb & attacking_side_piece_occ;
 }
 
-bool IsKingInCheck(const Board& board, const Side side) {
+bool InCheck(const Board& board, const Side side) {
   const U64 king_bb = board.BitBoard(PieceOfSide(KING, side));
   if (!king_bb) {
     return false;

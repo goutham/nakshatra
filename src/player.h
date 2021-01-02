@@ -13,6 +13,7 @@
 class EGTB;
 class IterativeDeepener;
 class MoveGenerator;
+class TranspositionTable;
 struct Extensions;
 
 struct SearchParams {
@@ -23,8 +24,8 @@ struct SearchParams {
 class Player {
 public:
   Player(const Book* book, Board* board, MoveGenerator* movegen,
-         IterativeDeepener* iterative_deepener, Timer* timer, EGTB* egtb,
-         Extensions* extensions, int rand_moves);
+         IterativeDeepener* iterative_deepener, TranspositionTable* transpos,
+         Timer* timer, EGTB* egtb, Extensions* extensions, int rand_moves);
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
@@ -35,6 +36,7 @@ private:
   Board* board_;
   MoveGenerator* movegen_;
   IterativeDeepener* iterative_deepener_;
+  TranspositionTable* transpos_;
   Timer* timer_;
   EGTB* egtb_;
   Extensions* extensions_;

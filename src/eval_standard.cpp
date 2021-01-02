@@ -13,7 +13,7 @@ namespace pv = standard_chess::piece_value;
 
 int EvalStandard::StaticEval() const {
   const Side side = board_->SideToMove();
-  if (attacks::IsKingInCheck(*board_, side)) {
+  if (attacks::InCheck(*board_, side)) {
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
     const int self_moves = move_array.size();
@@ -22,7 +22,7 @@ int EvalStandard::StaticEval() const {
     }
   }
   const Side opp_side = OppositeSide(side);
-  if (attacks::IsKingInCheck(*board_, opp_side)) {
+  if (attacks::InCheck(*board_, opp_side)) {
     return WIN;
   }
 

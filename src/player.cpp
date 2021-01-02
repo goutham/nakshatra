@@ -10,6 +10,7 @@
 #include "pn_search.h"
 #include "stopwatch.h"
 #include "timer.h"
+#include "transpos.h"
 
 #include <algorithm>
 #include <cassert>
@@ -18,14 +19,18 @@
 #include <sys/time.h>
 
 Player::Player(const Book* book, Board* board, MoveGenerator* movegen,
-               IterativeDeepener* iterative_deepener, Timer* timer, EGTB* egtb,
+               IterativeDeepener* iterative_deepener,
+               TranspositionTable* transpos, Timer* timer, EGTB* egtb,
                Extensions* extensions, int rand_moves)
     : book_(book), board_(board), movegen_(movegen),
-      iterative_deepener_(iterative_deepener), timer_(timer), egtb_(egtb),
-      extensions_(extensions), rand_moves_(rand_moves) {}
+      iterative_deepener_(iterative_deepener), transpos_(transpos),
+      timer_(timer), egtb_(egtb), extensions_(extensions),
+      rand_moves_(rand_moves) {}
 
 Move Player::Search(const SearchParams& search_params,
                     long time_for_move_centis) {
+  transpos_->SetEpoch(board_->HalfMoves());
+
   std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
   if (rand_moves_ > 0) {
     MoveArray move_array;

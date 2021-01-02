@@ -17,7 +17,7 @@
 // Special case(s):
 //   Denotes invalid move if all bits are set to 0. This works because no
 //   valid move has same From and To Squares.
-typedef unsigned short int EncodedMove;
+typedef uint16_t EncodedMove;
 
 class Move {
 public:

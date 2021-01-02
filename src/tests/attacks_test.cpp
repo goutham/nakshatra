@@ -70,35 +70,35 @@ TEST(AttacksTest, SquareAttackers_King) {
                                          board.BitBoard(KING)));
 }
 
-TEST(AttacksTest, IsKingInCheck) {
+TEST(AttacksTest, InCheck) {
   {
     Board board(Variant::STANDARD, "5k2/8/6q1/8/8/3K4/8/8 w - -");
-    EXPECT_TRUE(attacks::IsKingInCheck(board, Side::WHITE));
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::BLACK));
+    EXPECT_TRUE(attacks::InCheck(board, Side::WHITE));
+    EXPECT_FALSE(attacks::InCheck(board, Side::BLACK));
   }
   {
     Board board(Variant::STANDARD, "5k2/8/6q1/8/8/4K3/8/8 w - -");
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::WHITE));
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::BLACK));
+    EXPECT_FALSE(attacks::InCheck(board, Side::WHITE));
+    EXPECT_FALSE(attacks::InCheck(board, Side::BLACK));
   }
   {
     Board board(Variant::STANDARD, "5k2/8/6q1/8/5R2/4K3/8/8 b - -");
-    EXPECT_TRUE(attacks::IsKingInCheck(board, Side::BLACK));
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::WHITE));
+    EXPECT_TRUE(attacks::InCheck(board, Side::BLACK));
+    EXPECT_FALSE(attacks::InCheck(board, Side::WHITE));
   }
   {
     Board board(Variant::STANDARD, "5k2/8/6q1/5n2/5R2/4K3/8/8 w - -");
-    EXPECT_TRUE(attacks::IsKingInCheck(board, Side::WHITE));
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::BLACK));
+    EXPECT_TRUE(attacks::InCheck(board, Side::WHITE));
+    EXPECT_FALSE(attacks::InCheck(board, Side::BLACK));
   }
   {
     Board board(Variant::STANDARD, "5k2/8/8/8/8/8/1p6/2K5 w - -");
-    EXPECT_TRUE(attacks::IsKingInCheck(board, Side::WHITE));
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::BLACK));
+    EXPECT_TRUE(attacks::InCheck(board, Side::WHITE));
+    EXPECT_FALSE(attacks::InCheck(board, Side::BLACK));
   }
   {
     Board board(Variant::STANDARD, "5k2/8/8/8/8/B7/8/2K5 w - -");
-    EXPECT_TRUE(attacks::IsKingInCheck(board, Side::BLACK));
-    EXPECT_FALSE(attacks::IsKingInCheck(board, Side::WHITE));
+    EXPECT_TRUE(attacks::InCheck(board, Side::BLACK));
+    EXPECT_FALSE(attacks::InCheck(board, Side::WHITE));
   }
 }

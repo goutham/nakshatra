@@ -7,49 +7,54 @@
 
 #include <cstdio>
 
-struct TranspositionTableEntry {
-  TranspositionTableEntry() : valid(false) {}
-  bool valid;
-  short int score;
-  NodeType node_type;
-  unsigned char
-      depth; // depth to the bottom of the tree in depth-restricted search.
-  Move best_move;
+struct TTEntry {
   U64 zkey;
+  Move best_move;
+  int16_t score;
+  uint8_t depth;
+  uint8_t epoch;
+  // LSB 0 -> 0: invalid, 1: valid
+  // LSB (1, 2) -> 00: FAIL_HIGH_NODE, 01: FAIL_LOW_NODE, 10: EXACT_NODE
+  uint16_t flags = 0;
+
+  bool is_valid() const { return flags & 0x1; }
+
+  NodeType node_type() const { return NodeType((flags >> 1) & 0x3); }
 };
 
-struct TranspositionTable2Entry {
-  TranspositionTableEntry t1; // depth preferred
-  TranspositionTableEntry t2; // always replace
+struct TTBucket {
+  TTEntry tt_entries[4];
 };
 
 class TranspositionTable {
 public:
   TranspositionTable(int size);
   ~TranspositionTable();
-  TranspositionTableEntry* Get(U64 zkey);
+
+  TTEntry* Get(U64 zkey);
+
   void Put(int score, NodeType node_type, int depth, U64 zkey, Move best_move);
-  void Reset();
+
+  void SetEpoch(uint8_t epoch) { epoch_ = epoch; }
 
   void LogStats() const;
 
 private:
   void Set(int score, NodeType node_type, int depth, U64 zkey, Move best_move,
-           TranspositionTableEntry* t);
+           TTEntry* t);
 
   int hash(const U64 key) const { return key % size_; }
-
-  int hash2(const U64 key) const { return (key >> 1) % size_; }
 
   double UtilizationFactor() const;
 
   const int size_;
-
-  TranspositionTable2Entry* tentries_;
-
-  unsigned int transpos1_hits_;
-  unsigned int transpos2_hits_;
-  unsigned int transpos_misses_;
+  TTBucket* tt_buckets_;
+  uint8_t epoch_ = 0;
+  uint64_t hits_ = 0;
+  uint64_t misses_ = 0;
+  uint64_t new_puts_ = 0;
+  uint64_t old_replace_ = 0;
+  uint64_t depth_replace_ = 0;
 };
 
 #endif

@@ -19,6 +19,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
 int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
                                        int ply, bool allow_null_move,
                                        SearchStats* search_stats) {
+  ++search_stats->nodes_searched;
   const U64 zkey = board_->ZobristKey();
 
   // Return DRAW if the position is repeated.
@@ -28,27 +29,24 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
     }
   }
 
-  TranspositionTableEntry* tentry = transpos_->Get(zkey);
-  Move tt_move = Move();
-  if (tentry != nullptr) {
-    if (tentry->node_type == EXACT_NODE &&
-        (tentry->score == WIN || tentry->score == -WIN)) {
-      return tentry->score;
-    }
-    if (tentry->depth >= max_depth &&
-        (tentry->node_type == EXACT_NODE ||
-         (tentry->node_type == FAIL_HIGH_NODE && tentry->score >= beta) ||
-         (tentry->node_type == FAIL_LOW_NODE && tentry->score <= alpha))) {
-      return tentry->score;
-    }
-    tt_move = tentry->best_move;
+  if (max_depth <= 0 || (timer_ && timer_->Lapsed())) {
+    return evaluator_->Evaluate(alpha, beta);
   }
 
-  if (max_depth == 0 || (timer_ && timer_->Lapsed())) {
-    ++search_stats->nodes_evaluated;
-    int score = evaluator_->Evaluate(alpha, beta);
-    transpos_->Put(score, EXACT_NODE, 0, zkey, Move());
-    return score;
+  Move tt_move = Move();
+  if (TTEntry* tentry = transpos_->Get(zkey); tentry != nullptr) {
+    const NodeType node_type = tentry->node_type();
+    const int score = tentry->score;
+    if (node_type == EXACT_NODE && (score == WIN || score == -WIN)) {
+      return score;
+    }
+    if (tentry->depth >= max_depth &&
+        (node_type == EXACT_NODE ||
+         (node_type == FAIL_HIGH_NODE && score >= beta) ||
+         (node_type == FAIL_LOW_NODE && score <= alpha))) {
+      return score;
+    }
+    tt_move = tentry->best_move;
   }
 
   MoveArray move_array;
@@ -56,7 +54,6 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
-    ++search_stats->nodes_evaluated;
     return evaluator_->Evaluate(alpha, beta);
   }
 
@@ -72,9 +69,8 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
   allow_null_move = variant_ != Variant::ANTICHESS && allow_null_move &&
                     max_depth >= 2 && beta < INF &&
                     PopCount(board_->BitBoard()) > 10 &&
-                    !attacks::IsKingInCheck(*board_, board_->SideToMove());
+                    !attacks::InCheck(*board_, board_->SideToMove());
   if (allow_null_move) {
-    ++search_stats->nodes_searched;
     board_->MakeNullMove();
     int value = -NegaScoutInternal(max_depth - 2, -beta, -beta + 1, ply + 1,
                                    !allow_null_move, search_stats);
@@ -88,7 +84,6 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
   NodeType node_type = FAIL_LOW_NODE;
   int b = beta;
   for (size_t index = 0; index < move_info_array.size; ++index) {
-    ++search_stats->nodes_searched;
     const MoveInfo& move_info = move_info_array.moves[index];
     const Move move = move_info.move;
     board_->MakeMove(move);
@@ -114,7 +109,6 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
-      ++search_stats->nodes_researched;
       value = -NegaScoutInternal(max_depth - 1, -beta, -alpha, ply + 1, true,
                                  search_stats);
     }

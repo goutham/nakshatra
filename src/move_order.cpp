@@ -70,8 +70,10 @@ void EvalScoreOrderer::Order(const MoveArray& move_array,
   move_info_array->size = num_moves;
   for (size_t i = 0; i < num_moves; ++i) {
     const Move move = move_array.get(i);
+    board_->MakeMove(move);
     move_info_array->moves[i] = {move, MoveType::UNCATEGORIZED,
-                                 eval_->Evaluate(-INF, +INF)};
+                                 -eval_->Evaluate(-INF, +INF)};
+    board_->UnmakeLastMove();
   }
   move_info_array->Sort();
 }

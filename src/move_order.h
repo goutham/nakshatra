@@ -86,13 +86,15 @@ private:
 
 class EvalScoreOrderer : public MoveOrderer {
 public:
-  EvalScoreOrderer(Evaluator* eval) : eval_(eval) {}
+  EvalScoreOrderer(Board* board, Evaluator* eval)
+      : board_(board), eval_(eval) {}
   ~EvalScoreOrderer() override {}
 
   void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
              MoveInfoArray* move_info_array) override;
 
 private:
+  Board* board_;
   Evaluator* eval_;
 };
 

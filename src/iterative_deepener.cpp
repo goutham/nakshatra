@@ -111,16 +111,14 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
     *best_move_score = last_istat.score;
     for (const auto& stat : last_istat.move_stats) {
       id_search_stats->nodes_searched += stat.second.nodes_searched;
-      id_search_stats->nodes_researched += stat.second.nodes_researched;
-      id_search_stats->nodes_evaluated += stat.second.nodes_evaluated;
       id_search_stats->search_depth = stat.second.search_depth;
     }
 
     // XBoard style thinking output.
     if (ids_params.thinking_output) {
       char output[256];
-      snprintf(output, 256, "%2d\t%5d\t%5d\t%10d\t%s", depth, last_istat.score,
-               int(elapsed_time), id_search_stats->nodes_evaluated,
+      snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth, last_istat.score,
+               int(elapsed_time), id_search_stats->nodes_searched,
                PV(*best_move).c_str());
       std::cout << output << std::endl;
     }
@@ -198,9 +196,9 @@ std::string IterativeDeepener::PV(const Move& root_move) {
   int depth = 0;
   while (depth < 10) {
     U64 zkey = board_->ZobristKey();
-    TranspositionTableEntry* tentry = transpos_->Get(zkey);
+    TTEntry* tentry = transpos_->Get(zkey);
     if (!tentry || !tentry->best_move.is_valid() ||
-        tentry->node_type != EXACT_NODE) {
+        tentry->node_type() != EXACT_NODE) {
       break;
     }
     pv.append(SAN(*board_, tentry->best_move) + " ");

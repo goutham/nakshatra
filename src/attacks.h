@@ -17,7 +17,7 @@ U64 SquareAttackers(const int square, const Piece attacking_piece,
                     const U64 occ, const U64 attacking_side_piece_occ);
 
 // Returns true if king of given side is in check.
-bool IsKingInCheck(const Board& board, const Side side);
+bool InCheck(const Board& board, const Side side);
 
 } // namespace attacks
 

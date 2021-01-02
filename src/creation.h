@@ -60,8 +60,8 @@ public:
   virtual void BuildEvaluator() = 0;
 
   virtual void BuildTranspositionTable() {
-    // ~16M entries.
-    transpos_.reset(new TranspositionTable(1U << 23));
+    // ~16M entries in ~4M buckets.
+    transpos_.reset(new TranspositionTable(1U << 22));
   }
 
   virtual void InjectExternalTranspositionTable(TranspositionTable* transpos) {
@@ -88,7 +88,7 @@ public:
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
     assert(eval_ != nullptr);
-    root_move_orderer_.reset(new EvalScoreOrderer(eval_.get()));
+    root_move_orderer_.reset(new EvalScoreOrderer(board_.get(), eval_.get()));
     iterative_deepener_.reset(new IterativeDeepener(
         board_.get(), movegen_.get(), search_algorithm_.get(), timer_.get(),
         transpos_.get(), root_move_orderer_.get()));
@@ -169,11 +169,13 @@ public:
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
+    assert(transpos_ != nullptr);
     assert(timer_ != nullptr);
     // For standard player, extensions_ could be NULL as of now.
     player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
-                             iterative_deepener_.get(), timer_.get(),
-                             egtb_.get(), extensions_.get(), rand_moves));
+                             iterative_deepener_.get(), transpos_.get(),
+                             timer_.get(), egtb_.get(), extensions_.get(),
+                             rand_moves));
   }
 };
 
@@ -228,11 +230,13 @@ public:
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
+    assert(transpos_ != nullptr);
     assert(timer_ != nullptr);
     assert(extensions_ != nullptr);
     player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
-                             iterative_deepener_.get(), timer_.get(),
-                             egtb_.get(), extensions_.get(), rand_moves));
+                             iterative_deepener_.get(), transpos_.get(),
+                             timer_.get(), egtb_.get(), extensions_.get(),
+                             rand_moves));
   }
 
 private:
