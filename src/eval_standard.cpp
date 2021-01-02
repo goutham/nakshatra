@@ -63,13 +63,15 @@ int EvalStandard::StaticEval() const {
 }
 
 int EvalStandard::Quiesce(int alpha, int beta) {
-  // TODO: Handle checks.
-  int standing_pat = StaticEval();
-  if (standing_pat >= beta) {
-    return standing_pat;
-  }
-  if (standing_pat > alpha) {
-    alpha = standing_pat;
+  bool in_check = attacks::InCheck(*board_, board_->SideToMove());
+  if (!in_check) {
+    int standing_pat = StaticEval();
+    if (standing_pat >= beta) {
+      return standing_pat;
+    }
+    if (standing_pat > alpha) {
+      alpha = standing_pat;
+    }
   }
   MoveArray move_array;
   movegen_->GenerateMoves(&move_array);
@@ -78,8 +80,7 @@ int EvalStandard::Quiesce(int alpha, int beta) {
   for (size_t i = 0; i < move_info_array.size; ++i) {
     const MoveInfo& move_info = move_info_array.moves[i];
     const Move move = move_info.move;
-    if (move_info.type == MoveType::SEE_GOOD_CAPTURE ||
-        move_info.type == MoveType::SEE_BAD_CAPTURE) {
+    if (in_check || move_info.type == MoveType::SEE_GOOD_CAPTURE) {
       board_->MakeMove(move);
       int score = -Quiesce(-beta, -alpha);
       board_->UnmakeLastMove();
@@ -89,8 +90,6 @@ int EvalStandard::Quiesce(int alpha, int beta) {
       if (score > alpha) {
         alpha = score;
       }
-    } else {
-      break;
     }
   }
   return alpha;
