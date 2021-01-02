@@ -26,7 +26,7 @@ public:
 
 private:
   int NegaScoutInternal(int max_depth, int alpha, int beta, int ply,
-                        SearchStats* search_stats);
+                        bool allow_null_move, SearchStats* search_stats);
 
   const Variant variant_;
   Board* board_;

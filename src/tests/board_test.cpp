@@ -447,3 +447,50 @@ TEST_F(BoardTest, SANToMoveTest1) {
   EXPECT_EQ("b1a3", SANToMove("Na3", board, &movegen).str());
   EXPECT_EQ("b1c3", SANToMove("Nc3", board, &movegen).str());
 }
+
+TEST_F(BoardTest, HalfMoveClock) {
+  Board board(Variant::STANDARD);
+  EXPECT_EQ(0, board.HalfMoveClock());
+  board.MakeMove(Move("e2e4"));
+  EXPECT_EQ(0, board.HalfMoveClock());
+  board.MakeMove(Move("g8f6"));
+  EXPECT_EQ(1, board.HalfMoveClock());
+  board.MakeMove(Move("b1c3"));
+  EXPECT_EQ(2, board.HalfMoveClock());
+  board.MakeMove(Move("b8c6"));
+  EXPECT_EQ(3, board.HalfMoveClock());
+  board.MakeMove(Move("g1f3"));
+  EXPECT_EQ(4, board.HalfMoveClock());
+  board.MakeMove(Move("c6d4"));
+  EXPECT_EQ(5, board.HalfMoveClock());
+  board.MakeMove(Move("f3d4"));
+  EXPECT_EQ(0, board.HalfMoveClock());
+  board.UnmakeLastMove();
+  EXPECT_EQ(5, board.HalfMoveClock());
+  board.UnmakeLastMove();
+  EXPECT_EQ(4, board.HalfMoveClock());
+  board.UnmakeLastMove();
+  EXPECT_EQ(3, board.HalfMoveClock());
+  board.UnmakeLastMove();
+  EXPECT_EQ(2, board.HalfMoveClock());
+  board.UnmakeLastMove();
+  EXPECT_EQ(1, board.HalfMoveClock());
+  board.UnmakeLastMove();
+  EXPECT_EQ(0, board.HalfMoveClock());
+}
+
+TEST_F(BoardTest, PrevZobristKeys) {
+  Board board(Variant::STANDARD);
+  const U64 z0 = board.ZobristKey();
+  board.MakeMove(Move("e2e4"));
+  const U64 z1 = board.ZobristKey();
+  board.MakeMove(Move("g8f6"));
+  const U64 z2 = board.ZobristKey();
+  board.MakeMove(Move("b1c3"));
+  const U64 z3 = board.ZobristKey();
+  board.MakeMove(Move("b8c6"));
+  EXPECT_EQ(z3, board.ZobristKey(1));
+  EXPECT_EQ(z2, board.ZobristKey(2));
+  EXPECT_EQ(z1, board.ZobristKey(3));
+  EXPECT_EQ(z0, board.ZobristKey(4));
+}

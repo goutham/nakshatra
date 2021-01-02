@@ -1,4 +1,5 @@
 #include "search_algorithm.h"
+#include "attacks.h"
 #include "board.h"
 #include "common.h"
 #include "eval.h"
@@ -13,12 +14,21 @@
 
 int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
                                SearchStats* search_stats) {
-  return NegaScoutInternal(max_depth, alpha, beta, 0, search_stats);
+  return NegaScoutInternal(max_depth, alpha, beta, 0, true, search_stats);
 }
 
 int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
-                                       int ply, SearchStats* search_stats) {
-  U64 zkey = board_->ZobristKey();
+                                       int ply, bool allow_null_move,
+                                       SearchStats* search_stats) {
+  const U64 zkey = board_->ZobristKey();
+
+  // Return DRAW if the position is repeated.
+  for (int i = 4; i <= board_->HalfMoveClock(); i += 2) {
+    if (zkey == board_->ZobristKey(i)) {
+      return DRAW;
+    }
+  }
+
   TranspositionTableEntry* tentry = transpos_->Get(zkey);
   Move tt_move = Move();
   if (tentry != nullptr) {
@@ -56,6 +66,23 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
     return evaluator_->Evaluate(alpha, beta);
   }
 
+  // Decide whether to use null move pruning. Disabled for ANTICHESS where
+  // zugzwangs are common.
+  allow_null_move = variant_ != Variant::ANTICHESS && allow_null_move &&
+                    max_depth >= 2 && beta < INF &&
+                    PopCount(board_->BitBoard()) > 10 &&
+                    !attacks::IsKingInCheck(*board_, board_->SideToMove());
+  if (allow_null_move) {
+    ++search_stats->nodes_searched;
+    board_->MakeNullMove();
+    int value = -NegaScoutInternal(max_depth - 2, -beta, -beta + 1, ply + 1,
+                                   !allow_null_move, search_stats);
+    board_->UnmakeNullMove();
+    if (value >= beta) {
+      return beta;
+    }
+  }
+
   Move best_move;
   NodeType node_type = FAIL_LOW_NODE;
   int b = beta;
@@ -72,21 +99,21 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
         extensions_->lmr->CanReduce(index, max_depth)) {
       value = -NegaScoutInternal(
           max_depth - (1 + extensions_->lmr->DepthReductionFactor()),
-          -alpha - 1, -alpha, ply + 1, search_stats);
+          -alpha - 1, -alpha, ply + 1, true, search_stats);
       lmr_triggered = true;
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal
     // search.
     if (!lmr_triggered || value > alpha) {
-      value =
-          -NegaScoutInternal(max_depth - 1, -b, -alpha, ply + 1, search_stats);
+      value = -NegaScoutInternal(max_depth - 1, -b, -alpha, ply + 1, true,
+                                 search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
       ++search_stats->nodes_researched;
-      value = -NegaScoutInternal(max_depth - 1, -beta, -alpha, ply + 1,
+      value = -NegaScoutInternal(max_depth - 1, -beta, -alpha, ply + 1, true,
                                  search_stats);
     }
 

@@ -70,6 +70,7 @@ void Board::MakeMove(const Move& move) {
   top->ep_index = prev->ep_index;
   top->zobrist_key = prev->zobrist_key;
   top->castle = prev->castle;
+  top->half_move_clock = prev->half_move_clock + 1;
 
   // If previous move was a 2 space pawn move, update zobrist key. This is
   // to distinguish between two boards with same piece positions but different
@@ -81,11 +82,13 @@ void Board::MakeMove(const Move& move) {
   // Remove piece at source square and destination square (if any).
   RemovePiece(from_index);
   if (dest_piece != NULLPIECE) {
+    top->half_move_clock = 0;  // captures reset half-move clock
     RemovePiece(to_index);
   }
 
   // Handle pawn move.
   if (PieceType(src_piece) == PAWN) {
+    top->half_move_clock = 0;  // pawn moves reset half-move clock
     top->ep_index = -1;
 
     if (abs(to_row - from_row) == 2) {
@@ -236,6 +239,28 @@ bool Board::UnmakeLastMove() {
     PlacePieceNoZ(to_index, top->captured_piece);
   }
 
+  move_stack_.Pop();
+  return true;
+}
+
+void Board::MakeNullMove() {
+  move_stack_.Push();
+  MoveStackEntry* top = move_stack_.Top();
+  const MoveStackEntry* prev = move_stack_.Seek(1);
+  top->move = Move();
+  top->captured_piece = NULLPIECE;
+  top->ep_index = prev->ep_index;
+  top->zobrist_key = prev->zobrist_key;
+  top->castle = prev->castle;
+  top->half_move_clock = 0;
+  FlipSideToMove();
+}
+
+bool Board::UnmakeNullMove() {
+  if (!move_stack_.Size()) {
+    return false;
+  }
+  FlipSideToMove();
   move_stack_.Pop();
   return true;
 }

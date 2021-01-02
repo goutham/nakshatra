@@ -23,6 +23,9 @@ public:
   // If no move is present in move stack, returns false.
   bool UnmakeLastMove();
 
+  void MakeNullMove();
+  bool UnmakeNullMove();
+
   // Next side to move.
   Side SideToMove() const { return side_to_move_; }
 
@@ -55,14 +58,20 @@ public:
   // Returns the number of pieces of given side on the board.
   int NumPieces(const Side side) const { return PopCount(BitBoard(side)); }
 
-  // The zobrist key for current board position.
-  U64 ZobristKey() const { return move_stack_.Top()->zobrist_key; }
+  // The zobrist key num_half_moves ago (default: 0). Returns zobrist key at
+  // current position by default. Callers must check num_half_moves is <=
+  // HalfMoves().
+  U64 ZobristKey(const int num_half_moves = 0) const {
+    return move_stack_.Seek(num_half_moves)->zobrist_key;
+  }
 
   // Returns the board as an FEN (Forsyth-Edwards Notation) string.
   std::string ParseIntoFEN() const;
 
-  // Returns number of plies played on the board so far.
-  int Ply() const { return move_stack_.Size(); }
+  // Returns number of half-moves played on the board so far.
+  int HalfMoves() const { return move_stack_.Size(); }
+
+  int HalfMoveClock() const { return move_stack_.Top()->half_move_clock; }
 
   void DebugPrintBoard() const;
 
@@ -97,6 +106,9 @@ private:
 
     // Zobrist key of the board position after this move is played.
     U64 zobrist_key;
+
+    // Number of half-moves since a pawn move or capture.
+    int half_move_clock = 0;
   };
 
   // A thin wrapper around an array of MoveStackEntry elements that provides a
