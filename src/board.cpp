@@ -11,9 +11,24 @@
 #include <string>
 
 namespace {
+
 const std::map<const Variant, const std::string> variant_fen_map = {
     {Variant::STANDARD, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"},
     {Variant::ANTICHESS, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}};
+
+// clang-format off
+constexpr uint8_t CASTLING_MASKS[64] = {
+    0b10, 0, 0, 0,   0b11, 0, 0,   0b1,
+       0, 0, 0, 0,      0, 0, 0,     0,
+       0, 0, 0, 0,      0, 0, 0,     0,
+       0, 0, 0, 0,      0, 0, 0,     0,
+       0, 0, 0, 0,      0, 0, 0,     0,
+       0, 0, 0, 0,      0, 0, 0,     0,
+       0, 0, 0, 0,      0, 0, 0,     0,
+  0b1000, 0, 0, 0, 0b1100, 0, 0, 0b100,
+};
+// clang-format on
+
 } // namespace
 
 Board::Board(const Variant variant)
@@ -67,38 +82,31 @@ void Board::MakeMove(const Move& move) {
   const MoveStackEntry* prev = move_stack_.Seek(1);
   top->move = move;
   top->captured_piece = dest_piece;
-  top->ep_index = prev->ep_index;
   top->zobrist_key = prev->zobrist_key;
   top->castle = prev->castle;
   top->half_move_clock = prev->half_move_clock + 1;
 
-  // If previous move was a 2 space pawn move, update zobrist key. This is
-  // to distinguish between two boards with same piece positions but different
-  // enpassant capture opportunities.
-  if (top->ep_index != -1) {
-    top->zobrist_key ^= zobrist::EP(top->ep_index);
-  }
-
   // Remove piece at source square and destination square (if any).
   RemovePiece(from_index);
   if (dest_piece != NULLPIECE) {
-    top->half_move_clock = 0;  // captures reset half-move clock
+    top->half_move_clock = 0; // captures reset half-move clock
     RemovePiece(to_index);
   }
 
   // Handle pawn move.
   if (PieceType(src_piece) == PAWN) {
-    top->half_move_clock = 0;  // pawn moves reset half-move clock
-    top->ep_index = -1;
+    top->half_move_clock = 0; // pawn moves reset half-move clock
+    top->ep_index = 0;
 
     if (abs(to_row - from_row) == 2) {
       // Two space pawn move.
       top->ep_index = INDX((to_row + from_row) >> 1, to_col);
-      top->zobrist_key ^= zobrist::EP(top->ep_index);
     } else if (from_col != to_col && dest_piece == NULLPIECE) {
       // Enpassant capture.
       RemovePiece(INDX(from_row, to_col));
     }
+    top->zobrist_key ^= zobrist::EP(prev->ep_index);
+    top->zobrist_key ^= zobrist::EP(top->ep_index);
 
     PlacePiece(to_index, move.is_promotion()
                              ? PieceOfSide(move.promoted_piece(), side_to_move_)
@@ -106,90 +114,26 @@ void Board::MakeMove(const Move& move) {
 
     FlipSideToMove();
     return;
+  } else {
+    top->ep_index = 0;
+    top->zobrist_key ^= zobrist::EP(prev->ep_index);
+    top->zobrist_key ^= zobrist::EP(top->ep_index);
   }
 
   // Handle castling.
   if (castling_allowed_) {
-    unsigned char castling_bit_king, castling_bit_queen;
-    switch (side_to_move_) {
-    case Side::BLACK:
-      castling_bit_king = top->castle & 0x4;
-      castling_bit_queen = top->castle & 0x8;
-      break;
-
-    case Side::WHITE:
-      castling_bit_king = top->castle & 0x1;
-      castling_bit_queen = top->castle & 0x2;
-      break;
-
-    default:
-      throw std::runtime_error("Invalid side.");
+    if (PieceType(src_piece) == KING && abs(to_col - from_col) > 1) {
+      const int rook_index = INDX(from_row, to_col > from_col ? 7 : 0);
+      const Piece rook = board_array_[rook_index];
+      RemovePiece(rook_index);
+      PlacePiece(INDX(from_row, (to_col + from_col) >> 1), rook);
     }
-
-    const unsigned char castling_bits = castling_bit_king | castling_bit_queen;
-
-    // If castling is possible for the current side.
-    if (castling_bits) {
-
-      // Update castling data if the moving piece is king or rook.
-      switch (PieceType(src_piece)) {
-      case KING:
-        if (abs(to_col - from_col) > 1) {
-          // When king is moved by more than one space, it is for castling so
-          // move the rook to appropriate square.
-          const int rook_index = INDX(from_row, to_col > from_col ? 7 : 0);
-          const Piece rook = board_array_[rook_index];
-          RemovePiece(rook_index);
-          PlacePiece(INDX(from_row, (to_col + from_col) >> 1), rook);
-        }
-        // Update castle and zobrist. This will only happen first time king is
-        // moved, as for later movements of king 'castling_bits' will be 0 and
-        // we'll not reach this point.
-        top->castle &= ~castling_bits;
-        top->zobrist_key ^= zobrist::Castling(top->castle);
-        break;
-
-      case ROOK:
-        // Depending on which rook is moved, mask the relevant bit in 'castle'
-        // and update zobrist key.
-        if (from_col == 0 && castling_bit_queen) {
-          top->castle &= ~castling_bit_queen;
-          top->zobrist_key ^= zobrist::Castling(top->castle);
-        } else if (from_col == 7 && castling_bit_king) {
-          top->castle &= ~castling_bit_king;
-          top->zobrist_key ^= zobrist::Castling(top->castle);
-        }
-        break;
-      }
-    }
-
-    // If destination piece is ROOK on it's home index, update opponent
-    // castling rights.
-    if (PieceType(dest_piece) == ROOK) {
-      switch (side_to_move_) {
-      case Side::BLACK:
-        if (to_index == 0) {
-          top->castle &= ~0x2U;
-        } else if (to_index == 7) {
-          top->castle &= ~0x1U;
-        }
-        break;
-
-      case Side::WHITE:
-        if (to_index == 56) {
-          top->castle &= ~0x8U;
-        } else if (to_index == 63) {
-          top->castle &= ~0x4U;
-        }
-        break;
-
-      default:
-        throw std::runtime_error("Unknown side to move");
-      }
-    }
+    top->castle &= ~CASTLING_MASKS[from_index];
+    top->castle &= ~CASTLING_MASKS[to_index];
+    top->zobrist_key ^= zobrist::Castling(prev->castle);
+    top->zobrist_key ^= zobrist::Castling(top->castle);
   }
 
-  top->ep_index = -1;
   PlacePiece(to_index, src_piece);
   FlipSideToMove();
 }
@@ -351,6 +295,7 @@ U64 Board::GenerateZobristKey() {
   if (SideToMove() == Side::BLACK) {
     zkey ^= zobrist::Turn();
   }
+  zkey ^= zobrist::EP(move_stack_.Top()->ep_index);
   zkey ^= zobrist::Castling(move_stack_.Top()->castle);
   return zkey;
 }

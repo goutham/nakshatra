@@ -11,12 +11,7 @@
 
 using std::string;
 
-class BoardTest : public testing::Test {
-public:
-  BoardTest() {}
-};
-
-TEST_F(BoardTest, VerifyFENInitializedBoard) {
+TEST(BoardTest, VerifyFENInitializedBoard) {
   Piece expected_board[8][8] = {
       {ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK},
       {PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN},
@@ -37,7 +32,7 @@ TEST_F(BoardTest, VerifyFENInitializedBoard) {
   EXPECT_EQ(Side::WHITE, board.SideToMove());
 }
 
-TEST_F(BoardTest, VerifyFENFunctionality) {
+TEST(BoardTest, VerifyFENFunctionality) {
   string expected_fen =
       "r2qr1k1/ppbn1pp1/4bn1p/PN1pp3/1P2P3/3P1N2/2Q1BPPP/R1B2RK1 b - -";
   Board board(Variant::ANTICHESS, expected_fen);
@@ -46,7 +41,7 @@ TEST_F(BoardTest, VerifyFENFunctionality) {
   EXPECT_EQ(Side::BLACK, board.SideToMove());
 }
 
-TEST_F(BoardTest, VerifyPieceMovements) {
+TEST(BoardTest, VerifyPieceMovements) {
   string init_board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -";
   Board board(Variant::ANTICHESS, init_board);
 
@@ -71,7 +66,7 @@ TEST_F(BoardTest, VerifyPieceMovements) {
   EXPECT_FALSE(board.UnmakeLastMove());
 }
 
-TEST_F(BoardTest, VerifyNumPieces) {
+TEST(BoardTest, VerifyNumPieces) {
   Board board(Variant::ANTICHESS, "8/8/1r1q4/2P5/8/8/8/8 w - -");
   board.DebugPrintBoard();
   EXPECT_EQ(1, board.NumPieces(Side::WHITE));
@@ -87,36 +82,36 @@ TEST_F(BoardTest, VerifyNumPieces) {
   EXPECT_EQ(2, board.NumPieces(Side::BLACK));
 }
 
-TEST_F(BoardTest, Pawn2SpaceMoves) {
+TEST(BoardTest, Pawn2SpaceMoves) {
   Board board(Variant::ANTICHESS, "8/3p/8/8/8/8/1P6/8 w - -");
-  EXPECT_TRUE(board.EnpassantTarget() == -1);
+  EXPECT_TRUE(board.EnpassantTarget() == 0);
   board.MakeMove(Move("b2b4"));
-  EXPECT_TRUE(board.EnpassantTarget() != -1);
+  EXPECT_TRUE(board.EnpassantTarget() != 0);
   board.MakeMove(Move("d7d6"));
-  EXPECT_TRUE(board.EnpassantTarget() == -1);
+  EXPECT_TRUE(board.EnpassantTarget() == 0);
   board.UnmakeLastMove();
-  EXPECT_TRUE(board.EnpassantTarget() != -1);
+  EXPECT_TRUE(board.EnpassantTarget() != 0);
   board.UnmakeLastMove();
-  EXPECT_TRUE(board.EnpassantTarget() == -1);
+  EXPECT_TRUE(board.EnpassantTarget() == 0);
 }
 
-TEST_F(BoardTest, EnpassantCapture) {
+TEST(BoardTest, EnpassantCapture) {
   Board board(Variant::ANTICHESS, "8/8/8/8/2p5/8/1P6/8 w - -");
-  EXPECT_TRUE(board.EnpassantTarget() == -1);
+  EXPECT_TRUE(board.EnpassantTarget() == 0);
   board.MakeMove(Move("b2b4"));
-  EXPECT_TRUE(board.EnpassantTarget() != -1);
+  EXPECT_TRUE(board.EnpassantTarget() != 0);
   board.MakeMove(Move("c4b3"));
   EXPECT_EQ("8/8/8/8/8/1p6/8/8 w - -", board.ParseIntoFEN());
-  EXPECT_TRUE(board.EnpassantTarget() == -1);
+  EXPECT_TRUE(board.EnpassantTarget() == 0);
   board.UnmakeLastMove();
   EXPECT_EQ("8/8/8/8/1Pp5/8/8/8 b - b3", board.ParseIntoFEN());
-  EXPECT_TRUE(board.EnpassantTarget() != -1);
+  EXPECT_TRUE(board.EnpassantTarget() != 0);
   board.UnmakeLastMove();
   EXPECT_EQ("8/8/8/8/2p5/8/1P6/8 w - -", board.ParseIntoFEN());
-  EXPECT_TRUE(board.EnpassantTarget() == -1);
+  EXPECT_TRUE(board.EnpassantTarget() == 0);
 }
 
-TEST_F(BoardTest, ZobristTest1) {
+TEST(BoardTest, ZobristTest1) {
   string init_board = "8/8/8/8/8/8/1P6/8 w - -";
   Board board(Variant::ANTICHESS, init_board);
   board.MakeMove(Move("b2b4"));
@@ -138,7 +133,7 @@ TEST_F(BoardTest, ZobristTest1) {
 // Verifies that a 2 space pawn move creates a different zobrist hash value
 // compared to same position of board without 2 space pawn move. Further also
 // verifies that this does not have any side-effect on subsequent moves.
-TEST_F(BoardTest, Zobrist2) {
+TEST(BoardTest, Zobrist2) {
   Board board(Variant::ANTICHESS, "8/1p6/8/8/8/8/1P6/8 w - -");
   board.MakeMove(Move("b2b4"));
   U64 z1 = board.ZobristKey();
@@ -160,7 +155,7 @@ TEST_F(BoardTest, Zobrist2) {
   EXPECT_TRUE(b2 == b4);
 }
 
-TEST_F(BoardTest, CastlingTest) {
+TEST(BoardTest, Castling1) {
   string init_board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -";
   Board board(Variant::STANDARD, init_board);
   board.MakeMove(Move("e2e4"));
@@ -240,7 +235,104 @@ TEST_F(BoardTest, CastlingTest) {
   EXPECT_EQ(z1, board.ZobristKey());
 }
 
-TEST_F(BoardTest, BitBoardVerification) {
+TEST(BoardTest, Castling2) {
+  const string fen =
+      "r2qk2r/pppb1ppp/2n1pn2/3p4/1b1P4/2NBPN2/PPPB1PPP/R2QK2R w KQkq -";
+  Board board(Variant::STANDARD, fen);
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.MakeMove(Move("a1b1"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("h1g1"));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("e1f1"));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("e1g1"));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("f3e5"));
+  board.MakeMove(Move("a8b8"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("h8f8"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("e8f8"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+  board.MakeMove(Move("e8g8"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, QUEEN));
+  board.UnmakeLastMove();
+}
+
+TEST(BoardTest, Castling3) {
+  const string fen =
+      "r2qk2r/pppb1ppp/2n1pn2/3p4/1b1P4/2NBPN2/PPPB1PPP/R2QK2R w KQkq -";
+  Board board(Variant::STANDARD, fen);
+  const U64 init_zkey = board.ZobristKey();
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.MakeMove(Move("a1b1"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, QUEEN));
+  board.MakeMove(Move("a8b8"));
+  EXPECT_TRUE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, QUEEN));
+  board.MakeMove(Move("h1g1"));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_TRUE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, QUEEN));
+  board.MakeMove(Move("h8f8"));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, KING));
+  EXPECT_FALSE(board.CanCastle(Side::WHITE, QUEEN));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, KING));
+  EXPECT_FALSE(board.CanCastle(Side::BLACK, QUEEN));
+  // Move all the pieces back but castling rights are lost.
+  board.MakeMove(Move("b1a1"));
+  board.MakeMove(Move("b8a8"));
+  board.MakeMove(Move("g1h1"));
+  board.MakeMove(Move("f8h8"));
+  EXPECT_EQ("r2qk2r/pppb1ppp/2n1pn2/3p4/1b1P4/2NBPN2/PPPB1PPP/R2QK2R w - -", board.ParseIntoFEN());
+  EXPECT_NE(board.ZobristKey(), init_zkey);
+}
+
+TEST(BoardTest, BitBoardVerification) {
   Board board(Variant::ANTICHESS);
 
   U64 black, white, white_pawns, white_kings, white_queens, white_rooks,
@@ -314,7 +406,7 @@ TEST_F(BoardTest, BitBoardVerification) {
   EXPECT_EQ(2048ULL, white_kings);
 }
 
-TEST_F(BoardTest, PawnPromotions) {
+TEST(BoardTest, PawnPromotions) {
   Board board(Variant::ANTICHESS, "8/8/8/P7/8/2p5/3ppp2/8 b - -");
 
   U64 white_pawns, black_pawns, black_kings, black_rooks, white_queens,
@@ -408,7 +500,7 @@ TEST_F(BoardTest, PawnPromotions) {
   EXPECT_EQ(72057594037927936ULL, white_queens);
 }
 
-TEST_F(BoardTest, SANTest1) {
+TEST(BoardTest, SANTest1) {
   Board board(Variant::ANTICHESS);
   EXPECT_EQ("e3", SAN(board, Move("e2e3")));
   EXPECT_EQ("g4", SAN(board, Move("g2g4")));
@@ -418,7 +510,7 @@ TEST_F(BoardTest, SANTest1) {
   EXPECT_EQ("Nc3", SAN(board, Move("b1c3")));
 }
 
-TEST_F(BoardTest, SANTest2) {
+TEST(BoardTest, SANTest2) {
   Board board(Variant::STANDARD, "8/2k5/4r3/3P2N1/8/R7/7p/3R2N1 w - -");
   EXPECT_EQ("N1f3", SAN(board, Move("g1f3")));
   EXPECT_EQ("N5f3", SAN(board, Move("g5f3")));
@@ -430,14 +522,14 @@ TEST_F(BoardTest, SANTest2) {
   EXPECT_EQ("Rad3", SAN(board, Move("a3d3")));
 }
 
-TEST_F(BoardTest, SANTest3) {
+TEST(BoardTest, SANTest3) {
   Board board(Variant::STANDARD, "8/2k5/4r3/3P2N1/8/R7/7p/3R2N1 b - -");
   EXPECT_EQ("h1Q", SAN(board, Move("h2h1q")));
   EXPECT_EQ("hxg1Q", SAN(board, Move("h2g1q")));
   EXPECT_EQ("Kb7", SAN(board, Move("c7b7")));
 }
 
-TEST_F(BoardTest, SANToMoveTest1) {
+TEST(BoardTest, SANToMoveTest1) {
   Board board(Variant::ANTICHESS);
   MoveGeneratorAntichess movegen(board);
   EXPECT_EQ("e2e3", SANToMove("e3", board, &movegen).str());
@@ -448,7 +540,7 @@ TEST_F(BoardTest, SANToMoveTest1) {
   EXPECT_EQ("b1c3", SANToMove("Nc3", board, &movegen).str());
 }
 
-TEST_F(BoardTest, HalfMoveClock) {
+TEST(BoardTest, HalfMoveClock) {
   Board board(Variant::STANDARD);
   EXPECT_EQ(0, board.HalfMoveClock());
   board.MakeMove(Move("e2e4"));
@@ -479,7 +571,7 @@ TEST_F(BoardTest, HalfMoveClock) {
   EXPECT_EQ(0, board.HalfMoveClock());
 }
 
-TEST_F(BoardTest, PrevZobristKeys) {
+TEST(BoardTest, PrevZobristKeys) {
   Board board(Variant::STANDARD);
   const U64 z0 = board.ZobristKey();
   board.MakeMove(Move("e2e4"));

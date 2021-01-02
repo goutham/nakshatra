@@ -31,7 +31,7 @@ public:
 
   // If pawn was advanced by 2 squares from its starting position in the last
   // move, this function returns the en-passant target square. If no such move
-  // was made, returns -1.
+  // was made, returns 0.
   int EnpassantTarget() const { return move_stack_.Top()->ep_index; }
 
   // Returns true if given side can castle on the 'piece_type' side. piece_type
@@ -98,11 +98,11 @@ private:
 
     // Determines if castling can be done. If set, castling is available.
     // Bits (0, 1, 2, 3) = (white king, white queen, black king, black queen).
-    unsigned char castle;
+    uint8_t castle;
 
     // Enpassant target position, only updated if last move was a pawn advanced
-    // by two squares from its starting position. Else, set to -1.
-    int ep_index = -1;
+    // by two squares from its starting position. Else, set to 0.
+    int ep_index = 0;
 
     // Zobrist key of the board position after this move is played.
     U64 zobrist_key;
