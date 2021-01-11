@@ -139,8 +139,28 @@ IterativeDeepener::FindBestMove(int max_depth) {
     const Move& move = root_move_array_.get(i);
     board_->MakeMove(move);
     SearchStats search_stats;
-    int score = -search_algorithm_->Search(max_depth - 1, -INF, -istat.score,
+    int score = -INF;
+    if (i == 0 || max_depth < 5) {
+      score = -search_algorithm_->Search(max_depth - 1, -INF, -istat.score,
+                                         &search_stats);
+    } else {
+      bool lmr_triggered = false;
+      if (variant_ == Variant::ANTICHESS) {
+        if (i >= 4 && max_depth >= 2) {
+          score = -search_algorithm_->Search(max_depth - 2, -istat.score - 1,
+                                             -istat.score, &search_stats);
+          lmr_triggered = true;
+        }
+      }
+      if (!lmr_triggered || score > istat.score) {
+        score = -search_algorithm_->Search(max_depth - 1, -istat.score - 1,
+                                           -istat.score, &search_stats);
+      }
+      if (score > istat.score) {
+        score = -search_algorithm_->Search(max_depth - 1, -INF, -istat.score,
                                            &search_stats);
+      }
+    }
     board_->UnmakeLastMove();
     istat.move_stats.push_back(std::make_pair(move, search_stats));
 

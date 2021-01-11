@@ -90,8 +90,8 @@ public:
     assert(eval_ != nullptr);
     root_move_orderer_.reset(new EvalScoreOrderer(board_.get(), eval_.get()));
     iterative_deepener_.reset(new IterativeDeepener(
-        board_.get(), movegen_.get(), search_algorithm_.get(), timer_.get(),
-        transpos_.get(), root_move_orderer_.get()));
+        variant_, board_.get(), movegen_.get(), search_algorithm_.get(),
+        timer_.get(), transpos_.get(), root_move_orderer_.get()));
   }
 
   // BuildExtensions only allocates memory for the extensions_ object. The

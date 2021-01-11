@@ -24,11 +24,13 @@ struct IDSParams {
 
 class IterativeDeepener {
 public:
-  IterativeDeepener(Board* board, MoveGenerator* movegen,
-                    SearchAlgorithm* search_algorithm, Timer* timer,
-                    TranspositionTable* transpos, MoveOrderer* move_orderer)
-      : board_(board), movegen_(movegen), search_algorithm_(search_algorithm),
-        timer_(timer), transpos_(transpos), move_orderer_(move_orderer) {}
+  IterativeDeepener(const Variant variant, Board* board,
+                    MoveGenerator* movegen, SearchAlgorithm* search_algorithm,
+                    Timer* timer, TranspositionTable* transpos,
+                    MoveOrderer* move_orderer)
+      : variant_(variant), board_(board), movegen_(movegen),
+        search_algorithm_(search_algorithm), timer_(timer), transpos_(transpos),
+        move_orderer_(move_orderer) {}
 
   void Search(const IDSParams& ids_params, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);
@@ -64,6 +66,7 @@ private:
 
   void ClearState();
 
+  const Variant variant_;
   Board* board_;
   MoveGenerator* movegen_;
   SearchAlgorithm* search_algorithm_;

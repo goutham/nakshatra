@@ -10,7 +10,7 @@
 
 #define BOARD_SIZE 64
 
-#define MAX_DEPTH 30
+#define MAX_DEPTH 100
 
 #define INF SHRT_MAX
 #define WIN (SHRT_MAX - 1)
