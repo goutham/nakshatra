@@ -11,14 +11,14 @@
 #include "timer.h"
 #include "transpos.h"
 
-int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta,
-                               SearchStats* search_stats) {
-  return NegaScoutInternal(max_depth, alpha, beta, 0, true, search_stats);
+int SearchAlgorithm::Search(int max_depth, int alpha, int beta,
+                            SearchStats* search_stats) {
+  return NegaScout(max_depth, alpha, beta, 0, true, search_stats);
 }
 
-int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
-                                       int ply, bool allow_null_move,
-                                       SearchStats* search_stats) {
+int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
+                               bool allow_null_move,
+                               SearchStats* search_stats) {
   ++search_stats->nodes_searched;
   const U64 zkey = board_->ZobristKey();
 
@@ -72,8 +72,8 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
                     !attacks::InCheck(*board_, board_->SideToMove());
   if (allow_null_move) {
     board_->MakeNullMove();
-    int value = -NegaScoutInternal(max_depth - 2, -beta, -beta + 1, ply + 1,
-                                   !allow_null_move, search_stats);
+    int value = -NegaScout(max_depth - 2, -beta, -beta + 1, ply + 1,
+                           !allow_null_move, search_stats);
     board_->UnmakeNullMove();
     if (value >= beta) {
       return beta;
@@ -94,8 +94,8 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
     bool lmr_triggered = false;
     if (variant_ == Variant::ANTICHESS) {
       if (index >= 4 && max_depth >= 2) {
-        value = -NegaScoutInternal(max_depth - 2, -alpha - 1, -alpha, ply + 1,
-                                   true, search_stats);
+        value = -NegaScout(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
+                           search_stats);
         lmr_triggered = true;
       }
     }
@@ -103,14 +103,14 @@ int SearchAlgorithm::NegaScoutInternal(int max_depth, int alpha, int beta,
     // If LMR was not triggered or LMR search failed high, proceed with normal
     // search.
     if (!lmr_triggered || value > alpha) {
-      value = -NegaScoutInternal(max_depth - 1, -b, -alpha, ply + 1, true,
-                                 search_stats);
+      value =
+          -NegaScout(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
-      value = -NegaScoutInternal(max_depth - 1, -beta, -alpha, ply + 1, true,
-                                 search_stats);
+      value =
+          -NegaScout(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
     }
 
     board_->UnmakeLastMove();

@@ -21,10 +21,6 @@ public:
 private:
   int EvaluateInternal(int alpha, int beta, int max_depth);
 
-  int PieceValDifference() const;
-
-  int PieceCountDiff() const;
-
   int OpponentMobility(const MoveArray& move_array);
 
   int InspectResultOfMove();

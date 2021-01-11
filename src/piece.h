@@ -204,4 +204,16 @@ constexpr int PSTVal(Side side, Piece piece, int sq) {
 
 } // namespace standard_chess
 
+namespace antichess {
+namespace piece_value {
+constexpr int KING = 10;
+constexpr int QUEEN = 6;
+constexpr int ROOK = 7;
+constexpr int BISHOP = 3;
+constexpr int KNIGHT = 3;
+constexpr int PAWN = 2;
+constexpr int value[] = {0, KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN};
+} // namespace piece_value
+} // namespace antichess
+
 #endif

@@ -9,48 +9,12 @@
 #include <cstdlib>
 
 namespace {
-// Piece values.
-namespace pv {
-constexpr int KING = 10;
-constexpr int QUEEN = 6;
-constexpr int ROOK = 7;
-constexpr int BISHOP = 3;
-constexpr int KNIGHT = 3;
-constexpr int PAWN = 2;
-} // namespace pv
-
-// Weight for mobility.
 constexpr int MOBILITY_FACTOR = 25;
-
 constexpr int PIECE_COUNT_FACTOR = -50;
-
 constexpr int TEMPO = 250;
 } // namespace
 
-int EvalAntichess::PieceValDifference() const {
-  const int white_val = PopCount(board_->BitBoard(KING)) * pv::KING +
-                        PopCount(board_->BitBoard(QUEEN)) * pv::QUEEN +
-                        PopCount(board_->BitBoard(PAWN)) * pv::PAWN +
-                        PopCount(board_->BitBoard(BISHOP)) * pv::BISHOP +
-                        PopCount(board_->BitBoard(KNIGHT)) * pv::KNIGHT +
-                        PopCount(board_->BitBoard(ROOK)) * pv::ROOK;
-  const int black_val = PopCount(board_->BitBoard(-KING)) * pv::KING +
-                        PopCount(board_->BitBoard(-QUEEN)) * pv::QUEEN +
-                        PopCount(board_->BitBoard(-PAWN)) * pv::PAWN +
-                        PopCount(board_->BitBoard(-BISHOP)) * pv::BISHOP +
-                        PopCount(board_->BitBoard(-KNIGHT)) * pv::KNIGHT +
-                        PopCount(board_->BitBoard(-ROOK)) * pv::ROOK;
-
-  return (board_->SideToMove() == Side::WHITE) ? (white_val - black_val)
-                                               : (black_val - white_val);
-}
-
-int EvalAntichess::PieceCountDiff() const {
-  const int white_count = PopCount(board_->BitBoard(Side::WHITE));
-  const int black_count = PopCount(board_->BitBoard(Side::BLACK));
-  return (board_->SideToMove() == Side::WHITE) ? (white_count - black_count)
-                                               : (black_count - white_count);
-}
+namespace pv = antichess::piece_value;
 
 bool EvalAntichess::RivalBishopsOnOppositeColoredSquares() const {
   static const U64 WHITE_SQUARES = 0xAA55AA55AA55AA55ULL;
@@ -91,9 +55,9 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
     board_->MakeMove(move_array.get(0));
-    const int eval_val = -EvaluateInternal(-beta, -alpha, max_depth);
+    const int eval = -EvaluateInternal(-beta, -alpha, max_depth);
     board_->UnmakeLastMove();
-    return eval_val;
+    return eval;
   }
   if (self_moves <= 3 && max_depth > 0) {
     MoveArray move_array;
@@ -101,10 +65,17 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
     int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       board_->MakeMove(move_array.get(i));
-      const int eval_val = -EvaluateInternal(-beta, -alpha, max_depth - (self_moves - 1));
+      const int eval =
+          -EvaluateInternal(-beta, -alpha, max_depth - (self_moves - 1));
       board_->UnmakeLastMove();
-      if (eval_val > score) {
-        score = eval_val;
+      if (eval > score) {
+        score = eval;
+        if (score > alpha) {
+          alpha = score;
+          if (alpha >= beta) {
+            return alpha;
+          }
+        }
       }
     }
     return score;
@@ -116,21 +87,35 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
   if (opp_moves == 0) {
     MoveArray move_array;
     movegen_->GenerateMoves(&move_array);
-    int max_eval = -INF;
+    int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       const Move& move = move_array.get(i);
       board_->MakeMove(move);
-      const int eval_val = -Evaluate(-beta, -alpha);
+      const int eval = -Evaluate(-beta, -alpha);
       board_->UnmakeLastMove();
-      if (max_eval < eval_val) {
-        max_eval = eval_val;
+      if (eval > score) {
+        score = eval;
+        if (score > alpha) {
+          alpha = score;
+          if (alpha >= beta) {
+            return alpha;
+          }
+        }
       }
     }
-    return max_eval;
+    return score;
   }
 
-  return (self_moves - opp_moves) * MOBILITY_FACTOR + PieceValDifference() +
-         TEMPO + PIECE_COUNT_FACTOR * PieceCountDiff();
+  int score = 0;
+  for (Piece p = KING; p <= PAWN; ++p) {
+    score += PopCount(board_->BitBoard(p)) * pv::value[p] -
+             PopCount(board_->BitBoard(-p)) * pv::value[p];
+  }
+  if (board_->SideToMove() == Side::BLACK) {
+    score = -score;
+  }
+  return TEMPO + (self_moves - opp_moves) * MOBILITY_FACTOR +
+         (self_pieces - opp_pieces) * PIECE_COUNT_FACTOR + score;
 }
 
 int EvalAntichess::Evaluate(int alpha, int beta) {

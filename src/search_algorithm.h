@@ -22,11 +22,11 @@ public:
         evaluator_(evaluator), transpos_(transpos), move_orderer_(move_orderer),
         extensions_(extensions) {}
 
-  int NegaScout(int max_depth, int alpha, int beta, SearchStats* search_stats);
+  int Search(int max_depth, int alpha, int beta, SearchStats* search_stats);
 
 private:
-  int NegaScoutInternal(int max_depth, int alpha, int beta, int ply,
-                        bool allow_null_move, SearchStats* search_stats);
+  int NegaScout(int max_depth, int alpha, int beta, int ply,
+                bool allow_null_move, SearchStats* search_stats);
 
   const Variant variant_;
   Board* board_;
