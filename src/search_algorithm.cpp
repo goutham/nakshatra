@@ -83,6 +83,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   Move best_move;
   NodeType node_type = FAIL_LOW_NODE;
   int b = beta;
+  int score = -INF;
   for (size_t index = 0; index < move_info_array.size; ++index) {
     const MoveInfo& move_info = move_info_array.moves[index];
     const Move move = move_info.move;
@@ -115,28 +116,29 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
 
     board_->UnmakeLastMove();
 
-    if (value > alpha) {
-      best_move = move;
-      node_type = EXACT_NODE;
-      alpha = value;
-    }
-
-    if (alpha >= beta) {
-      node_type = FAIL_HIGH_NODE;
-      if (move != tt_move && move != killers_[ply][0] &&
-          (variant_ == Variant::ANTICHESS ||
-           board_->PieceAt(move.to_index()) == NULLPIECE)) {
-        killers_[ply][1] = killers_[ply][0];
-        killers_[ply][0] = move;
+    if (value > score) {
+      score = value;
+      if (score > alpha) {
+        best_move = move;
+        node_type = EXACT_NODE;
+        alpha = score;
+        if (alpha >= beta) {
+          node_type = FAIL_HIGH_NODE;
+          if (move != tt_move && move != killers_[ply][0] &&
+              (variant_ == Variant::ANTICHESS ||
+               board_->PieceAt(move.to_index()) == NULLPIECE)) {
+            killers_[ply][1] = killers_[ply][0];
+            killers_[ply][0] = move;
+          }
+          break;
+        }
       }
-      break;
     }
-
     b = alpha + 1;
   }
 
   if (!timer_ || !timer_->Lapsed()) {
-    transpos_->Put(alpha, node_type, max_depth, zkey, best_move);
+    transpos_->Put(score, node_type, max_depth, zkey, best_move);
   }
-  return alpha;
+  return score;
 }
