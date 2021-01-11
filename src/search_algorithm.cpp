@@ -11,6 +11,32 @@
 #include "timer.h"
 #include "transpos.h"
 
+namespace {
+
+// Probes TT. Returns true if tt_score can be returned as the result of search
+// at given max_depth.
+bool Probe(int max_depth, int alpha, int beta, U64 zkey,
+           TranspositionTable* transpos, int* tt_score, Move* tt_move) {
+  TTEntry* tentry = transpos->Get(zkey);
+  if (tentry == nullptr) {
+    return false;
+  }
+  *tt_score = tentry->score;
+  *tt_move = tentry->best_move;
+  const NodeType node_type = tentry->node_type();
+  if (node_type == EXACT_NODE && (*tt_score == WIN || *tt_score == -WIN)) {
+    return true;
+  }
+  if (tentry->depth >= max_depth &&
+      (node_type == EXACT_NODE ||
+       (node_type == FAIL_HIGH_NODE && *tt_score >= beta) ||
+       (node_type == FAIL_LOW_NODE && *tt_score <= alpha))) {
+    return true;
+  }
+  return false;
+}
+} // namespace
+
 int SearchAlgorithm::Search(int max_depth, int alpha, int beta,
                             SearchStats* search_stats) {
   return NegaScout(max_depth, alpha, beta, 0, true, search_stats);
@@ -34,19 +60,17 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   }
 
   Move tt_move = Move();
-  if (TTEntry* tentry = transpos_->Get(zkey); tentry != nullptr) {
-    const NodeType node_type = tentry->node_type();
-    const int score = tentry->score;
-    if (node_type == EXACT_NODE && (score == WIN || score == -WIN)) {
-      return score;
+  int tt_score = 0;
+  if (Probe(max_depth, alpha, beta, zkey, transpos_, &tt_score, &tt_move)) {
+    return tt_score;
+  }
+  // Search to a reduced depth to get a good first move to try (internal
+  // iterative deepening).
+  if (!tt_move.is_valid() && max_depth > 3) {
+    NegaScout(max_depth - 3, alpha, beta, ply, allow_null_move, search_stats);
+    if (Probe(max_depth, alpha, beta, zkey, transpos_, &tt_score, &tt_move)) {
+      return tt_score;
     }
-    if (tentry->depth >= max_depth &&
-        (node_type == EXACT_NODE ||
-         (node_type == FAIL_HIGH_NODE && score >= beta) ||
-         (node_type == FAIL_LOW_NODE && score <= alpha))) {
-      return score;
-    }
-    tt_move = tentry->best_move;
   }
 
   MoveArray move_array;

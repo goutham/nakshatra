@@ -84,16 +84,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
       }
     }
 
-    // This will return immediately when timer expires but updates the
-    // iteration_stats_ nevertheless. Results from the last iteration are
-    // acceptable only if search of at least the first root move subtree was
-    // completed. Due to the move-ordering done above, the first root move that
-    // is searched is guaranteed to be the best known move before beginning of
-    // this iteration. So, if a different best move is found before timer
-    // expiry, it is at least better than the previously known best move
-    // (though it might not be the overall best move at this depth because all
-    // the root moves might not be covered).
-    FindBestMove(depth);
+    const auto istat = FindBestMove(depth);
+    iteration_stats_.push_back(istat);
 
     double elapsed_time = stop_watch.ElapsedTime();
 
@@ -136,7 +128,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
 // Finds the best move by searching up to given max_depth. Stops and returns
 // quickly if timer expires during computation. Updates iteration_stats_ with
 // details of current iteration.
-void IterativeDeepener::FindBestMove(int max_depth) {
+IterativeDeepener::IterationStat
+IterativeDeepener::FindBestMove(int max_depth) {
   IterationStat istat;
   istat.depth = max_depth;
   istat.best_move = root_move_array_.get(0);
@@ -176,7 +169,7 @@ void IterativeDeepener::FindBestMove(int max_depth) {
     transpos_->Put(istat.score, EXACT_NODE, max_depth, board_->ZobristKey(),
                    istat.best_move);
   }
-  iteration_stats_.push_back(istat);
+  return istat;
 }
 
 void IterativeDeepener::ClearState() {

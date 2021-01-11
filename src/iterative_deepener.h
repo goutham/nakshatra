@@ -34,23 +34,6 @@ public:
               int* best_move_score, SearchStats* id_search_stats);
 
 private:
-  void FindBestMove(int max_depth);
-
-  // Returns principal variation as a string of moves.
-  std::string PV(const Move& root_move);
-
-  void ClearState();
-
-  Board* board_;
-  MoveGenerator* movegen_;
-  SearchAlgorithm* search_algorithm_;
-  Timer* timer_;
-  TranspositionTable* transpos_;
-  MoveOrderer* move_orderer_;
-
-  // Maintains list of moves at the root node.
-  MoveArray root_move_array_;
-
   // Stat associated with each iteration of the iterative deepening search
   // is stored in the corresponding IterationStat object and pushed in the
   // iteration_stats_ vector.
@@ -73,6 +56,23 @@ private:
     // Stats for searching to this depth.
     std::vector<std::pair<Move, SearchStats>> move_stats;
   };
+
+  IterationStat FindBestMove(int max_depth);
+
+  // Returns principal variation as a string of moves.
+  std::string PV(const Move& root_move);
+
+  void ClearState();
+
+  Board* board_;
+  MoveGenerator* movegen_;
+  SearchAlgorithm* search_algorithm_;
+  Timer* timer_;
+  TranspositionTable* transpos_;
+  MoveOrderer* move_orderer_;
+
+  // Maintains list of moves at the root node.
+  MoveArray root_move_array_;
 
   std::vector<IterationStat> iteration_stats_;
 };
