@@ -36,7 +36,7 @@ private:
   TranspositionTable* transpos_;
   MoveOrderer* move_orderer_;
   Extensions* extensions_;
-  Move killers_[64][2];
+  Move killers_[MAX_DEPTH][2];
 };
 
 #endif
