@@ -3,11 +3,10 @@ Nakshatra
 
 A chess engine that I originally developed to play [antichess](https://en.wikipedia.org/wiki/Losing_Chess) (a.k.a. suicide chess) variant on [Free Internet Chess Server (FICS)](http://www.freechess.org). Back around 2009/2010, many strong antichess playing humans and bots hung out on [FICS](http://www.freechess.org) and it was fun to develop and pitch my own engine against them. For a while, I even (sparingly) [blogged](http://nakshatrachess.blogspot.com) its progress. Although I don't work on the codebase regularly anymore, every now and then I do try something new to scratch an itch or two.
 
-To play a game of chess or antichess against Nakshatra, check out these sites where it *may* be online (you'll need an account):
+To play a game of chess or antichess against Nakshatra, check out these sites where it *may* be online:
 
-* lichess: https://lichess.org/@/Nakshatra3 -- often online (as of Dec. 2020); this is a weakened version running on a low cost cloud VM with minimal resources.
-* lichess: https://lichess.org/@/Nakshatra7 -- sometimes online.
-* [FICS](http://www.freechess.org) handle: [nakshatra](http://ficsgames.org/cgi-bin/search.cgi?player=nakshatra&action=Finger) -- sometimes online.
+* [Nakshatra3](https://lichess.org/@/Nakshatra3) @ [lichess.org](https://lichess.org/)
+* [nakshatra](http://ficsgames.org/cgi-bin/search.cgi?player=nakshatra&action=Finger) @ [FICS](https://www.freechess.org/)
 
 You can also clone the repository, build and run it locally:
 
