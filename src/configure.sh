@@ -7,6 +7,11 @@ __EOF__
 exit 1
 fi
 
+if test ! -e magic-bits; then
+  echo "Fetching magic-bits library..."
+  git clone https://github.com/goutham/magic-bits.git
+fi
+
 if test ! -e gtest; then
   echo "Fetching googletest..."
   curl -L -O https://github.com/google/googletest/archive/release-1.7.0.zip
