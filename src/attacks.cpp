@@ -3,7 +3,6 @@
 #include "common.h"
 #include "magic-bits/include/magic_bits.hpp"
 #include "side_relative.h"
-#include "magic-bits/include/magic_bits.hpp"
 
 #include <cassert>
 #include <cstdlib>
