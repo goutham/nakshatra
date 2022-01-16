@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 #include "executor.h"
 #include "movegen.h"
 
@@ -14,22 +15,20 @@ int main(int argc, char** argv) {
   using std::endl;
   using std::string;
 
-  const string kNakshatra = "Nakshatra";
-
   cout << "feature usermove=1" << endl;
   cout << "feature variants=\"normal,suicide,giveaway\"" << endl;
   cout << "feature time=1" << endl;
   cout << "feature debug=1" << endl;
   cout << "feature setboard=1" << endl;
   cout << "feature ping=1" << endl;
-  cout << "feature myname=\"" << kNakshatra << "\"" << endl;
+  cout << "feature myname=\"" << ENGINE_NAME << "\"" << endl;
   cout << "feature sigint=0" << endl;
   cout << "feature sigterm=0" << endl;
   cout << "feature done=1" << endl;
 
   srand(time(NULL) ^ getpid());
 
-  Executor executor(kNakshatra);
+  Executor executor(ENGINE_NAME);
 
   string cmd_string;
   while (getline(std::cin, cmd_string)) {

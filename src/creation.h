@@ -3,6 +3,7 @@
 
 #include "board.h"
 #include "common.h"
+#include "config.h"
 #include "egtb.h"
 #include "eval.h"
 #include "eval_antichess.h"
@@ -58,11 +59,7 @@ public:
   virtual void BuildMoveOrderer() = 0;
   virtual void BuildEGTB() = 0;
   virtual void BuildEvaluator() = 0;
-
-  virtual void BuildTranspositionTable() {
-    // ~16M entries in ~4M buckets.
-    transpos_.reset(new TranspositionTable(1U << 22));
-  }
+  virtual void BuildTranspositionTable() = 0;
 
   virtual void InjectExternalTranspositionTable(TranspositionTable* transpos) {
     transpos_.reset(transpos);
@@ -143,6 +140,10 @@ class StandardPlayerBuilder : public PlayerBuilder {
 public:
   StandardPlayerBuilder() : PlayerBuilder(Variant::STANDARD) {}
 
+  void BuildTranspositionTable() {
+    transpos_.reset(new TranspositionTable(STANDARD_TRANSPOS_SIZE));
+  }
+
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
     movegen_.reset(new MoveGeneratorStandard(board_.get()));
@@ -162,7 +163,7 @@ public:
   }
 
   void BuildBook() override {
-    book_.reset(new Book(Variant::STANDARD, "nbook.txt"));
+    book_.reset(new Book(Variant::STANDARD, STANDARD_BOOK_PATH));
   }
 
   void BuildPlayer(int rand_moves) override {
@@ -184,6 +185,10 @@ public:
   AntichessPlayerBuilder(const bool enable_pns = true)
       : PlayerBuilder(Variant::ANTICHESS), enable_pns_(enable_pns) {}
 
+  void BuildTranspositionTable() {
+    transpos_.reset(new TranspositionTable(ANTICHESS_TRANSPOS_SIZE));
+  }
+
   void BuildMoveGenerator() override {
     assert(board_ != nullptr);
     movegen_.reset(new MoveGeneratorAntichess(*board_.get()));
@@ -198,7 +203,7 @@ public:
   void BuildEGTB() override {
     assert(board_ != nullptr);
     std::vector<std::string> egtb_filenames;
-    assert(GlobFiles("egtb/*.egtb", &egtb_filenames));
+    assert(GlobFiles(ANTICHESS_EGTB_PATH_GLOB, &egtb_filenames));
     egtb_.reset(new EGTB(egtb_filenames, *board_.get()));
     egtb_->Initialize();
   }
@@ -210,7 +215,7 @@ public:
   }
 
   void BuildBook() override {
-    book_.reset(new Book(Variant::ANTICHESS, "sbook.txt"));
+    book_.reset(new Book(Variant::ANTICHESS, ANTICHESS_BOOK_PATH));
   }
 
   void AddExtensions() override {

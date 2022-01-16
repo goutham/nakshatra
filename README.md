@@ -24,7 +24,7 @@ Clone the repo, build and run tests:
 ```
 git clone https://github.com/goutham/nakshatra.git
 cd nakshatra/src
-./configure.sh
+./build.sh
 ```
 
 If all tests succeed, you've probably built it successfully. Now you can invoke the engine directly (`./nakshatra`) and communicate with it using [XBoard communication protocol](https://www.gnu.org/software/xboard/engine-intf.html) (which can be a bit awkward), or install
