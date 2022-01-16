@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
   cout << "feature time=1" << endl;
   cout << "feature debug=1" << endl;
   cout << "feature setboard=1" << endl;
+  cout << "feature ping=1" << endl;
   cout << "feature myname=\"" << kNakshatra << "\"" << endl;
   cout << "feature sigint=0" << endl;
   cout << "feature sigterm=0" << endl;
