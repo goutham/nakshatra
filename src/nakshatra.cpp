@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   const string kNakshatra = "Nakshatra";
 
   cout << "feature usermove=1" << endl;
-  cout << "feature variants=\"normal,suicide\"" << endl;
+  cout << "feature variants=\"normal,suicide,giveaway\"" << endl;
   cout << "feature time=1" << endl;
   cout << "feature debug=1" << endl;
   cout << "feature setboard=1" << endl;

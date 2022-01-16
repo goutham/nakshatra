@@ -204,6 +204,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     force_mode_ = false;
     variant_ = Variant::STANDARD;
     if (command.arguments.at(0) == "suicide" ||
+        command.arguments.at(0) == "giveaway" ||
         command.arguments.at(0) == "S") {
       variant_ = Variant::ANTICHESS;
     }
