@@ -249,7 +249,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     ReBuildPlayer(rand_moves_);
   } else if (cmd == "quit") {
     quit_ = true;
-  } else if (cmd == "Error" || cmd == "feature") {
+  } else if (cmd == "Error" || cmd == "feature" || cmd == "level" || cmd == "easy" || cmd == "hard") {
     // Ignore
   } else {
     response->push_back("Error (Unknown command): " + command_str);
