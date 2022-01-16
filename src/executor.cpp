@@ -23,69 +23,6 @@ using std::vector;
 
 namespace {
 
-// All supported Xboard communication protocol commands.
-enum CmdName {
-  ERROR,
-  FEATURE,
-  FORCE,
-  GO,
-  INVALID, // if command entered is invalid.
-  MOVELIST,
-  NEW,
-  NOBOOK,
-  NOPNS,
-  NOPONDER,
-  NOPOST,
-  OMOVELIST,
-  OTIME,
-  PING,
-  POST,
-  QUIT,
-  RESULT,
-  RANDMOVES,
-  SEARCH_DEPTH,
-  SETBOARD,
-  SHOWBOARD,
-  THINKTIME,
-  TIME,
-  UNMAKE,
-  USERMOVE,
-  VARIANT,
-};
-
-struct Command {
-  CmdName cmd_name;
-  std::vector<std::string> arguments;
-};
-
-Command Interpret(const std::string& cmd) {
-  static std::map<std::string, CmdName> cmd_map = {
-      {"Error", ERROR},      {"feature", FEATURE},
-      {"force", FORCE},      {"go", GO},
-      {"move", USERMOVE},    {"mlist", MOVELIST},
-      {"omlist", OMOVELIST}, {"new", NEW},
-      {"nobook", NOBOOK},    {"nopns", NOPNS},
-      {"nopost", NOPOST},    {"otim", OTIME},
-      {"ping", PING},        {"noponder", NOPONDER},
-      {"post", POST},        {"quit", QUIT},
-      {"result", RESULT},    {"randmoves", RANDMOVES},
-      {"sd", SEARCH_DEPTH},  {"setboard", SETBOARD},
-      {"sb", SHOWBOARD},     {"thinktime", THINKTIME},
-      {"time", TIME},        {"usermove", USERMOVE},
-      {"variant", VARIANT},  {"unmake", UNMAKE}};
-  std::vector<std::string> parts = SplitString(cmd, ' ');
-  Command command;
-  if (auto cmd_map_kv = cmd_map.find(parts[0]); cmd_map_kv == cmd_map.end()) {
-    command.cmd_name = INVALID;
-  } else {
-    command.cmd_name = cmd_map_kv->second;
-  }
-  for (size_t i = 1; i < parts.size(); ++i) {
-    command.arguments.push_back(parts[i]);
-  }
-  return command;
-}
-
 // Linear interpolation - given x1, y1, x2, y2 and x3, find y3.
 double Interpolate(double x1, double y1, double x2, double y2, double x3) {
   return y1 + ((y2 - y1) / (x2 - x1)) * (x3 - x1);
@@ -187,8 +124,12 @@ void Executor::StopPondering() {
 }
 
 void Executor::Execute(const string& command_str, vector<string>* response) {
-  switch (Command command = Interpret(command_str); command.cmd_name) {
-  case NEW: {
+  if (command_str.empty()) {
+    return;
+  }
+  const std::vector<std::string> cmd_parts = SplitString(command_str, ' ');
+  const string& cmd = cmd_parts[0];
+  if (cmd == "new") {
     StopPondering();
     variant_ = Variant::STANDARD;
     force_mode_ = false;
@@ -197,114 +138,83 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     think_time_centis_ = -1;
     search_params_.search_depth = MAX_DEPTH;
     ReBuildPlayer(rand_moves_);
-  } break;
-
-  case VARIANT: {
+  } else if (cmd == "variant") {
     StopPondering();
     force_mode_ = false;
     variant_ = Variant::STANDARD;
-    if (command.arguments.at(0) == "suicide" ||
-        command.arguments.at(0) == "giveaway" ||
-        command.arguments.at(0) == "S") {
+    if (cmd_parts.at(1) == "suicide" || cmd_parts.at(1) == "giveaway" ||
+        cmd_parts.at(1) == "S") {
       variant_ = Variant::ANTICHESS;
     }
     ReBuildPlayer(rand_moves_);
-  } break;
-
-  case SEARCH_DEPTH: {
-    std::stringstream ss(command.arguments.at(0));
+  } else if (cmd == "sd") {
+    std::stringstream ss(cmd_parts.at(1));
     ss >> search_params_.search_depth;
     std::cout << "# Search Depth = " << search_params_.search_depth
               << std::endl;
-  } break;
-
-  case SETBOARD: {
+  } else if (cmd == "setboard") {
     init_fen_.clear();
-    for (const string& part : command.arguments) {
-      init_fen_ += part + " ";
+    for (size_t i = 1; i < cmd_parts.size(); ++i) {
+      init_fen_ += cmd_parts[i] + " ";
     }
     // Erase last character which is a trailing space.
     if (!init_fen_.empty()) {
       init_fen_.erase(init_fen_.end() - 1);
     }
     ReBuildPlayer(rand_moves_);
-  } break;
-
-  case GO: {
+  } else if (cmd == "go") {
     if (player_ == nullptr) {
       ReBuildPlayer(rand_moves_);
     }
     StopPondering();
-    if (MatchResult(response)) {
-      break;
+    if (!MatchResult(response)) {
+      force_mode_ = false;
+      Move cmove = player_->Search(search_params_, AllocateTime());
+      player_->GetBoard()->MakeMove(cmove);
+      OutputFEN();
+      response->push_back("move " + cmove.str());
+      StartPondering(time_centis_);
     }
-    force_mode_ = false;
-    Move cmove = player_->Search(search_params_, AllocateTime());
-    player_->GetBoard()->MakeMove(cmove);
-    OutputFEN();
-    response->push_back("move " + cmove.str());
-    StartPondering(time_centis_);
-  } break;
-
-  case THINKTIME:
-    think_time_centis_ = StringToInt(command.arguments.at(0));
-    break;
-
-  case TIME:
-    time_centis_ = StringToInt(command.arguments.at(0));
-    break;
-
-  case OTIME:
-    otime_centis_ = StringToInt(command.arguments.at(0));
-    break;
-
-  case USERMOVE: {
+  } else if (cmd == "thinktime") {
+    think_time_centis_ = StringToInt(cmd_parts.at(1));
+  } else if (cmd == "time") {
+    time_centis_ = StringToInt(cmd_parts.at(1));
+  } else if (cmd == "otim") {
+    otime_centis_ = StringToInt(cmd_parts.at(1));
+  } else if (cmd == "usermove") {
     if (player_ == nullptr) {
       ReBuildPlayer(rand_moves_);
     }
     StopPondering();
-    Move move(command.arguments.at(0));
+    Move move(cmd_parts.at(1));
     if (force_mode_) {
       std::cout << "# Forced: " << player_->GetBoard()->ParseIntoFEN() << "|"
                 << move.str() << std::endl;
       player_->GetBoard()->MakeMove(move);
       OutputFEN();
-      break;
-    }
-    if (!player_builder_->GetMoveGenerator()->IsValidMove(move)) {
+    } else if (!player_builder_->GetMoveGenerator()->IsValidMove(move)) {
       response->push_back("Illegal move: " + move.str());
-      break;
+    } else {
+      player_->GetBoard()->MakeMove(move);
+      OutputFEN();
+      if (!MatchResult(response)) {
+        Move cmove = player_->Search(search_params_, AllocateTime());
+        player_->GetBoard()->MakeMove(cmove);
+        OutputFEN();
+        response->push_back("move " + cmove.str());
+        if (!MatchResult(response)) {
+          StartPondering(time_centis_);
+        }
+      }
     }
-    player_->GetBoard()->MakeMove(move);
-    OutputFEN();
-    if (MatchResult(response)) {
-      break;
-    }
-
-    Move cmove = player_->Search(search_params_, AllocateTime());
-    player_->GetBoard()->MakeMove(cmove);
-    OutputFEN();
-    response->push_back("move " + cmove.str());
-    if (MatchResult(response)) {
-      break;
-    }
-    StartPondering(time_centis_);
-  } break;
-
-  case FORCE:
+  } else if (cmd == "force") {
     StopPondering();
     force_mode_ = true;
-    break;
-
-  case SHOWBOARD:
+  } else if (cmd == "sb") {
     player_->GetBoard()->DebugPrintBoard();
-    break;
-
-  case UNMAKE:
+  } else if (cmd == "unmake") {
     player_->GetBoard()->UnmakeLastMove();
-    break;
-
-  case MOVELIST: {
+  } else if (cmd == "movelist") {
     MoveGenerator* movegen = nullptr;
     switch (variant_) {
     case Variant::STANDARD:
@@ -320,52 +230,29 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
     }
     delete movegen;
-  } break;
-
-  case NOBOOK:
+  } else if (cmd == "nobook") {
     book_ = false;
     ReBuildPlayer(rand_moves_);
-    break;
-
-  case NOPNS:
+  } else if (cmd == "nopns") {
     pns_ = false;
     ReBuildPlayer(rand_moves_);
-    break;
-
-  case NOPONDER:
+  } else if (cmd == "noponder") {
     ponder_ = false;
-    break;
-
-  case NOPOST:
+  } else if (cmd == "nopost") {
     search_params_.thinking_output = false;
-    break;
-
-  case PING:
-    response->push_back("pong " + command.arguments.at(0));
-    break;
-
-  case POST:
+  } else if (cmd == "ping") {
+    response->push_back("pong " + cmd_parts.at(1));
+  } else if (cmd == "post") {
     search_params_.thinking_output = true;
-    break;
-
-  case RANDMOVES:
-    rand_moves_ = StringToInt(command.arguments.at(0));
+  } else if (cmd == "randmoves") {
+    rand_moves_ = StringToInt(cmd_parts.at(1));
     ReBuildPlayer(rand_moves_);
-    break;
-
-  case QUIT:
+  } else if (cmd == "quit") {
     quit_ = true;
-    break;
-
-  // Ignore
-  case ERROR:
-  case FEATURE:
-    break;
-
-  default:
+  } else {
     response->push_back("Error (Unknown command): " + command_str);
-    break;
   }
+
   if (quit_ && player_builder_.get()) {
     StopPondering();
     player_builder_->GetTranspos()->LogStats();
