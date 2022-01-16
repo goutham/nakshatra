@@ -92,8 +92,8 @@ namespace piece_value {
 const int KING = 20000;
 const int QUEEN = 900;
 const int ROOK = 500;
-const int BISHOP = 300;
-const int KNIGHT = 300;
+const int BISHOP = 330;
+const int KNIGHT = 320;
 const int PAWN = 100;
 constexpr int value[] = {0, KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN};
 } // namespace piece_value
