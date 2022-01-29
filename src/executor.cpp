@@ -255,7 +255,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
              cmd == "xboard" || cmd == "accepted" || cmd == "rejected" ||
              cmd == "?" || cmd == "protover" || cmd == "sigterm" ||
              cmd == "name" || cmd == "rating" || cmd == "computer" ||
-             cmd == "st") {
+             cmd == "st" || cmd == "result") {
     // Ignore / TBD
   } else {
     response->push_back("Error (Unknown command): " + command_str);
