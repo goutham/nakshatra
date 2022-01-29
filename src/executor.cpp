@@ -236,8 +236,10 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   } else if (cmd == "nopns") {
     pns_ = false;
     ReBuildPlayer(rand_moves_);
-  } else if (cmd == "noponder") {
+  } else if (cmd == "easy") {
     ponder_ = false;
+  } else if (cmd == "hard") {
+    ponder_ = true;
   } else if (cmd == "nopost") {
     search_params_.thinking_output = false;
   } else if (cmd == "ping") {
@@ -250,9 +252,11 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   } else if (cmd == "quit") {
     quit_ = true;
   } else if (cmd == "Error" || cmd == "feature" || cmd == "level" ||
-             cmd == "easy" || cmd == "hard" || cmd == "xboard" ||
-             cmd == "protover" || cmd == "sigterm") {
-    // Ignore
+             cmd == "xboard" || cmd == "accepted" || cmd == "rejected" ||
+             cmd == "?" || cmd == "protover" || cmd == "sigterm" ||
+             cmd == "name" || cmd == "rating" || cmd == "computer" ||
+             cmd == "st") {
+    // Ignore / TBD
   } else {
     response->push_back("Error (Unknown command): " + command_str);
   }
