@@ -68,7 +68,6 @@ void Executor::ReBuildPlayer(int rand_moves) {
   PlayerBuilderDirector director(player_builder_.get());
   BuildOptions options;
   options.init_fen = init_fen_;
-  options.build_book = book_;
   options.rand_moves = rand_moves;
   player_ = director.Build(options);
   assert(player_ != nullptr);
@@ -91,7 +90,6 @@ void Executor::ReBuildPonderer() {
   BuildOptions options;
   options.init_fen = player_->GetBoard()->ParseIntoFEN();
   options.transpos = player_builder_->GetTranspos();
-  options.build_book = false;
   ponderer_ = director.Build(options);
   assert(ponderer_ != nullptr);
 }
@@ -134,7 +132,6 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     variant_ = Variant::STANDARD;
     force_mode_ = false;
     pns_ = true;
-    book_ = true;
     think_time_centis_ = -1;
     search_params_.search_depth = MAX_DEPTH;
     ReBuildPlayer(rand_moves_);
@@ -230,9 +227,6 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
     }
     delete movegen;
-  } else if (cmd == "nobook") {
-    book_ = false;
-    ReBuildPlayer(rand_moves_);
   } else if (cmd == "nopns") {
     pns_ = false;
     ReBuildPlayer(rand_moves_);

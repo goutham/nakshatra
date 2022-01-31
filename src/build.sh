@@ -36,8 +36,6 @@ __EOF__
 done
 
 cat >> config.h << __EOF__
-#define STANDARD_BOOK_PATH "${PWD}/nbook.txt"
-#define ANTICHESS_BOOK_PATH "${PWD}/sbook.txt"
 #define ANTICHESS_EGTB_PATH_GLOB "${PWD}/egtb/*.egtb"
 
 #ifdef LOWMEM

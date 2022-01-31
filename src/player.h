@@ -2,7 +2,6 @@
 #define PLAYER_H
 
 #include "board.h"
-#include "book.h"
 #include "common.h"
 #include "move.h"
 #include "timer.h"
@@ -23,7 +22,7 @@ struct SearchParams {
 
 class Player {
 public:
-  Player(const Book* book, Board* board, MoveGenerator* movegen,
+  Player(Board* board, MoveGenerator* movegen,
          IterativeDeepener* iterative_deepener, TranspositionTable* transpos,
          Timer* timer, EGTB* egtb, Extensions* extensions, int rand_moves);
 
@@ -32,7 +31,6 @@ public:
   Board* GetBoard() { return board_; }
 
 private:
-  const Book* book_;
   Board* board_;
   MoveGenerator* movegen_;
   IterativeDeepener* iterative_deepener_;

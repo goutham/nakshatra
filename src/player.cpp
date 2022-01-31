@@ -1,6 +1,5 @@
 #include "player.h"
 #include "board.h"
-#include "book.h"
 #include "common.h"
 #include "egtb.h"
 #include "extensions.h"
@@ -18,13 +17,12 @@
 #include <signal.h>
 #include <sys/time.h>
 
-Player::Player(const Book* book, Board* board, MoveGenerator* movegen,
+Player::Player(Board* board, MoveGenerator* movegen,
                IterativeDeepener* iterative_deepener,
                TranspositionTable* transpos, Timer* timer, EGTB* egtb,
                Extensions* extensions, int rand_moves)
-    : book_(book), board_(board), movegen_(movegen),
-      iterative_deepener_(iterative_deepener), transpos_(transpos),
-      timer_(timer), egtb_(egtb), extensions_(extensions),
+    : board_(board), movegen_(movegen), iterative_deepener_(iterative_deepener),
+      transpos_(transpos), timer_(timer), egtb_(egtb), extensions_(extensions),
       rand_moves_(rand_moves) {}
 
 Move Player::Search(const SearchParams& search_params,
@@ -37,12 +35,6 @@ Move Player::Search(const SearchParams& search_params,
     movegen_->GenerateMoves(&move_array);
     --rand_moves_;
     return move_array.get(rand() % move_array.size());
-  }
-  if (book_) {
-    Move book_move = book_->GetBookMove(*board_);
-    if (book_move.is_valid()) {
-      return book_move;
-    }
   }
   if (egtb_ && OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
       OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {

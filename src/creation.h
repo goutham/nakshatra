@@ -19,6 +19,7 @@
 #include "transpos.h"
 
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <sys/stat.h>
@@ -34,8 +35,6 @@ struct BuildOptions {
   // different board position but reuse the existing transposition table. If
   // this variable is nullptr, a new transposition table is built.
   TranspositionTable* transpos = nullptr;
-
-  bool build_book = true;
 
   int rand_moves = 0;
 };
@@ -102,7 +101,6 @@ public:
   virtual void BuildExtensions() { extensions_.reset(new Extensions()); }
   virtual void AddExtensions() {}
 
-  virtual void BuildBook() = 0;
   virtual void BuildPlayer(int rand_moves) = 0;
 
   virtual Player* GetPlayer() const { return player_.get(); }
@@ -129,7 +127,6 @@ protected:
   std::unique_ptr<Evaluator> eval_;
   std::unique_ptr<TranspositionTable> transpos_;
   std::unique_ptr<Timer> timer_;
-  std::unique_ptr<Book> book_;
   std::unique_ptr<Extensions> extensions_;
   std::unique_ptr<Player> player_;
   std::unique_ptr<EGTB> egtb_;
@@ -162,10 +159,6 @@ public:
     eval_.reset(new EvalStandard(board_.get(), movegen_.get()));
   }
 
-  void BuildBook() override {
-    book_.reset(new Book(Variant::STANDARD, STANDARD_BOOK_PATH));
-  }
-
   void BuildPlayer(int rand_moves) override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
@@ -173,7 +166,7 @@ public:
     assert(transpos_ != nullptr);
     assert(timer_ != nullptr);
     // For standard player, extensions_ could be NULL as of now.
-    player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
+    player_.reset(new Player(board_.get(), movegen_.get(),
                              iterative_deepener_.get(), transpos_.get(),
                              timer_.get(), egtb_.get(), extensions_.get(),
                              rand_moves));
@@ -214,10 +207,6 @@ public:
     eval_.reset(new EvalAntichess(board_.get(), movegen_.get(), egtb_.get()));
   }
 
-  void BuildBook() override {
-    book_.reset(new Book(Variant::ANTICHESS, ANTICHESS_BOOK_PATH));
-  }
-
   void AddExtensions() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
@@ -238,7 +227,7 @@ public:
     assert(transpos_ != nullptr);
     assert(timer_ != nullptr);
     assert(extensions_ != nullptr);
-    player_.reset(new Player(book_.get(), board_.get(), movegen_.get(),
+    player_.reset(new Player(board_.get(), movegen_.get(),
                              iterative_deepener_.get(), transpos_.get(),
                              timer_.get(), egtb_.get(), extensions_.get(),
                              rand_moves));
@@ -258,9 +247,6 @@ public:
       player_builder_->InjectExternalTranspositionTable(options.transpos);
     } else {
       player_builder_->BuildTranspositionTable();
-    }
-    if (options.build_book) {
-      player_builder_->BuildBook();
     }
     if (options.init_fen.empty()) {
       player_builder_->BuildBoard();

@@ -41,7 +41,6 @@ evaluator = env.Library(
 player = env.Library(
     target = 'player',
     source = ['player.cpp',
-              'book.cpp',
               'pn_search.cpp',
               'iterative_deepener.cpp',
               'move_order.cpp',

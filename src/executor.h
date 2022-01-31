@@ -64,7 +64,6 @@ private:
   bool quit_ = false;
   bool force_mode_ = false;
   bool pns_ = true;
-  bool book_ = true;
   bool ponder_ = true;
   int rand_moves_ = 0;
   int think_time_centis_ = -1;
