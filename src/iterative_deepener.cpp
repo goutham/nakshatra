@@ -166,12 +166,10 @@ IterativeDeepener::FindBestMove(int max_depth) {
                                          &search_stats);
     } else {
       bool lmr_triggered = false;
-      if (variant_ == Variant::ANTICHESS) {
-        if (i >= 4 && max_depth >= 2) {
-          score = -search_algorithm_->Search(max_depth - 2, -istat.score - 1,
-                                             -istat.score, &search_stats);
-          lmr_triggered = true;
-        }
+      if (i >= 4 && max_depth >= 2) {
+        score = -search_algorithm_->Search(max_depth - 2, -istat.score - 1,
+                                           -istat.score, &search_stats);
+        lmr_triggered = true;
       }
       if (!lmr_triggered || score > istat.score) {
         score = -search_algorithm_->Search(max_depth - 1, -istat.score - 1,
