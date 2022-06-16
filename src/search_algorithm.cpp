@@ -117,12 +117,10 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
 
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;
-    if (variant_ == Variant::ANTICHESS) {
-      if (index >= 4 && max_depth >= 2) {
-        value = -NegaScout(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
-                           search_stats);
-        lmr_triggered = true;
-      }
+    if (index >= 4 && max_depth >= 2) {
+      value = -NegaScout(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
+                         search_stats);
+      lmr_triggered = true;
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal
