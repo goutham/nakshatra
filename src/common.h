@@ -36,13 +36,14 @@ constexpr int FILE_H = 7;
 
 enum NodeType { FAIL_HIGH_NODE, FAIL_LOW_NODE, EXACT_NODE };
 
-// Uses de Bruijn Sequences to Index a 1 in a Computer Word.
-int log2U(U64 bb);
-
-inline int Lsb1(const U64 v) { return log2U(v); }
+inline int Lsb1(const U64 v) {
+  return __builtin_ctzll(v);
+}
 
 // Number of set bits in a U64 integer.
-unsigned PopCount(U64 x);
+inline int PopCount(U64 v) {
+  return __builtin_popcountll(v);
+}
 
 constexpr int CharToDigit(const char c) {
   return (c >= '0' && c <= '9')

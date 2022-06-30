@@ -3,7 +3,7 @@
 #
 
 env = Environment(
-    CCFLAGS = ['-std=c++17', '-flto', '-O3', '-Wall'],
+    CCFLAGS = ['-std=c++17', '-flto', '-O3', '-Wall', '-march=native'],
     CPPPATH = '.')
 
 test_env = Environment(
