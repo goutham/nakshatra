@@ -13,18 +13,20 @@ TranspositionTable::TranspositionTable(int size) : size_(size) {
 
 TranspositionTable::~TranspositionTable() { delete tt_buckets_; }
 
-TTEntry* TranspositionTable::Get(U64 zkey) {
+TTEntry TranspositionTable::Get(U64 zkey, bool* found) {
+  *found = false;
   TTBucket& bucket = tt_buckets_[hash(zkey)];
   for (int i = 0; i < 4; ++i) {
     TTEntry& tt_entry = bucket.tt_entries[i];
     if (tt_entry.is_valid() && tt_entry.zkey == zkey) {
       tt_entry.epoch = epoch_;
       ++hits_;
-      return &tt_entry;
+      *found = true;
+      return tt_entry;
     }
   }
   ++misses_;
-  return nullptr;
+  return TTEntry();
 }
 
 void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,

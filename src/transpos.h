@@ -22,6 +22,8 @@ struct TTEntry {
   NodeType node_type() const { return NodeType((flags >> 1) & 0x3); }
 };
 
+static_assert(sizeof(TTEntry) == 16);
+
 struct TTBucket {
   TTEntry tt_entries[4];
 };
@@ -31,7 +33,7 @@ public:
   TranspositionTable(int size);
   ~TranspositionTable();
 
-  TTEntry* Get(U64 zkey);
+  TTEntry Get(U64 zkey, bool* found);
 
   void Put(int score, NodeType node_type, int depth, U64 zkey, Move best_move);
 
