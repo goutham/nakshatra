@@ -18,17 +18,17 @@ namespace {
 bool Probe(int max_depth, int alpha, int beta, U64 zkey,
            TranspositionTable* transpos, int* tt_score, Move* tt_move) {
   bool found = false;
-  const TTEntry tentry = transpos->Get(zkey, &found);
+  const TTData tdata = transpos->Get(zkey, &found);
   if (!found) {
     return false;
   }
-  *tt_score = tentry.score;
-  *tt_move = tentry.best_move;
-  const NodeType node_type = tentry.node_type();
+  *tt_score = tdata.score;
+  *tt_move = tdata.best_move;
+  const NodeType node_type = tdata.node_type();
   if (node_type == EXACT_NODE && (*tt_score == WIN || *tt_score == -WIN)) {
     return true;
   }
-  if (tentry.depth >= max_depth &&
+  if (tdata.depth >= max_depth &&
       (node_type == EXACT_NODE ||
        (node_type == FAIL_HIGH_NODE && *tt_score >= beta) ||
        (node_type == FAIL_LOW_NODE && *tt_score <= alpha))) {

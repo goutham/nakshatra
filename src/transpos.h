@@ -7,8 +7,7 @@
 
 #include <cstdio>
 
-struct TTEntry {
-  U64 zkey;
+struct TTData {
   Move best_move;
   int16_t score;
   uint8_t depth;
@@ -22,6 +21,13 @@ struct TTEntry {
   NodeType node_type() const { return NodeType((flags >> 1) & 0x3); }
 };
 
+static_assert(sizeof(TTData) == 8);
+
+struct TTEntry {
+  U64 zkey;
+  TTData data;
+};
+
 static_assert(sizeof(TTEntry) == 16);
 
 struct TTBucket {
@@ -33,7 +39,7 @@ public:
   TranspositionTable(int size);
   ~TranspositionTable();
 
-  TTEntry Get(U64 zkey, bool* found);
+  TTData Get(U64 zkey, bool* found);
 
   void Put(int score, NodeType node_type, int depth, U64 zkey, Move best_move);
 
