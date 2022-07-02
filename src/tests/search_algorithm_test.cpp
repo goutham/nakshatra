@@ -30,8 +30,7 @@ TEST_F(SearchAlgorithmTest, Search) {
 
   TranspositionTable transpos(1U << 20); // 1 MB
   SearchAlgorithm search_algorithm(Variant::ANTICHESS, &board, movegen.get(),
-                                   eval.get(), nullptr, &transpos, &orderer,
-                                   nullptr);
+                                   eval.get(), nullptr, &transpos, &orderer);
   // Not a win up to depth 6.
   for (int depth = 1; depth <= 6; ++depth) {
     SearchStats search_stats;
@@ -52,7 +51,7 @@ TEST_F(SearchAlgorithmTest, Repetition) {
   TranspositionTable tt(256);
   StandardMoveOrderer orderer(&board);
   SearchAlgorithm search(Variant::STANDARD, &board, &movegen, &eval, nullptr,
-                         &tt, &orderer, nullptr);
+                         &tt, &orderer);
   SearchStats stats;
   EXPECT_GT(search.Search(1, -INF, INF, &stats), 0);
   board.MakeMove(Move("h2f3"));

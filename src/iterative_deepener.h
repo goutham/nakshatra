@@ -6,12 +6,13 @@
 #include "move_order.h"
 #include "stats.h"
 
+#include <map>
 #include <utility>
 #include <vector>
 
 class Board;
+class EGTB;
 class MoveGenerator;
-class SearchAlgorithm;
 class Timer;
 class TranspositionTable;
 
@@ -25,11 +26,10 @@ struct IDSParams {
 class IterativeDeepener {
 public:
   IterativeDeepener(const Variant variant, Board* board, MoveGenerator* movegen,
-                    SearchAlgorithm* search_algorithm, Timer* timer,
-                    TranspositionTable* transpos, MoveOrderer* move_orderer)
-      : variant_(variant), board_(board), movegen_(movegen),
-        search_algorithm_(search_algorithm), timer_(timer), transpos_(transpos),
-        move_orderer_(move_orderer) {}
+                    Timer* timer, TranspositionTable* transpos,
+                    MoveOrderer* move_orderer, EGTB* egtb)
+      : variant_(variant), board_(board), movegen_(movegen), timer_(timer),
+        transpos_(transpos), move_orderer_(move_orderer), egtb_(egtb) {}
 
   void Search(const IDSParams& ids_params, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);
@@ -56,6 +56,19 @@ private:
 
     // Stats for searching to this depth.
     std::vector<std::pair<Move, SearchStats>> move_stats;
+
+    void MergeStats(const IterationStat& istat) {
+      std::map<Move, SearchStats> stats_by_move;
+      for (const auto& item : istat.move_stats) {
+        stats_by_move[item.first] = item.second;
+      }
+      for (auto& item : move_stats) {
+        auto iter = stats_by_move.find(item.first);
+        if (iter != stats_by_move.end()) {
+          item.second.nodes_searched += iter->second.nodes_searched;
+        }
+      }
+    }
   };
 
   IterationStat FindBestMove(int max_depth);
@@ -68,10 +81,10 @@ private:
   const Variant variant_;
   Board* board_;
   MoveGenerator* movegen_;
-  SearchAlgorithm* search_algorithm_;
   Timer* timer_;
   TranspositionTable* transpos_;
   MoveOrderer* move_orderer_;
+  EGTB* egtb_;
 
   // Maintains list of moves at the root node.
   MoveArray root_move_array_;

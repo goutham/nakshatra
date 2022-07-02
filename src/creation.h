@@ -65,29 +65,16 @@ public:
     external_transpos_ = true;
   }
   virtual void BuildTimer() { timer_.reset(new Timer); }
-  virtual void BuildSearchAlgorithm() {
-    assert(board_ != nullptr);
-    assert(movegen_ != nullptr);
-    assert(eval_ != nullptr);
-    assert(timer_ != nullptr);
-    assert(transpos_ != nullptr);
-    assert(move_orderer_ != nullptr);
-    assert(extensions_ != nullptr);
-    search_algorithm_.reset(new SearchAlgorithm(
-        variant_, board_.get(), movegen_.get(), eval_.get(), timer_.get(),
-        transpos_.get(), move_orderer_.get(), extensions_.get()));
-  }
   virtual void BuildIterativeDeepener() {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
-    assert(search_algorithm_ != nullptr);
     assert(timer_ != nullptr);
     assert(transpos_ != nullptr);
     assert(eval_ != nullptr);
     root_move_orderer_.reset(new EvalScoreOrderer(board_.get(), eval_.get()));
     iterative_deepener_.reset(new IterativeDeepener(
-        variant_, board_.get(), movegen_.get(), search_algorithm_.get(),
-        timer_.get(), transpos_.get(), root_move_orderer_.get()));
+        variant_, board_.get(), movegen_.get(), timer_.get(), transpos_.get(),
+        root_move_orderer_.get(), egtb_.get()));
   }
 
   // BuildExtensions only allocates memory for the extensions_ object. The
@@ -122,7 +109,6 @@ protected:
   std::unique_ptr<MoveGenerator> movegen_;
   std::unique_ptr<MoveOrderer> move_orderer_;
   std::unique_ptr<MoveOrderer> root_move_orderer_;
-  std::unique_ptr<SearchAlgorithm> search_algorithm_;
   std::unique_ptr<IterativeDeepener> iterative_deepener_;
   std::unique_ptr<Evaluator> eval_;
   std::unique_ptr<TranspositionTable> transpos_;
@@ -259,7 +245,6 @@ public:
     player_builder_->BuildEGTB();
     player_builder_->BuildEvaluator();
     player_builder_->BuildTimer();
-    player_builder_->BuildSearchAlgorithm();
     player_builder_->BuildIterativeDeepener();
     player_builder_->BuildPlayer(options.rand_moves);
     player_builder_->AddExtensions(); // Must always be called last.

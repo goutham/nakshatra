@@ -51,6 +51,10 @@ cat >> config.h << __EOF__
 #endif
 __EOF__
 
+cat >> config.h << __EOF__
+#define NUM_THREADS 1
+__EOF__
+
 scons
 
 if test ! -e egtb; then

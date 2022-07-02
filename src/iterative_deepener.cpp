@@ -2,7 +2,10 @@
 #include "board.h"
 #include "common.h"
 #include "config.h"
+#include "egtb.h"
 #include "eval.h"
+#include "eval_antichess.h"
+#include "eval_standard.h"
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -16,7 +19,9 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <string>
+#include <thread>
 
 void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
                                int* best_move_score,
@@ -152,64 +157,129 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
 // details of current iteration.
 IterativeDeepener::IterationStat
 IterativeDeepener::FindBestMove(int max_depth) {
-  IterationStat istat;
-  istat.depth = max_depth;
-  istat.best_move = root_move_array_.get(0);
-  istat.score = -INF;
-  istat.root_moves_covered = 0;
-  for (unsigned int i = 0; i < root_move_array_.size(); ++i) {
-    const Move& move = root_move_array_.get(i);
-    board_->MakeMove(move);
-    SearchStats search_stats;
-    int score = -INF;
-    if (i == 0 || max_depth < 5) {
-      score = -search_algorithm_->Search(max_depth - 1, -INF, -istat.score,
-                                         &search_stats);
-    } else {
-      bool lmr_triggered = false;
-      if (i >= 4 && max_depth >= 2) {
-        score = -search_algorithm_->Search(max_depth - 2, -istat.score - 1,
-                                           -istat.score, &search_stats);
-        lmr_triggered = true;
+
+  auto search = [max_depth, root_move_array = root_move_array_,
+                 &transpos = transpos_,
+                 &timer = timer_](int thread_num, Board* board,
+                                  SearchAlgorithm* search_algorithm,
+                                  IterationStat* ret_istat) mutable {
+    if (thread_num % 2 == 1) {
+      ++max_depth;
+    }
+    IterationStat istat;
+    istat.depth = max_depth;
+    istat.best_move = root_move_array.get(0);
+    istat.score = -INF;
+    istat.root_moves_covered = 0;
+    for (unsigned int i = 0; i < root_move_array.size(); ++i) {
+      const Move& move = root_move_array.get(i);
+      board->MakeMove(move);
+      SearchStats search_stats;
+      int score = -INF;
+      if (i == 0 || max_depth < 5) {
+        score = -search_algorithm->Search(max_depth - 1, -INF, -istat.score,
+                                          &search_stats);
+      } else {
+        bool lmr_triggered = false;
+        if (i >= 4 && max_depth >= 2) {
+          score = -search_algorithm->Search(max_depth - 2, -istat.score - 1,
+                                            -istat.score, &search_stats);
+          lmr_triggered = true;
+        }
+        if (!lmr_triggered || score > istat.score) {
+          score = -search_algorithm->Search(max_depth - 1, -istat.score - 1,
+                                            -istat.score, &search_stats);
+        }
+        if (score > istat.score) {
+          score = -search_algorithm->Search(max_depth - 1, -INF, -istat.score,
+                                            &search_stats);
+        }
       }
-      if (!lmr_triggered || score > istat.score) {
-        score = -search_algorithm_->Search(max_depth - 1, -istat.score - 1,
-                                           -istat.score, &search_stats);
+      board->UnmakeLastMove();
+      istat.move_stats.push_back(std::make_pair(move, search_stats));
+
+      // Return on timer expiry only if we are not searching at depth 1. If
+      // searching at depth 1, we should at least quickly find a meaningful
+      // move even if timer expires before all the root moves are evaluated.
+      // Without this, there is a possibility of iterative deepener not
+      // reporting any moves at all in some extremely time constrained
+      // situations. Searching all root moves at depth 1 is very quick
+      // (sub-millisecond latency).
+      if (timer->Lapsed() && max_depth > 1) {
+        break;
       }
       if (score > istat.score) {
-        score = -search_algorithm_->Search(max_depth - 1, -INF, -istat.score,
-                                           &search_stats);
+        istat.best_move = move;
+        istat.score = score;
       }
+      ++istat.root_moves_covered;
     }
-    board_->UnmakeLastMove();
-    istat.move_stats.push_back(std::make_pair(move, search_stats));
+    // Add move to transposition table if at least the first root move was
+    // completely searched to current depth before timer lapsed. Otherwise,
+    // we don't really have any valid move to update. Due to move ordering
+    // guarantees, the first move in root_move_array_ is guaranteed to be
+    // the best known move before current iteration, which means any other
+    // move found to be better at this depth is at least better than that.
+    if (istat.root_moves_covered > 0) {
+      transpos->Put(istat.score, EXACT_NODE, max_depth, board->ZobristKey(),
+                    istat.best_move);
+    }
+    *ret_istat = istat;
+  };
 
-    // Return on timer expiry only if we are not searching at depth 1. If
-    // searching at depth 1, we should at least quickly find a meaningful move
-    // even if timer expires before all the root moves are evaluated. Without
-    // this, there is a possibility of iterative deepener not reporting any
-    // moves at all in some extremely time constrained situations. Searching all
-    // root moves at depth 1 is very quick (sub-millisecond latency).
-    if (timer_->Lapsed() && max_depth > 1) {
-      break;
+  struct Context {
+    std::unique_ptr<Board> board;
+    std::unique_ptr<MoveGenerator> movegen;
+    std::unique_ptr<Evaluator> eval;
+    std::unique_ptr<MoveOrderer> move_orderer;
+    std::unique_ptr<SearchAlgorithm> search_algorithm;
+    IterationStat istat;
+  };
+
+  bool abort = false;
+  std::vector<Context> contexts;
+  const int num_threads = (max_depth < 3 ? 1 : NUM_THREADS);
+  for (int i = 0; i < num_threads; ++i) {
+    Context ctxt;
+    ctxt.board = std::make_unique<Board>(*board_);
+    if (variant_ == Variant::STANDARD) {
+      ctxt.movegen = std::make_unique<MoveGeneratorStandard>(ctxt.board.get());
+      ctxt.move_orderer =
+          std::make_unique<StandardMoveOrderer>(ctxt.board.get());
+      ctxt.eval =
+          std::make_unique<EvalStandard>(ctxt.board.get(), ctxt.movegen.get());
+    } else if (variant_ == Variant::ANTICHESS) {
+      ctxt.movegen = std::make_unique<MoveGeneratorAntichess>(*ctxt.board);
+      ctxt.move_orderer = std::make_unique<AntichessMoveOrderer>(
+          ctxt.board.get(), ctxt.movegen.get());
+      ctxt.eval = std::make_unique<EvalAntichess>(ctxt.board.get(),
+                                                  ctxt.movegen.get(), egtb_);
     }
-    if (score > istat.score) {
-      istat.best_move = move;
-      istat.score = score;
-    }
-    ++istat.root_moves_covered;
+    ctxt.search_algorithm = std::make_unique<SearchAlgorithm>(
+        variant_, ctxt.board.get(), ctxt.movegen.get(), ctxt.eval.get(), timer_,
+        transpos_, ctxt.move_orderer.get(), i == 0 ? nullptr : &abort);
+    contexts.push_back(std::move(ctxt));
   }
-  // Add move to transposition table if at least the first root move was
-  // completely searched to current depth before timer lapsed. Otherwise, we
-  // don't really have any valid move to update. Due to move ordering
-  // guarantees, the first move in root_move_array_ is guaranteed to be the
-  // best known move before current iteration, which means any other move found
-  // to be better at this depth is at least better than that.
-  if (istat.root_moves_covered > 0) {
-    transpos_->Put(istat.score, EXACT_NODE, max_depth, board_->ZobristKey(),
-                   istat.best_move);
+
+  std::vector<std::thread> threads;
+  for (size_t i = 1; i < contexts.size(); ++i) {
+    auto& ctxt = contexts.at(i);
+    threads.push_back(std::thread(search, i, ctxt.board.get(),
+                                  ctxt.search_algorithm.get(), &ctxt.istat));
   }
-  return istat;
+
+  auto& ctxt = contexts.at(0);
+  search(0, ctxt.board.get(), ctxt.search_algorithm.get(), &ctxt.istat);
+  abort = true;
+
+  for (auto& thread : threads) {
+    thread.join();
+  }
+
+  for (size_t i = 1; i < contexts.size(); ++i) {
+    ctxt.istat.MergeStats(contexts.at(i).istat);
+  }
+  return ctxt.istat;
 }
 
 void IterativeDeepener::ClearState() {

@@ -3,7 +3,6 @@
 #include "board.h"
 #include "common.h"
 #include "eval.h"
-#include "extensions.h"
 #include "move.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -56,7 +55,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     }
   }
 
-  if (max_depth <= 0 || (timer_ && timer_->Lapsed())) {
+  if (max_depth <= 0 || (timer_ && timer_->Lapsed()) || (abort_ && *abort_)) {
     return evaluator_->Evaluate(alpha, beta);
   }
 
@@ -160,7 +159,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     b = alpha + 1;
   }
 
-  if (!timer_ || !timer_->Lapsed()) {
+  if (!(timer_ && timer_->Lapsed()) && !(abort_ && *abort_)) {
     transpos_->Put(score, node_type, max_depth, zkey, best_move);
   }
   return score;

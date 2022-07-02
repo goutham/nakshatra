@@ -17,10 +17,10 @@ public:
   SearchAlgorithm(const Variant variant, Board* board, MoveGenerator* movegen,
                   Evaluator* evaluator, Timer* timer,
                   TranspositionTable* transpos, MoveOrderer* move_orderer,
-                  Extensions* extensions)
+                  bool* abort = nullptr)
       : variant_(variant), board_(board), movegen_(movegen), timer_(timer),
         evaluator_(evaluator), transpos_(transpos), move_orderer_(move_orderer),
-        extensions_(extensions) {}
+        abort_(abort) {}
 
   int Search(int max_depth, int alpha, int beta, SearchStats* search_stats);
 
@@ -35,7 +35,7 @@ private:
   Evaluator* evaluator_;
   TranspositionTable* transpos_;
   MoveOrderer* move_orderer_;
-  Extensions* extensions_;
+  bool* abort_ = nullptr;
   Move killers_[MAX_DEPTH][2];
 };
 
