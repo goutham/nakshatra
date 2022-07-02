@@ -79,9 +79,10 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
       }
       root_move_array_.PushToFront(iteration_stats_.back().best_move);
     } else if (ids_params.pruned_ordered_moves.size() == 0) {
-      if (auto* tentry = transpos_->Get(board_->ZobristKey());
-          tentry && tentry->best_move.is_valid()) {
-        root_move_array_.PushToFront(tentry->best_move);
+      bool found = false;
+      const TTData tdata = transpos_->Get(board_->ZobristKey(), &found);
+      if (found && tdata.best_move.is_valid()) {
+        root_move_array_.PushToFront(tdata.best_move);
       }
     }
 
@@ -228,14 +229,15 @@ std::string IterativeDeepener::PV(const Move& root_move) {
   int depth = 0;
   while (depth < 10) {
     U64 zkey = board_->ZobristKey();
-    TTEntry* tentry = transpos_->Get(zkey);
-    if (!tentry || !tentry->best_move.is_valid() ||
-        tentry->node_type() != EXACT_NODE) {
+    bool found = false;
+    const TTData tdata = transpos_->Get(zkey, &found);
+    if (!found || !tdata.best_move.is_valid() ||
+        tdata.node_type() != EXACT_NODE) {
       break;
     }
-    pv.append(SAN(*board_, tentry->best_move) + " ");
+    pv.append(SAN(*board_, tdata.best_move) + " ");
     ++depth;
-    board_->MakeMove(tentry->best_move);
+    board_->MakeMove(tdata.best_move);
   }
   while (depth--) {
     board_->UnmakeLastMove();
