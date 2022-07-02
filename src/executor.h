@@ -39,7 +39,7 @@ private:
   // false.
   bool MatchResult(std::vector<std::string>* response);
 
-  void ReBuildPlayer(int rand_moves);
+  void ReBuildPlayer();
   void ReBuildPonderer();
 
   void StartPondering(double time_centis);
@@ -65,7 +65,6 @@ private:
   bool force_mode_ = false;
   bool pns_ = true;
   bool ponder_ = true;
-  int rand_moves_ = 0;
   int think_time_centis_ = -1;
 
   double time_centis_;

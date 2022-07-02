@@ -55,7 +55,7 @@ bool Executor::MatchResult(vector<string>* response) {
   return true;
 }
 
-void Executor::ReBuildPlayer(int rand_moves) {
+void Executor::ReBuildPlayer() {
   switch (variant_) {
   case Variant::STANDARD:
     player_builder_.reset(new StandardPlayerBuilder());
@@ -68,7 +68,6 @@ void Executor::ReBuildPlayer(int rand_moves) {
   PlayerBuilderDirector director(player_builder_.get());
   BuildOptions options;
   options.init_fen = init_fen_;
-  options.rand_moves = rand_moves;
   player_ = director.Build(options);
   assert(player_ != nullptr);
 }
@@ -84,7 +83,7 @@ void Executor::ReBuildPonderer() {
   }
   assert(ponderer_builder_.get() != nullptr);
   if (!player_) {
-    ReBuildPlayer(rand_moves_);
+    ReBuildPlayer();
   }
   PlayerBuilderDirector director(ponderer_builder_.get());
   BuildOptions options;
@@ -134,7 +133,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     pns_ = true;
     think_time_centis_ = -1;
     search_params_.search_depth = MAX_DEPTH;
-    ReBuildPlayer(rand_moves_);
+    ReBuildPlayer();
   } else if (cmd == "variant") {
     StopPondering();
     force_mode_ = false;
@@ -143,7 +142,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
         cmd_parts.at(1) == "S") {
       variant_ = Variant::ANTICHESS;
     }
-    ReBuildPlayer(rand_moves_);
+    ReBuildPlayer();
   } else if (cmd == "sd") {
     std::stringstream ss(cmd_parts.at(1));
     ss >> search_params_.search_depth;
@@ -158,10 +157,10 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     if (!init_fen_.empty()) {
       init_fen_.erase(init_fen_.end() - 1);
     }
-    ReBuildPlayer(rand_moves_);
+    ReBuildPlayer();
   } else if (cmd == "go") {
     if (player_ == nullptr) {
-      ReBuildPlayer(rand_moves_);
+      ReBuildPlayer();
     }
     StopPondering();
     if (!MatchResult(response)) {
@@ -180,7 +179,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     otime_centis_ = StringToInt(cmd_parts.at(1));
   } else if (cmd == "usermove") {
     if (player_ == nullptr) {
-      ReBuildPlayer(rand_moves_);
+      ReBuildPlayer();
     }
     StopPondering();
     Move move(cmd_parts.at(1));
@@ -229,7 +228,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     delete movegen;
   } else if (cmd == "nopns") {
     pns_ = false;
-    ReBuildPlayer(rand_moves_);
+    ReBuildPlayer();
   } else if (cmd == "easy") {
     ponder_ = false;
   } else if (cmd == "hard") {
@@ -240,9 +239,6 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     response->push_back("pong " + cmd_parts.at(1));
   } else if (cmd == "post") {
     search_params_.thinking_output = true;
-  } else if (cmd == "randmoves") {
-    rand_moves_ = StringToInt(cmd_parts.at(1));
-    ReBuildPlayer(rand_moves_);
   } else if (cmd == "quit") {
     quit_ = true;
   } else if (cmd == "Error" || cmd == "feature" || cmd == "level" ||

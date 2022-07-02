@@ -24,7 +24,10 @@ class Player {
 public:
   Player(Board* board, MoveGenerator* movegen,
          IterativeDeepener* iterative_deepener, TranspositionTable* transpos,
-         Timer* timer, EGTB* egtb, Extensions* extensions, int rand_moves);
+         Timer* timer, EGTB* egtb, Extensions* extensions)
+      : board_(board), movegen_(movegen),
+        iterative_deepener_(iterative_deepener), transpos_(transpos),
+        timer_(timer), egtb_(egtb), extensions_(extensions) {}
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
@@ -38,7 +41,6 @@ private:
   Timer* timer_;
   EGTB* egtb_;
   Extensions* extensions_;
-  int rand_moves_ = 0;
 };
 
 #endif

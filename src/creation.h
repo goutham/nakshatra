@@ -35,8 +35,6 @@ struct BuildOptions {
   // different board position but reuse the existing transposition table. If
   // this variable is nullptr, a new transposition table is built.
   TranspositionTable* transpos = nullptr;
-
-  int rand_moves = 0;
 };
 
 class PlayerBuilder {
@@ -88,7 +86,7 @@ public:
   virtual void BuildExtensions() { extensions_.reset(new Extensions()); }
   virtual void AddExtensions() {}
 
-  virtual void BuildPlayer(int rand_moves) = 0;
+  virtual void BuildPlayer() = 0;
 
   virtual Player* GetPlayer() const { return player_.get(); }
 
@@ -145,7 +143,7 @@ public:
     eval_.reset(new EvalStandard(board_.get(), movegen_.get()));
   }
 
-  void BuildPlayer(int rand_moves) override {
+  void BuildPlayer() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
@@ -154,8 +152,7 @@ public:
     // For standard player, extensions_ could be NULL as of now.
     player_.reset(new Player(board_.get(), movegen_.get(),
                              iterative_deepener_.get(), transpos_.get(),
-                             timer_.get(), egtb_.get(), extensions_.get(),
-                             rand_moves));
+                             timer_.get(), egtb_.get(), extensions_.get()));
   }
 };
 
@@ -206,7 +203,7 @@ public:
     }
   }
 
-  void BuildPlayer(int rand_moves) override {
+  void BuildPlayer() override {
     assert(board_ != nullptr);
     assert(movegen_ != nullptr);
     assert(iterative_deepener_ != nullptr);
@@ -215,8 +212,7 @@ public:
     assert(extensions_ != nullptr);
     player_.reset(new Player(board_.get(), movegen_.get(),
                              iterative_deepener_.get(), transpos_.get(),
-                             timer_.get(), egtb_.get(), extensions_.get(),
-                             rand_moves));
+                             timer_.get(), egtb_.get(), extensions_.get()));
   }
 
 private:
@@ -246,7 +242,7 @@ public:
     player_builder_->BuildEvaluator();
     player_builder_->BuildTimer();
     player_builder_->BuildIterativeDeepener();
-    player_builder_->BuildPlayer(options.rand_moves);
+    player_builder_->BuildPlayer();
     player_builder_->AddExtensions(); // Must always be called last.
     return player_builder_->GetPlayer();
   }

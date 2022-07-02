@@ -17,25 +17,11 @@
 #include <signal.h>
 #include <sys/time.h>
 
-Player::Player(Board* board, MoveGenerator* movegen,
-               IterativeDeepener* iterative_deepener,
-               TranspositionTable* transpos, Timer* timer, EGTB* egtb,
-               Extensions* extensions, int rand_moves)
-    : board_(board), movegen_(movegen), iterative_deepener_(iterative_deepener),
-      transpos_(transpos), timer_(timer), egtb_(egtb), extensions_(extensions),
-      rand_moves_(rand_moves) {}
-
 Move Player::Search(const SearchParams& search_params,
                     long time_for_move_centis) {
   transpos_->SetEpoch(board_->HalfMoves());
 
   std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
-  if (rand_moves_ > 0) {
-    MoveArray move_array;
-    movegen_->GenerateMoves(&move_array);
-    --rand_moves_;
-    return move_array.get(rand() % move_array.size());
-  }
   if (egtb_ && OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
       OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
     out << "# Num pieces <= 2, looking up EGTB..." << std::endl;
