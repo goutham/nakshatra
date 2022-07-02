@@ -76,8 +76,6 @@ private:
   // Returns principal variation as a string of moves.
   std::string PV(const Move& root_move);
 
-  void ClearState();
-
   const Variant variant_;
   Board* board_;
   MoveGenerator* movegen_;

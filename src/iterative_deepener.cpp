@@ -27,8 +27,6 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
                                int* best_move_score,
                                SearchStats* id_search_stats) {
   std::ostream& out = ids_params.thinking_output ? std::cout : nullstream;
-  ClearState();
-
   StopWatch stop_watch;
   stop_watch.Start();
 
@@ -280,11 +278,6 @@ IterativeDeepener::FindBestMove(int max_depth) {
     ctxt.istat.MergeStats(contexts.at(i).istat);
   }
   return ctxt.istat;
-}
-
-void IterativeDeepener::ClearState() {
-  root_move_array_.clear();
-  iteration_stats_.clear();
 }
 
 std::string IterativeDeepener::PV(const Move& root_move) {

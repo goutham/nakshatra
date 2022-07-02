@@ -10,9 +10,10 @@
 #include <sys/time.h>
 
 class EGTB;
-class IterativeDeepener;
 class MoveGenerator;
+class MoveOrderer;
 class TranspositionTable;
+class Evaluator;
 struct Extensions;
 
 struct SearchParams {
@@ -22,22 +23,21 @@ struct SearchParams {
 
 class Player {
 public:
-  Player(Board* board, MoveGenerator* movegen,
-         IterativeDeepener* iterative_deepener, TranspositionTable* transpos,
-         Timer* timer, EGTB* egtb, Extensions* extensions)
-      : board_(board), movegen_(movegen),
-        iterative_deepener_(iterative_deepener), transpos_(transpos),
-        timer_(timer), egtb_(egtb), extensions_(extensions) {}
+  Player(const Variant variant, Board* board, MoveGenerator* movegen,
+         TranspositionTable* transpos, Evaluator* evaluator, Timer* timer,
+         EGTB* egtb, Extensions* extensions)
+      : variant_(variant), board_(board), movegen_(movegen),
+        transpos_(transpos), evaluator_(evaluator), timer_(timer), egtb_(egtb),
+        extensions_(extensions) {}
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
-  Board* GetBoard() { return board_; }
-
 private:
+  const Variant variant_;
   Board* board_;
   MoveGenerator* movegen_;
-  IterativeDeepener* iterative_deepener_;
   TranspositionTable* transpos_;
+  Evaluator* evaluator_;
   Timer* timer_;
   EGTB* egtb_;
   Extensions* extensions_;

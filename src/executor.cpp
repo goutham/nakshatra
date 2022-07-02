@@ -31,19 +31,19 @@ double Interpolate(double x1, double y1, double x2, double y2, double x3) {
 } // namespace
 
 bool Executor::MatchResult(vector<string>* response) {
-  int result = player_builder_->GetEvaluator()->Result();
+  int result = player_builder_->evaluator->Result();
   if (!(result == WIN || result == -WIN || result == DRAW)) {
     return false;
   }
   string match_result;
   if (result == WIN) {
-    if (player_->GetBoard()->SideToMove() == Side::WHITE) {
+    if (player_builder_->board->SideToMove() == Side::WHITE) {
       match_result = "1-0 {White Wins}";
     } else {
       match_result = "0-1 {Black Wins}";
     }
   } else if (result == -WIN) {
-    if (player_->GetBoard()->SideToMove() == Side::WHITE) {
+    if (player_builder_->board->SideToMove() == Side::WHITE) {
       match_result = "0-1 {Black Wins}";
     } else {
       match_result = "1-0 {White Wins}";
@@ -87,8 +87,8 @@ void Executor::ReBuildPonderer() {
   }
   PlayerBuilderDirector director(ponderer_builder_.get());
   BuildOptions options;
-  options.init_fen = player_->GetBoard()->ParseIntoFEN();
-  options.transpos = player_builder_->GetTranspos();
+  options.init_fen = player_builder_->board->ParseIntoFEN();
+  options.transpos = player_builder_->transpos.get();
   ponderer_ = director.Build(options);
   assert(ponderer_ != nullptr);
 }
@@ -115,7 +115,7 @@ void Executor::StopPondering() {
   if (!pondering_thread_) {
     return;
   }
-  ponderer_builder_->GetTimer()->Invalidate();
+  ponderer_builder_->timer_->Invalidate();
   pondering_thread_->join();
   pondering_thread_.reset(nullptr);
 }
@@ -166,7 +166,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     if (!MatchResult(response)) {
       force_mode_ = false;
       Move cmove = player_->Search(search_params_, AllocateTime());
-      player_->GetBoard()->MakeMove(cmove);
+      player_builder_->board->MakeMove(cmove);
       OutputFEN();
       response->push_back("move " + cmove.str());
       StartPondering(time_centis_);
@@ -184,18 +184,18 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     StopPondering();
     Move move(cmd_parts.at(1));
     if (force_mode_) {
-      std::cout << "# Forced: " << player_->GetBoard()->ParseIntoFEN() << "|"
+      std::cout << "# Forced: " << player_builder_->board->ParseIntoFEN() << "|"
                 << move.str() << std::endl;
-      player_->GetBoard()->MakeMove(move);
+      player_builder_->board->MakeMove(move);
       OutputFEN();
-    } else if (!player_builder_->GetMoveGenerator()->IsValidMove(move)) {
+    } else if (!player_builder_->movegen->IsValidMove(move)) {
       response->push_back("Illegal move: " + move.str());
     } else {
-      player_->GetBoard()->MakeMove(move);
+      player_builder_->board->MakeMove(move);
       OutputFEN();
       if (!MatchResult(response)) {
         Move cmove = player_->Search(search_params_, AllocateTime());
-        player_->GetBoard()->MakeMove(cmove);
+        player_builder_->board->MakeMove(cmove);
         OutputFEN();
         response->push_back("move " + cmove.str());
         if (!MatchResult(response)) {
@@ -207,17 +207,17 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     StopPondering();
     force_mode_ = true;
   } else if (cmd == "sb") {
-    player_->GetBoard()->DebugPrintBoard();
+    player_builder_->board->DebugPrintBoard();
   } else if (cmd == "unmake") {
-    player_->GetBoard()->UnmakeLastMove();
+    player_builder_->board->UnmakeLastMove();
   } else if (cmd == "movelist") {
     MoveGenerator* movegen = nullptr;
     switch (variant_) {
     case Variant::STANDARD:
-      movegen = new MoveGeneratorStandard(player_->GetBoard());
+      movegen = new MoveGeneratorStandard(player_builder_->board.get());
       break;
     case Variant::ANTICHESS:
-      movegen = new MoveGeneratorAntichess(*player_->GetBoard());
+      movegen = new MoveGeneratorAntichess(*player_builder_->board);
       break;
     }
     MoveArray move_array;
@@ -253,9 +253,9 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
 
   if (quit_ && player_builder_.get()) {
     StopPondering();
-    player_builder_->GetTranspos()->LogStats();
-    if (player_builder_->GetEGTB()) {
-      player_builder_->GetEGTB()->LogStats();
+    player_builder_->transpos->LogStats();
+    if (player_builder_->egtb_) {
+      player_builder_->egtb_->LogStats();
     }
   }
 }
@@ -281,5 +281,5 @@ long Executor::AllocateTime() const {
 }
 
 void Executor::OutputFEN() const {
-  std::cout << "# FEN: " << player_->GetBoard()->ParseIntoFEN() << std::endl;
+  std::cout << "# FEN: " << player_builder_->board->ParseIntoFEN() << std::endl;
 }
