@@ -68,8 +68,7 @@ nakshatra = env.Program(
             movegen,
             board,
             common,
-            'pthread',
-            'rt'],
+            'pthread'],
     LIBPATH = '.')
 
 pns_analyze = env.Program(
@@ -116,6 +115,5 @@ unit_tests = test_env.Program(
             movegen,
             board,
             common,
-            'pthread',
-            'rt'],
+            'pthread'],
     LIBPATH = '.')

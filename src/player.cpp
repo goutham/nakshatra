@@ -48,7 +48,6 @@ Move Player::Search(const SearchParams& search_params,
       pns_extension.pn_search) {
     assert(pns_extension.pns_timer);
 
-    pns_extension.pns_timer->Reset();
     pns_extension.pns_timer->Run(
         time_for_move_centis *
         (pns_extension.pns_time_for_move_percent / 100.0));
@@ -98,7 +97,6 @@ Move Player::Search(const SearchParams& search_params,
     out << "# Time left: " << time_for_move_centis << " centis" << std::endl;
   }
 
-  timer_->Reset();
   timer_->Run(time_for_move_centis);
 
   SearchStats id_search_stats;
