@@ -51,17 +51,17 @@ public:
   std::unique_ptr<MoveGenerator> movegen;
   std::unique_ptr<Evaluator> evaluator;
   std::unique_ptr<TranspositionTable> transpos;
-  std::unique_ptr<Timer> timer_;
-  std::unique_ptr<Extensions> extensions_;
-  std::unique_ptr<Player> player_;
-  std::unique_ptr<EGTB> egtb_;
-  bool external_transpos_;
+  std::unique_ptr<Timer> timer;
+  std::unique_ptr<Extensions> extensions;
+  std::unique_ptr<Player> player;
+  std::unique_ptr<EGTB> egtb;
+  bool external_transpos;
 
   PlayerBuilder(Variant variant)
-      : variant(variant), external_transpos_(false) {}
+      : variant(variant), external_transpos(false) {}
 
   virtual ~PlayerBuilder() {
-    if (external_transpos_) {
+    if (external_transpos) {
       transpos.release();
     }
   }
@@ -78,9 +78,9 @@ public:
   virtual void
   InjectExternalTranspositionTable(TranspositionTable* ext_transpos) {
     transpos.reset(ext_transpos);
-    external_transpos_ = true;
+    external_transpos = true;
   }
-  virtual void BuildTimer() { timer_.reset(new Timer); }
+  virtual void BuildTimer() { timer.reset(new Timer); }
 
   // BuildExtensions only allocates memory for the extensions_ object. The
   // contents of the object will be initialized only after AddExtensions is
@@ -90,7 +90,7 @@ public:
   // require arbitrarily many other objects to have been built. The
   // side-effect of this is that none of the constructors which take extensions_
   // as an argument can refer to its contents.
-  virtual void BuildExtensions() { extensions_.reset(new Extensions()); }
+  virtual void BuildExtensions() { extensions.reset(new Extensions()); }
   virtual void AddExtensions() {}
 
   virtual void BuildPlayer() = 0;
@@ -116,9 +116,9 @@ public:
 
   void BuildPlayer() override {
     // For standard player, extensions_ could be NULL as of now.
-    player_.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
+    player.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
                              RawPtr(transpos), RawPtr(evaluator),
-                             RawPtr(timer_), egtb_.get(), extensions_.get()));
+                             RawPtr(timer), egtb.get(), extensions.get()));
   }
 };
 
@@ -138,29 +138,29 @@ public:
   void BuildEGTB() override {
     std::vector<std::string> egtb_filenames;
     assert(GlobFiles(ANTICHESS_EGTB_PATH_GLOB, &egtb_filenames));
-    egtb_.reset(new EGTB(egtb_filenames, *RawPtr(board)));
-    egtb_->Initialize();
+    egtb.reset(new EGTB(egtb_filenames, *RawPtr(board)));
+    egtb->Initialize();
   }
 
   void BuildEvaluator() override {
     evaluator.reset(
-        new EvalAntichess(RawPtr(board), RawPtr(movegen), RawPtr(egtb_)));
+        new EvalAntichess(RawPtr(board), RawPtr(movegen), RawPtr(egtb)));
   }
 
   void AddExtensions() override {
     if (enable_pns_) {
-      assert(extensions_ != nullptr);
-      extensions_->pns_extension.pns_timer.reset(new Timer);
-      extensions_->pns_extension.pn_search.reset(new PNSearch(
-          RawPtr(board), RawPtr(movegen), RawPtr(evaluator), egtb_.get(),
-          transpos.get(), extensions_->pns_extension.pns_timer.get()));
+      assert(extensions != nullptr);
+      extensions->pns_extension.pns_timer.reset(new Timer);
+      extensions->pns_extension.pn_search.reset(new PNSearch(
+          RawPtr(board), RawPtr(movegen), RawPtr(evaluator), egtb.get(),
+          transpos.get(), extensions->pns_extension.pns_timer.get()));
     }
   }
 
   void BuildPlayer() override {
-    player_.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
+    player.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
                              RawPtr(transpos), RawPtr(evaluator),
-                             RawPtr(timer_), egtb_.get(), RawPtr(extensions_)));
+                             RawPtr(timer), egtb.get(), RawPtr(extensions)));
   }
 
 private:
@@ -190,7 +190,7 @@ public:
     player_builder_->BuildTimer();
     player_builder_->BuildPlayer();
     player_builder_->AddExtensions(); // Must always be called last.
-    return player_builder_->player_.get();
+    return player_builder_->player.get();
   }
 
 private:

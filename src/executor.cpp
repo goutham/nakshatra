@@ -115,7 +115,7 @@ void Executor::StopPondering() {
   if (!pondering_thread_) {
     return;
   }
-  ponderer_builder_->timer_->Invalidate();
+  ponderer_builder_->timer->Invalidate();
   pondering_thread_->join();
   pondering_thread_.reset(nullptr);
 }
@@ -254,8 +254,8 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   if (quit_ && player_builder_.get()) {
     StopPondering();
     player_builder_->transpos->LogStats();
-    if (player_builder_->egtb_) {
-      player_builder_->egtb_->LogStats();
+    if (player_builder_->egtb) {
+      player_builder_->egtb->LogStats();
     }
   }
 }
