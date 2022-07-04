@@ -46,7 +46,7 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
     }
   }
 
-  const int self_moves = movegen_->CountMoves();
+  const int self_moves = CountMoves(Variant::ANTICHESS, board_);
   if (self_moves == 0) {
     return self_pieces < opp_pieces ? WIN
                                     : (self_pieces == opp_pieces ? DRAW : -WIN);
@@ -54,7 +54,7 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
 
   if (self_moves == 1) {
     MoveArray move_array;
-    movegen_->GenerateMoves(&move_array);
+    GenerateMoves(Variant::ANTICHESS, board_, &move_array);
     board_->MakeMove(move_array.get(0));
     const int eval = -EvaluateInternal(-beta, -alpha, max_depth);
     board_->UnmakeLastMove();
@@ -62,7 +62,7 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
   }
   if (self_moves <= 3 && max_depth > 0) {
     MoveArray move_array;
-    movegen_->GenerateMoves(&move_array);
+    GenerateMoves(Variant::ANTICHESS, board_, &move_array);
     int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       board_->MakeMove(move_array.get(i));
@@ -83,11 +83,11 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
   }
 
   board_->FlipSideToMove();
-  const int opp_moves = movegen_->CountMoves();
+  const int opp_moves = CountMoves(Variant::ANTICHESS, board_);
   board_->FlipSideToMove();
   if (opp_moves == 0) {
     MoveArray move_array;
-    movegen_->GenerateMoves(&move_array);
+    GenerateMoves(Variant::ANTICHESS, board_, &move_array);
     int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       const Move& move = move_array.get(i);
@@ -133,7 +133,7 @@ int EvalAntichess::Result() const {
     return DRAW;
   }
 
-  const int self_moves = movegen_->CountMoves();
+  const int self_moves = CountMoves(Variant::ANTICHESS, board_);
   if (self_moves == 0) {
     return self_pieces < opp_pieces ? WIN
                                     : (self_pieces == opp_pieces ? DRAW : -WIN);

@@ -31,7 +31,7 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
   StopWatch stop_watch;
   stop_watch.Start();
 
-  movegen_->GenerateMoves(&root_move_array_);
+  GenerateMoves(variant_, board_, &root_move_array_);
   out << "# Number of moves at root: " << root_move_array_.size() << std::endl;
 
   // No moves to make. Just return by setting invalid move. This can happen if
@@ -228,7 +228,6 @@ IterativeDeepener::FindBestMove(int max_depth) {
 
   struct Context {
     std::unique_ptr<Board> board;
-    std::unique_ptr<MoveGenerator> movegen;
     std::unique_ptr<Evaluator> eval;
     std::unique_ptr<MoveOrderer> move_orderer;
     std::unique_ptr<SearchAlgorithm> search_algorithm;
@@ -242,21 +241,17 @@ IterativeDeepener::FindBestMove(int max_depth) {
     Context ctxt;
     ctxt.board = std::make_unique<Board>(*board_);
     if (variant_ == Variant::STANDARD) {
-      ctxt.movegen = std::make_unique<MoveGeneratorStandard>(ctxt.board.get());
       ctxt.move_orderer =
           std::make_unique<StandardMoveOrderer>(ctxt.board.get());
-      ctxt.eval =
-          std::make_unique<EvalStandard>(ctxt.board.get(), ctxt.movegen.get());
+      ctxt.eval = std::make_unique<EvalStandard>(ctxt.board.get());
     } else if (variant_ == Variant::ANTICHESS) {
-      ctxt.movegen = std::make_unique<MoveGeneratorAntichess>(*ctxt.board);
-      ctxt.move_orderer = std::make_unique<AntichessMoveOrderer>(
-          ctxt.board.get(), ctxt.movegen.get());
-      ctxt.eval =
-          std::make_unique<EvalAntichess>(ctxt.board.get(), ctxt.movegen.get());
+      ctxt.move_orderer =
+          std::make_unique<AntichessMoveOrderer>(ctxt.board.get());
+      ctxt.eval = std::make_unique<EvalAntichess>(ctxt.board.get());
     }
     ctxt.search_algorithm = std::make_unique<SearchAlgorithm>(
-        variant_, ctxt.board.get(), ctxt.movegen.get(), ctxt.eval.get(), timer_,
-        transpos_, ctxt.move_orderer.get(), i == 0 ? nullptr : &abort);
+        variant_, ctxt.board.get(), ctxt.eval.get(), timer_, transpos_,
+        ctxt.move_orderer.get(), i == 0 ? nullptr : &abort);
     contexts.push_back(std::move(ctxt));
   }
 

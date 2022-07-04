@@ -188,7 +188,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
                 << move.str() << std::endl;
       player_builder_->board->MakeMove(move);
       OutputFEN();
-    } else if (!player_builder_->movegen->IsValidMove(move)) {
+    } else if (!IsValidMove(variant_, player_builder_->board.get(), move)) {
       response->push_back("Illegal move: " + move.str());
     } else {
       player_builder_->board->MakeMove(move);
@@ -211,21 +211,11 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   } else if (cmd == "unmake") {
     player_builder_->board->UnmakeLastMove();
   } else if (cmd == "movelist") {
-    MoveGenerator* movegen = nullptr;
-    switch (variant_) {
-    case Variant::STANDARD:
-      movegen = new MoveGeneratorStandard(player_builder_->board.get());
-      break;
-    case Variant::ANTICHESS:
-      movegen = new MoveGeneratorAntichess(*player_builder_->board);
-      break;
-    }
     MoveArray move_array;
-    movegen->GenerateMoves(&move_array);
+    GenerateMoves(variant_, player_builder_->board.get(), &move_array);
     for (size_t i = 0; i < move_array.size(); ++i) {
       std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
     }
-    delete movegen;
   } else if (cmd == "easy") {
     ponder_ = false;
   } else if (cmd == "hard") {

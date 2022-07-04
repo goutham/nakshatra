@@ -11,8 +11,7 @@ class MoveGenerator;
 
 class EvalAntichess : public Evaluator {
 public:
-  EvalAntichess(Board* board, MoveGenerator* movegen)
-      : board_(board), movegen_(movegen) {}
+  EvalAntichess(Board* board) : board_(board) {}
 
   int Evaluate(int alpha, int beta) override;
 
@@ -28,7 +27,6 @@ private:
   bool RivalBishopsOnOppositeColoredSquares() const;
 
   Board* board_;
-  MoveGenerator* movegen_;
 };
 
 #endif

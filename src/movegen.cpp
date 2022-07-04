@@ -349,86 +349,56 @@ void GenerateMoves_Standard(Board* board, MoveArray* move_array) {
 
 } // namespace
 
+void GenerateMoves(const Variant variant, Board* board, MoveArray* move_array) {
+  const Side side = board->SideToMove();
+  if (variant == Variant::STANDARD) {
+    if (side == Side::BLACK) {
+      GenerateMoves_Standard<Side::BLACK>(board, move_array);
+    } else {
+      assert(side == Side::WHITE);
+      GenerateMoves_Standard<Side::WHITE>(board, move_array);
+    }
+  } else {
+    assert(variant == Variant::ANTICHESS);
+    if (side == Side::BLACK) {
+      GenerateMoves_Antichess<Side::BLACK>(*board, move_array);
+    } else {
+      assert(side == Side::WHITE);
+      GenerateMoves_Antichess<Side::WHITE>(*board, move_array);
+    }
+  }
+}
+
+int CountMoves(const Variant variant, Board* board) {
+  const Side side = board->SideToMove();
+  if (variant == Variant::STANDARD) {
+    MoveArray move_array;
+    GenerateMoves(Variant::STANDARD, board, &move_array);
+    return move_array.size();
+  } else {
+    assert(variant == Variant::ANTICHESS);
+    int move_count = 0;
+    if (side == Side::BLACK) {
+      GenerateMoves_Antichess<Side::BLACK>(*board, &move_count);
+    } else {
+      assert(side == Side::WHITE);
+      GenerateMoves_Antichess<Side::WHITE>(*board, &move_count);
+    }
+    return move_count;
+  }
+}
+
+bool IsValidMove(const Variant variant, Board* board, const Move& move) {
+  MoveArray move_array;
+  GenerateMoves(variant, board, &move_array);
+  return move_array.Contains(move);
+}
+
 U64 ComputeAttackMap(const Board& board, const Side attacker_side) {
-  U64 attack_map = 0ULL;
-  switch (attacker_side) {
-  case Side::WHITE:
-    attack_map = GenerateAttackBitBoard<Side::WHITE>(board);
-    break;
-
-  case Side::BLACK:
-    attack_map = GenerateAttackBitBoard<Side::BLACK>(board);
-    break;
-
-  default:
-    throw std::runtime_error("Unknown side");
+  if (attacker_side == Side::WHITE) {
+    return GenerateAttackBitBoard<Side::WHITE>(board);
+  } else {
+    assert(attacker_side == Side::BLACK);
+    return GenerateAttackBitBoard<Side::BLACK>(board);
   }
-  return attack_map;
-}
-
-void MoveGeneratorAntichess::GenerateMoves(MoveArray* move_array) {
-  switch (board_.SideToMove()) {
-  case Side::BLACK:
-    GenerateMoves_Antichess<Side::BLACK>(board_, move_array);
-    break;
-
-  case Side::WHITE:
-    GenerateMoves_Antichess<Side::WHITE>(board_, move_array);
-    break;
-
-  default:
-    throw std::runtime_error("Unknown side");
-  }
-}
-
-int MoveGeneratorAntichess::CountMoves() {
-  int move_count = 0;
-
-  switch (board_.SideToMove()) {
-  case Side::BLACK:
-    GenerateMoves_Antichess<Side::BLACK>(board_, &move_count);
-    break;
-
-  case Side::WHITE:
-    GenerateMoves_Antichess<Side::WHITE>(board_, &move_count);
-    break;
-
-  default:
-    throw std::runtime_error("Unknown side");
-  }
-
-  return move_count;
-}
-
-bool MoveGeneratorAntichess::IsValidMove(const Move& move) {
-  MoveArray move_array;
-  GenerateMoves(&move_array);
-  return move_array.Contains(move);
-}
-
-void MoveGeneratorStandard::GenerateMoves(MoveArray* move_array) {
-  switch (board_->SideToMove()) {
-  case Side::BLACK:
-    GenerateMoves_Standard<Side::BLACK>(board_, move_array);
-    break;
-
-  case Side::WHITE:
-    GenerateMoves_Standard<Side::WHITE>(board_, move_array);
-    break;
-
-  default:
-    throw std::runtime_error("Unknown side");
-  }
-}
-
-int MoveGeneratorStandard::CountMoves() {
-  MoveArray move_array;
-  GenerateMoves(&move_array);
-  return move_array.size();
-}
-
-bool MoveGeneratorStandard::IsValidMove(const Move& move) {
-  MoveArray move_array;
-  GenerateMoves(&move_array);
-  return move_array.Contains(move);
 }

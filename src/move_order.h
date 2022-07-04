@@ -9,7 +9,6 @@
 #include <vector>
 
 class Board;
-class MoveGenerator;
 class Evaluator;
 
 enum class MoveType {
@@ -60,8 +59,7 @@ protected:
 
 class AntichessMoveOrderer : public MoveOrderer {
 public:
-  AntichessMoveOrderer(Board* board, MoveGenerator* movegen)
-      : board_(board), movegen_(movegen) {}
+  AntichessMoveOrderer(Board* board) : board_(board) {}
   ~AntichessMoveOrderer() override {}
 
   void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
@@ -69,7 +67,6 @@ public:
 
 private:
   Board* board_;
-  MoveGenerator* movegen_;
 };
 
 class StandardMoveOrderer : public MoveOrderer {

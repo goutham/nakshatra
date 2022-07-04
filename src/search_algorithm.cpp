@@ -75,7 +75,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   }
 
   MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
+  GenerateMoves(variant_, board_, &move_array);
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {

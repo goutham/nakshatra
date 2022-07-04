@@ -37,9 +37,9 @@ Move Player::Search(const SearchParams& search_params,
     }
   }
   // If the move is forced, just move.
-  if (movegen_->CountMoves() == 1) {
+  if (CountMoves(variant_, board_) == 1) {
     MoveArray move_array;
-    movegen_->GenerateMoves(&move_array);
+    GenerateMoves(variant_, board_, &move_array);
     return move_array.get(0);
   }
 
@@ -54,7 +54,7 @@ Move Player::Search(const SearchParams& search_params,
     StopWatch pn_stop_watch;
     pn_stop_watch.Start();
 
-    PNSearch pn_search(board_, movegen_, evaluator_, transpos_, &pns_timer);
+    PNSearch pn_search(board_, evaluator_, transpos_, &pns_timer);
     PNSParams pns_params;
     pns_params.quiet = !search_params.thinking_output;
     pns_params.max_nodes = 10000000;
@@ -103,8 +103,7 @@ Move Player::Search(const SearchParams& search_params,
   int move_score;
   Move best_move;
   EvalScoreOrderer root_move_orderer(board_, evaluator_);
-  IterativeDeepener id(variant_, board_, movegen_, timer_, transpos_,
-                       &root_move_orderer);
+  IterativeDeepener id(variant_, board_, timer_, transpos_, &root_move_orderer);
   id.Search(ids_params, &best_move, &move_score, &id_search_stats);
   return best_move;
 }

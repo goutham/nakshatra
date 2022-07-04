@@ -11,8 +11,7 @@ class MoveGenerator;
 // Evaluates the board to come up with a score.
 class EvalStandard : public Evaluator {
 public:
-  EvalStandard(Board* board, MoveGenerator* movegen)
-      : board_(board), movegen_(movegen), orderer_(board) {}
+  EvalStandard(Board* board) : board_(board), orderer_(board) {}
 
   int Evaluate(int alpha, int beta) override;
 
@@ -24,7 +23,6 @@ private:
   int PieceValDifference() const;
 
   Board* board_;
-  MoveGenerator* movegen_;
   StandardMoveOrderer orderer_;
 };
 

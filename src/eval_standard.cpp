@@ -15,7 +15,7 @@ int EvalStandard::StaticEval() const {
   const Side side = board_->SideToMove();
   if (attacks::InCheck(*board_, side)) {
     MoveArray move_array;
-    movegen_->GenerateMoves(&move_array);
+    GenerateMoves(Variant::STANDARD, board_, &move_array);
     const int self_moves = move_array.size();
     if (self_moves == 0) {
       return -WIN;
@@ -74,7 +74,7 @@ int EvalStandard::Quiesce(int alpha, int beta) {
     }
   }
   MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
+  GenerateMoves(Variant::STANDARD, board_, &move_array);
   MoveInfoArray move_info_array;
   orderer_.Order(move_array, nullptr, &move_info_array);
   for (size_t i = 0; i < move_info_array.size; ++i) {
@@ -100,7 +100,7 @@ int EvalStandard::Evaluate(int alpha, int beta) { return Quiesce(alpha, beta); }
 int EvalStandard::Result() const {
   const Side side = board_->SideToMove();
   MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
+  GenerateMoves(Variant::STANDARD, board_, &move_array);
   if (move_array.size() == 0) {
     const U64 attack_map = ComputeAttackMap(*board_, OppositeSide(side));
     if (attack_map & board_->BitBoard(PieceOfSide(KING, side))) {

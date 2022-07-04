@@ -8,7 +8,6 @@
 #include "eval_antichess.h"
 #include "eval_standard.h"
 #include "move_order.h"
-#include "movegen.h"
 #include "player.h"
 #include "pn_search.h"
 #include "search_algorithm.h"
@@ -46,7 +45,6 @@ class PlayerBuilder {
 public:
   const Variant variant;
   std::unique_ptr<Board> board;
-  std::unique_ptr<MoveGenerator> movegen;
   std::unique_ptr<Evaluator> evaluator;
   std::unique_ptr<TranspositionTable> transpos;
   std::unique_ptr<Timer> timer;
@@ -65,7 +63,6 @@ public:
   virtual void BuildBoard(const std::string& fen) {
     board.reset(new Board(variant, fen));
   }
-  virtual void BuildMoveGenerator() = 0;
   virtual void BuildEvaluator() = 0;
   virtual void BuildTranspositionTable() = 0;
 
@@ -87,18 +84,13 @@ public:
     transpos.reset(new TranspositionTable(STANDARD_TRANSPOS_SIZE));
   }
 
-  void BuildMoveGenerator() override {
-    movegen.reset(new MoveGeneratorStandard(RawPtr(board)));
-  }
-
   void BuildEvaluator() override {
-    evaluator.reset(new EvalStandard(RawPtr(board), RawPtr(movegen)));
+    evaluator.reset(new EvalStandard(RawPtr(board)));
   }
 
   void BuildPlayer() override {
-    player.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
-                            RawPtr(transpos), RawPtr(evaluator),
-                            RawPtr(timer)));
+    player.reset(new Player(variant, RawPtr(board), RawPtr(transpos),
+                            RawPtr(evaluator), RawPtr(timer)));
   }
 };
 
@@ -110,18 +102,13 @@ public:
     transpos.reset(new TranspositionTable(ANTICHESS_TRANSPOS_SIZE));
   }
 
-  void BuildMoveGenerator() override {
-    movegen.reset(new MoveGeneratorAntichess(*RawPtr(board)));
-  }
-
   void BuildEvaluator() override {
-    evaluator.reset(new EvalAntichess(RawPtr(board), RawPtr(movegen)));
+    evaluator.reset(new EvalAntichess(RawPtr(board)));
   }
 
   void BuildPlayer() override {
-    player.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
-                            RawPtr(transpos), RawPtr(evaluator),
-                            RawPtr(timer)));
+    player.reset(new Player(variant, RawPtr(board), RawPtr(transpos),
+                            RawPtr(evaluator), RawPtr(timer)));
   }
 };
 
@@ -141,7 +128,6 @@ public:
     } else {
       player_builder_->BuildBoard(options.init_fen);
     }
-    player_builder_->BuildMoveGenerator();
     player_builder_->BuildEvaluator();
     player_builder_->BuildTimer();
     player_builder_->BuildPlayer();

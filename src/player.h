@@ -23,18 +23,16 @@ struct SearchParams {
 
 class Player {
 public:
-  Player(const Variant variant, Board* board, MoveGenerator* movegen,
-         TranspositionTable* transpos, Evaluator* evaluator, Timer* timer)
-      : variant_(variant), board_(board), movegen_(movegen),
-        transpos_(transpos), evaluator_(evaluator), timer_(timer),
-        egtb_(GetEGTB(variant)) {}
+  Player(const Variant variant, Board* board, TranspositionTable* transpos,
+         Evaluator* evaluator, Timer* timer)
+      : variant_(variant), board_(board), transpos_(transpos),
+        evaluator_(evaluator), timer_(timer), egtb_(GetEGTB(variant)) {}
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
 private:
   const Variant variant_;
   Board* board_;
-  MoveGenerator* movegen_;
   TranspositionTable* transpos_;
   Evaluator* evaluator_;
   Timer* timer_;

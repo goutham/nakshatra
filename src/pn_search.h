@@ -71,9 +71,9 @@ class PNSearch {
 public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
-  PNSearch(Board* board, MoveGenerator* movegen, Evaluator* evaluator,
-           TranspositionTable* transpos, Timer* timer)
-      : board_(board), movegen_(movegen), evaluator_(evaluator),
+  PNSearch(Board* board, Evaluator* evaluator, TranspositionTable* transpos,
+           Timer* timer)
+      : board_(board), evaluator_(evaluator),
         egtb_(GetEGTB(Variant::ANTICHESS)), transpos_(transpos), timer_(timer) {
   }
 
@@ -107,7 +107,6 @@ private:
   void Delete(std::vector<PNSNode*>& pns_nodes);
 
   Board* board_;
-  MoveGenerator* movegen_;
   Evaluator* evaluator_;
   EGTB* egtb_;
   TranspositionTable* transpos_;

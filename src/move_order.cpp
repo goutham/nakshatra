@@ -22,7 +22,7 @@ void AntichessMoveOrderer::Order(const MoveArray& move_array,
       move_info_array->moves[i] = {move, MoveType::KILLER, 0};
     } else {
       board_->MakeMove(move);
-      const int opp_moves = movegen_->CountMoves();
+      const int opp_moves = CountMoves(Variant::ANTICHESS, board_);
       move_info_array->moves[i] = {move, MoveType::UNCATEGORIZED, -opp_moves};
       board_->UnmakeLastMove();
     }
