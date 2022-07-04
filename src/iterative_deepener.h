@@ -1,6 +1,7 @@
 #ifndef ITERATIVE_DEEPENER_H
 #define ITERATIVE_DEEPENER_H
 
+#include "egtb.h"
 #include "move.h"
 #include "move_array.h"
 #include "move_order.h"
@@ -11,7 +12,6 @@
 #include <vector>
 
 class Board;
-class EGTB;
 class MoveGenerator;
 class Timer;
 class TranspositionTable;
@@ -27,9 +27,10 @@ class IterativeDeepener {
 public:
   IterativeDeepener(const Variant variant, Board* board, MoveGenerator* movegen,
                     Timer* timer, TranspositionTable* transpos,
-                    MoveOrderer* move_orderer, EGTB* egtb)
+                    MoveOrderer* move_orderer)
       : variant_(variant), board_(board), movegen_(movegen), timer_(timer),
-        transpos_(transpos), move_orderer_(move_orderer), egtb_(egtb) {}
+        transpos_(transpos), move_orderer_(move_orderer),
+        egtb_(GetEGTB(variant)) {}
 
   void Search(const IDSParams& ids_params, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);

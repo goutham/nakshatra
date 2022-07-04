@@ -11,8 +11,8 @@ class MoveGenerator;
 
 class EvalAntichess : public Evaluator {
 public:
-  EvalAntichess(Board* board, MoveGenerator* movegen, EGTB* egtb)
-      : board_(board), movegen_(movegen), egtb_(egtb) {}
+  EvalAntichess(Board* board, MoveGenerator* movegen)
+      : board_(board), movegen_(movegen) {}
 
   int Evaluate(int alpha, int beta) override;
 
@@ -29,7 +29,6 @@ private:
 
   Board* board_;
   MoveGenerator* movegen_;
-  EGTB* egtb_;
 };
 
 #endif

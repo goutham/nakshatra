@@ -251,8 +251,8 @@ IterativeDeepener::FindBestMove(int max_depth) {
       ctxt.movegen = std::make_unique<MoveGeneratorAntichess>(*ctxt.board);
       ctxt.move_orderer = std::make_unique<AntichessMoveOrderer>(
           ctxt.board.get(), ctxt.movegen.get());
-      ctxt.eval = std::make_unique<EvalAntichess>(ctxt.board.get(),
-                                                  ctxt.movegen.get(), egtb_);
+      ctxt.eval =
+          std::make_unique<EvalAntichess>(ctxt.board.get(), ctxt.movegen.get());
     }
     ctxt.search_algorithm = std::make_unique<SearchAlgorithm>(
         variant_, ctxt.board.get(), ctxt.movegen.get(), ctxt.eval.get(), timer_,

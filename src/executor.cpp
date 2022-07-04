@@ -251,8 +251,9 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   if (quit_ && player_builder_.get()) {
     StopPondering();
     player_builder_->transpos->LogStats();
-    if (player_builder_->egtb) {
-      player_builder_->egtb->LogStats();
+    auto egtb = GetEGTB(variant_);
+    if (egtb) {
+      egtb->LogStats();
     }
   }
 }

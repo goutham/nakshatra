@@ -77,7 +77,7 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::ANTICHESS, *iter);
     MoveGeneratorAntichess movegen(board);
-    EvalAntichess eval(&board, &movegen, nullptr);
+    EvalAntichess eval(&board, &movegen);
     int result = eval.Result();
     if (result == WIN) {
       store->Put(board, 0, Move(), 1);

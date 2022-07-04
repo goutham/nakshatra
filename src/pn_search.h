@@ -2,6 +2,7 @@
 #define PN_SEARCH_H
 
 #include "common.h"
+#include "egtb.h"
 #include "move.h"
 
 #include <iostream>
@@ -10,7 +11,6 @@
 #define INF_NODES INT_MAX
 
 class Board;
-class EGTB;
 class Evaluator;
 class MoveGenerator;
 class Timer;
@@ -72,9 +72,10 @@ public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
   PNSearch(Board* board, MoveGenerator* movegen, Evaluator* evaluator,
-           EGTB* egtb, TranspositionTable* transpos, Timer* timer)
-      : board_(board), movegen_(movegen), evaluator_(evaluator), egtb_(egtb),
-        transpos_(transpos), timer_(timer) {}
+           TranspositionTable* transpos, Timer* timer)
+      : board_(board), movegen_(movegen), evaluator_(evaluator),
+        egtb_(GetEGTB(Variant::ANTICHESS)), transpos_(transpos), timer_(timer) {
+  }
 
   ~PNSearch() {
     if (pns_tree_) {

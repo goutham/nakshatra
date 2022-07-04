@@ -34,8 +34,9 @@ int EvalAntichess::EvaluateInternal(int alpha, int beta, int max_depth) {
   const int opp_pieces = board_->NumPieces(OppositeSide(side));
 
   if (self_pieces == 1 && opp_pieces == 1) {
-    if (egtb_) {
-      const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
+    auto egtb = GetEGTB(Variant::ANTICHESS);
+    if (egtb) {
+      const EGTBIndexEntry* egtb_entry = egtb->Lookup(*board_);
       if (egtb_entry) {
         return EGTBResult(*egtb_entry);
       }

@@ -1,6 +1,5 @@
 #include "board.h"
 #include "common.h"
-#include "egtb.h"
 #include "eval.h"
 #include "eval_antichess.h"
 #include "move.h"
@@ -49,19 +48,14 @@ int main(int argc, char* argv[]) {
 
   Board board(Variant::ANTICHESS, position);
   MoveGeneratorAntichess movegen(board);
-
-  std::vector<std::string> egtb_filenames;
-  assert(GlobFiles("egtb/*.egtb", &egtb_filenames));
-  EGTB egtb(egtb_filenames, board);
-  egtb.Initialize();
-  EvalAntichess eval(&board, &movegen, &egtb);
+  EvalAntichess eval(&board, &movegen);
 
   PNSParams pns_params;
   pns_params.max_nodes = max_nodes;
   pns_params.pns_type = pns_type;
   pns_params.quiet = false;
   pns_params.log_progress = 10;
-  PNSearch pn_search(&board, &movegen, &eval, &egtb, nullptr, nullptr);
+  PNSearch pn_search(&board, &movegen, &eval, nullptr, nullptr);
   PNSResult pns_result;
   pn_search.Search(pns_params, &pns_result);
   std::cout << "tree_size: " << pns_result.pns_tree->tree_size << "\n"

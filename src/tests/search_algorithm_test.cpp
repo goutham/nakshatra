@@ -24,8 +24,7 @@ TEST_F(SearchAlgorithmTest, Search) {
   Board board(Variant::ANTICHESS, board_str);
 
   std::unique_ptr<MoveGenerator> movegen(new MoveGeneratorAntichess(board));
-  std::unique_ptr<Evaluator> eval(
-      new EvalAntichess(&board, movegen.get(), nullptr));
+  std::unique_ptr<Evaluator> eval(new EvalAntichess(&board, movegen.get()));
   AntichessMoveOrderer orderer(&board, movegen.get());
 
   TranspositionTable transpos(1U << 20); // 1 MB

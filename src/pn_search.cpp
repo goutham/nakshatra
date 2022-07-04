@@ -240,7 +240,7 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
       if (result == UNKNOWN && egtb_ &&
           OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
           OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
-        const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
+        const EGTBIndexEntry* egtb_entry = egtb_->Lookup(*board_);
         if (egtb_entry) {
           result = EGTBResult(*egtb_entry);
         }

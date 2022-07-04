@@ -28,7 +28,7 @@ Move Player::Search(const SearchParams& search_params,
   if (egtb_ && OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
       OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
     out << "# Num pieces <= 2, looking up EGTB..." << std::endl;
-    const EGTBIndexEntry* egtb_entry = egtb_->Lookup();
+    const EGTBIndexEntry* egtb_entry = egtb_->Lookup(*board_);
     if (egtb_entry) {
       PrintEGTBIndexEntry(*egtb_entry);
       return egtb_entry->next_move;
@@ -54,8 +54,7 @@ Move Player::Search(const SearchParams& search_params,
     StopWatch pn_stop_watch;
     pn_stop_watch.Start();
 
-    PNSearch pn_search(board_, movegen_, evaluator_, egtb_, transpos_,
-                       &pns_timer);
+    PNSearch pn_search(board_, movegen_, evaluator_, transpos_, &pns_timer);
     PNSParams pns_params;
     pns_params.quiet = !search_params.thinking_output;
     pns_params.max_nodes = 10000000;
@@ -105,7 +104,7 @@ Move Player::Search(const SearchParams& search_params,
   Move best_move;
   EvalScoreOrderer root_move_orderer(board_, evaluator_);
   IterativeDeepener id(variant_, board_, movegen_, timer_, transpos_,
-                       &root_move_orderer, egtb_);
+                       &root_move_orderer);
   id.Search(ids_params, &best_move, &move_score, &id_search_stats);
   return best_move;
 }
