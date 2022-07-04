@@ -7,7 +7,6 @@
 
 class Board;
 class Evaluator;
-class Extensions;
 class MoveGenerator;
 class MoveOrderer;
 class Timer;

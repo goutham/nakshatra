@@ -61,7 +61,7 @@ void Executor::ReBuildPlayer() {
     player_builder_.reset(new StandardPlayerBuilder());
     break;
   case Variant::ANTICHESS:
-    player_builder_.reset(new AntichessPlayerBuilder(pns_));
+    player_builder_.reset(new AntichessPlayerBuilder());
     break;
   }
   assert(player_builder_.get() != nullptr);
@@ -78,7 +78,7 @@ void Executor::ReBuildPonderer() {
     ponderer_builder_.reset(new StandardPlayerBuilder());
     break;
   case Variant::ANTICHESS:
-    ponderer_builder_.reset(new AntichessPlayerBuilder(false));
+    ponderer_builder_.reset(new AntichessPlayerBuilder());
     break;
   }
   assert(ponderer_builder_.get() != nullptr);
@@ -105,6 +105,7 @@ void Executor::StartPondering(double time_centis) {
   pondering_thread_.reset(new std::thread([this] {
     SearchParams ponder_params;
     ponder_params.thinking_output = false;
+    ponder_params.antichess_pns = false;
     // Just seeding transposition table for now.
     this->ponderer_->Search(ponder_params, 300 * 100);
   }));
@@ -130,7 +131,6 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     StopPondering();
     variant_ = Variant::STANDARD;
     force_mode_ = false;
-    pns_ = true;
     think_time_centis_ = -1;
     search_params_.search_depth = MAX_DEPTH;
     ReBuildPlayer();
@@ -226,9 +226,6 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
     }
     delete movegen;
-  } else if (cmd == "nopns") {
-    pns_ = false;
-    ReBuildPlayer();
   } else if (cmd == "easy") {
     ponder_ = false;
   } else if (cmd == "hard") {

@@ -2,7 +2,6 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "extensions.h"
 #include "iterative_deepener.h"
 #include "movegen.h"
 #include "piece.h"
@@ -16,6 +15,10 @@
 #include <iostream>
 #include <signal.h>
 #include <sys/time.h>
+
+namespace {
+int kPNSTimeForMovePercent = 5;
+}
 
 Move Player::Search(const SearchParams& search_params,
                     long time_for_move_centis) {
@@ -44,22 +47,20 @@ Move Player::Search(const SearchParams& search_params,
   ids_params.thinking_output = search_params.thinking_output;
   ids_params.search_depth = search_params.search_depth;
 
-  if (const auto& pns_extension = extensions_->pns_extension;
-      pns_extension.pn_search) {
-    assert(pns_extension.pns_timer);
-
-    pns_extension.pns_timer->Run(
-        time_for_move_centis *
-        (pns_extension.pns_time_for_move_percent / 100.0));
+  if (variant_ == Variant::ANTICHESS && search_params.antichess_pns) {
+    Timer pns_timer;
+    pns_timer.Run(time_for_move_centis * (kPNSTimeForMovePercent / 100.0));
 
     StopWatch pn_stop_watch;
     pn_stop_watch.Start();
 
+    PNSearch pn_search(board_, movegen_, evaluator_, egtb_, transpos_,
+                       &pns_timer);
     PNSParams pns_params;
     pns_params.quiet = !search_params.thinking_output;
     pns_params.max_nodes = 10000000;
     PNSResult pns_result;
-    pns_extension.pn_search->Search(pns_params, &pns_result);
+    pn_search.Search(pns_params, &pns_result);
     pn_stop_watch.Stop();
     out << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
         << std::endl;
@@ -69,7 +70,7 @@ Move Player::Search(const SearchParams& search_params,
       PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);
       out << "# PNS best move: " << best_pns_move_stat.move.str() << std::endl;
       // If 100% time is used for PNS, return best move.
-      if (pns_extension.pns_time_for_move_percent >= 100) {
+      if (kPNSTimeForMovePercent >= 100) {
         return best_pns_move_stat.move;
       }
       // If the best move is WON, return.

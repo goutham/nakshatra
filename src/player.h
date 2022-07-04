@@ -14,21 +14,21 @@ class MoveGenerator;
 class MoveOrderer;
 class TranspositionTable;
 class Evaluator;
-struct Extensions;
 
 struct SearchParams {
   bool thinking_output = false;
   int search_depth = MAX_DEPTH;
+  bool antichess_pns = true;
 };
 
 class Player {
 public:
   Player(const Variant variant, Board* board, MoveGenerator* movegen,
          TranspositionTable* transpos, Evaluator* evaluator, Timer* timer,
-         EGTB* egtb, Extensions* extensions)
+         EGTB* egtb)
       : variant_(variant), board_(board), movegen_(movegen),
-        transpos_(transpos), evaluator_(evaluator), timer_(timer), egtb_(egtb),
-        extensions_(extensions) {}
+        transpos_(transpos), evaluator_(evaluator), timer_(timer), egtb_(egtb) {
+  }
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
@@ -40,7 +40,6 @@ private:
   Evaluator* evaluator_;
   Timer* timer_;
   EGTB* egtb_;
-  Extensions* extensions_;
 };
 
 #endif

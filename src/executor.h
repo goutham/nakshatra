@@ -63,7 +63,6 @@ private:
   Variant variant_;
   bool quit_ = false;
   bool force_mode_ = false;
-  bool pns_ = true;
   bool ponder_ = true;
   int think_time_centis_ = -1;
 

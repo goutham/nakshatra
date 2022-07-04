@@ -8,7 +8,6 @@
 #include "eval.h"
 #include "eval_antichess.h"
 #include "eval_standard.h"
-#include "extensions.h"
 #include "move_order.h"
 #include "movegen.h"
 #include "player.h"
@@ -52,13 +51,11 @@ public:
   std::unique_ptr<Evaluator> evaluator;
   std::unique_ptr<TranspositionTable> transpos;
   std::unique_ptr<Timer> timer;
-  std::unique_ptr<Extensions> extensions;
   std::unique_ptr<Player> player;
   std::unique_ptr<EGTB> egtb;
   bool external_transpos;
 
-  PlayerBuilder(Variant variant)
-      : variant(variant), external_transpos(false) {}
+  PlayerBuilder(Variant variant) : variant(variant), external_transpos(false) {}
 
   virtual ~PlayerBuilder() {
     if (external_transpos) {
@@ -82,17 +79,6 @@ public:
   }
   virtual void BuildTimer() { timer.reset(new Timer); }
 
-  // BuildExtensions only allocates memory for the extensions_ object. The
-  // contents of the object will be initialized only after AddExtensions is
-  // called. While building our object hierarchy, BuildExtensions will be
-  // called before building any other object and AddExtensions will be called
-  // after building all other objects. This is because some extensions may
-  // require arbitrarily many other objects to have been built. The
-  // side-effect of this is that none of the constructors which take extensions_
-  // as an argument can refer to its contents.
-  virtual void BuildExtensions() { extensions.reset(new Extensions()); }
-  virtual void AddExtensions() {}
-
   virtual void BuildPlayer() = 0;
 };
 
@@ -115,17 +101,15 @@ public:
   }
 
   void BuildPlayer() override {
-    // For standard player, extensions_ could be NULL as of now.
     player.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
-                             RawPtr(transpos), RawPtr(evaluator),
-                             RawPtr(timer), egtb.get(), extensions.get()));
+                            RawPtr(transpos), RawPtr(evaluator), RawPtr(timer),
+                            egtb.get()));
   }
 };
 
 class AntichessPlayerBuilder : public PlayerBuilder {
 public:
-  AntichessPlayerBuilder(const bool enable_pns = true)
-      : PlayerBuilder(Variant::ANTICHESS), enable_pns_(enable_pns) {}
+  AntichessPlayerBuilder() : PlayerBuilder(Variant::ANTICHESS) {}
 
   void BuildTranspositionTable() {
     transpos.reset(new TranspositionTable(ANTICHESS_TRANSPOS_SIZE));
@@ -147,24 +131,11 @@ public:
         new EvalAntichess(RawPtr(board), RawPtr(movegen), RawPtr(egtb)));
   }
 
-  void AddExtensions() override {
-    if (enable_pns_) {
-      assert(extensions != nullptr);
-      extensions->pns_extension.pns_timer.reset(new Timer);
-      extensions->pns_extension.pn_search.reset(new PNSearch(
-          RawPtr(board), RawPtr(movegen), RawPtr(evaluator), egtb.get(),
-          transpos.get(), extensions->pns_extension.pns_timer.get()));
-    }
-  }
-
   void BuildPlayer() override {
     player.reset(new Player(variant, RawPtr(board), RawPtr(movegen),
-                             RawPtr(transpos), RawPtr(evaluator),
-                             RawPtr(timer), egtb.get(), RawPtr(extensions)));
+                            RawPtr(transpos), RawPtr(evaluator), RawPtr(timer),
+                            egtb.get()));
   }
-
-private:
-  const bool enable_pns_;
 };
 
 class PlayerBuilderDirector {
@@ -183,13 +154,11 @@ public:
     } else {
       player_builder_->BuildBoard(options.init_fen);
     }
-    player_builder_->BuildExtensions(); // Must always be called first.
     player_builder_->BuildMoveGenerator();
     player_builder_->BuildEGTB();
     player_builder_->BuildEvaluator();
     player_builder_->BuildTimer();
     player_builder_->BuildPlayer();
-    player_builder_->AddExtensions(); // Must always be called last.
     return player_builder_->player.get();
   }
 
