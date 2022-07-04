@@ -55,7 +55,8 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     }
   }
 
-  if (max_depth <= 0 || (timer_ && timer_->Lapsed()) || (abort_ && *abort_)) {
+  if (max_depth <= 0 || (timer_ && timer_->Lapsed()) ||
+      (abort_ && abort_->load(std::memory_order_relaxed))) {
     return evaluator_->Evaluate(alpha, beta);
   }
 
@@ -159,7 +160,8 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     b = alpha + 1;
   }
 
-  if (!(timer_ && timer_->Lapsed()) && !(abort_ && *abort_)) {
+  if (!(timer_ && timer_->Lapsed()) &&
+      !(abort_ && abort_->load(std::memory_order_relaxed))) {
     transpos_->Put(score, node_type, max_depth, zkey, best_move);
   }
   return score;

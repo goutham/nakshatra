@@ -3,6 +3,8 @@
 
 #include "move.h"
 
+#include <atomic>
+
 class Board;
 class Evaluator;
 class Extensions;
@@ -17,7 +19,7 @@ public:
   SearchAlgorithm(const Variant variant, Board* board, MoveGenerator* movegen,
                   Evaluator* evaluator, Timer* timer,
                   TranspositionTable* transpos, MoveOrderer* move_orderer,
-                  bool* abort = nullptr)
+                  std::atomic<bool>* abort = nullptr)
       : variant_(variant), board_(board), movegen_(movegen), timer_(timer),
         evaluator_(evaluator), transpos_(transpos), move_orderer_(move_orderer),
         abort_(abort) {}
@@ -35,7 +37,7 @@ private:
   Evaluator* evaluator_;
   TranspositionTable* transpos_;
   MoveOrderer* move_orderer_;
-  bool* abort_ = nullptr;
+  std::atomic<bool>* abort_ = nullptr;
   Move killers_[MAX_DEPTH][2];
 };
 

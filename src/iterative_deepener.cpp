@@ -17,6 +17,7 @@
 #include "transpos.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstring>
 #include <iostream>
 #include <memory>
@@ -234,7 +235,7 @@ IterativeDeepener::FindBestMove(int max_depth) {
     IterationStat istat;
   };
 
-  bool abort = false;
+  std::atomic<bool> abort(false);
   std::vector<Context> contexts;
   const int num_threads = (max_depth < 3 ? 1 : NUM_THREADS);
   for (int i = 0; i < num_threads; ++i) {
@@ -268,7 +269,7 @@ IterativeDeepener::FindBestMove(int max_depth) {
 
   auto& ctxt = contexts.at(0);
   search(0, ctxt.board.get(), ctxt.search_algorithm.get(), &ctxt.istat);
-  abort = true;
+  abort.store(true, std::memory_order_relaxed);
 
   for (auto& thread : threads) {
     thread.join();
