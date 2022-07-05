@@ -46,53 +46,13 @@ struct PrefMoves {
   Move killer2 = Move();
 };
 
-class MoveOrderer {
-public:
-  virtual ~MoveOrderer() {}
+void OrderMoves(const Variant variant, Board* board,
+                const MoveArray& move_array, const PrefMoves* pref_moves,
+                MoveInfoArray* move_info_array);
 
-  virtual void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-                     MoveInfoArray* move_info_array) = 0;
-
-protected:
-  MoveOrderer() {}
-};
-
-class AntichessMoveOrderer : public MoveOrderer {
-public:
-  AntichessMoveOrderer(Board* board) : board_(board) {}
-  ~AntichessMoveOrderer() override {}
-
-  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-             MoveInfoArray* move_info_array) override;
-
-private:
-  Board* board_;
-};
-
-class StandardMoveOrderer : public MoveOrderer {
-public:
-  StandardMoveOrderer(Board* board) : board_(board) {}
-  ~StandardMoveOrderer() override {}
-
-  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-             MoveInfoArray* move_info_array) override;
-
-private:
-  Board* board_;
-};
-
-class EvalScoreOrderer : public MoveOrderer {
-public:
-  EvalScoreOrderer(const Variant variant, Board* board)
-      : variant_(variant), board_(board) {}
-  ~EvalScoreOrderer() override {}
-
-  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-             MoveInfoArray* move_info_array) override;
-
-private:
-  const Variant variant_;
-  Board* board_;
-};
+void OrderMovesByEvalScore(const Variant variant, Board* board,
+                           const MoveArray& move_array,
+                           const PrefMoves* pref_moves,
+                           MoveInfoArray* move_info_array);
 
 #endif

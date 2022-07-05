@@ -81,8 +81,7 @@ int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta) {
   MoveArray move_array;
   GenerateMoves(Variant::STANDARD, board, &move_array);
   MoveInfoArray move_info_array;
-  StandardMoveOrderer orderer(board);
-  orderer.Order(move_array, nullptr, &move_info_array);
+  OrderMoves(Variant::STANDARD, board, move_array, nullptr, &move_info_array);
   for (size_t i = 0; i < move_info_array.size; ++i) {
     const MoveInfo& move_info = move_info_array.moves[i];
     const Move move = move_info.move;

@@ -1,7 +1,7 @@
 #include "executor.h"
 #include "board.h"
 #include "common.h"
-#include "creation.h"
+#include "config.h"
 #include "eval.h"
 #include "move.h"
 #include "move_array.h"
@@ -26,22 +26,56 @@ double Interpolate(double x1, double y1, double x2, double y2, double x3) {
   return y1 + ((y2 - y1) / (x2 - x1)) * (x3 - x1);
 }
 
+int TransposSize(const Variant variant) {
+  if (variant == Variant::STANDARD) {
+    return STANDARD_TRANSPOS_SIZE;
+  }
+  assert(variant == Variant::ANTICHESS);
+  return ANTICHESS_TRANSPOS_SIZE;
+}
+
 } // namespace
 
+ExecutionContext::ExecutionContext(const Variant variant,
+                                   const ExecutionContext::Options& options)
+    : variant(variant) {
+  timer = std::make_unique<Timer>();
+  if (options.init_fen.empty()) {
+    board = std::make_unique<Board>(variant);
+  } else {
+    board = std::make_unique<Board>(variant, options.init_fen);
+  }
+  if (options.transpos) {
+    transpos = std::unique_ptr<TranspositionTable>(options.transpos);
+    own_transpos = false;
+  } else {
+    transpos = std::make_unique<TranspositionTable>(TransposSize(variant));
+    own_transpos = true;
+  }
+  player = std::make_unique<Player>(variant, board.get(), transpos.get(),
+                                    timer.get());
+}
+
+ExecutionContext::~ExecutionContext() {
+  if (!own_transpos) {
+    transpos.release();
+  }
+}
+
 bool Executor::MatchResult(vector<string>* response) {
-  int result = EvalResult(variant_, player_builder_->board.get());
+  int result = EvalResult(variant_, main_context_->board.get());
   if (!(result == WIN || result == -WIN || result == DRAW)) {
     return false;
   }
   string match_result;
   if (result == WIN) {
-    if (player_builder_->board->SideToMove() == Side::WHITE) {
+    if (main_context_->board->SideToMove() == Side::WHITE) {
       match_result = "1-0 {White Wins}";
     } else {
       match_result = "0-1 {Black Wins}";
     }
   } else if (result == -WIN) {
-    if (player_builder_->board->SideToMove() == Side::WHITE) {
+    if (main_context_->board->SideToMove() == Side::WHITE) {
       match_result = "0-1 {Black Wins}";
     } else {
       match_result = "1-0 {White Wins}";
@@ -53,42 +87,20 @@ bool Executor::MatchResult(vector<string>* response) {
   return true;
 }
 
-void Executor::ReBuildPlayer() {
-  switch (variant_) {
-  case Variant::STANDARD:
-    player_builder_.reset(new StandardPlayerBuilder());
-    break;
-  case Variant::ANTICHESS:
-    player_builder_.reset(new AntichessPlayerBuilder());
-    break;
-  }
-  assert(player_builder_.get() != nullptr);
-  PlayerBuilderDirector director(player_builder_.get());
-  BuildOptions options;
+void Executor::RebuildMainContext() {
+  ExecutionContext::Options options;
   options.init_fen = init_fen_;
-  player_ = director.Build(options);
-  assert(player_ != nullptr);
+  main_context_ = std::make_unique<ExecutionContext>(variant_, options);
 }
 
-void Executor::ReBuildPonderer() {
-  switch (variant_) {
-  case Variant::STANDARD:
-    ponderer_builder_.reset(new StandardPlayerBuilder());
-    break;
-  case Variant::ANTICHESS:
-    ponderer_builder_.reset(new AntichessPlayerBuilder());
-    break;
+void Executor::RebuildPonderingContext() {
+  if (!main_context_) {
+    RebuildMainContext();
   }
-  assert(ponderer_builder_.get() != nullptr);
-  if (!player_) {
-    ReBuildPlayer();
-  }
-  PlayerBuilderDirector director(ponderer_builder_.get());
-  BuildOptions options;
-  options.init_fen = player_builder_->board->ParseIntoFEN();
-  options.transpos = player_builder_->transpos.get();
-  ponderer_ = director.Build(options);
-  assert(ponderer_ != nullptr);
+  ExecutionContext::Options options;
+  options.init_fen = main_context_->board->ParseIntoFEN();
+  options.transpos = main_context_->transpos.get();
+  pondering_context_ = std::make_unique<ExecutionContext>(variant_, options);
 }
 
 void Executor::StartPondering(double time_centis) {
@@ -99,13 +111,13 @@ void Executor::StartPondering(double time_centis) {
   if (time_centis < 500 || pondering_thread_) {
     return;
   }
-  ReBuildPonderer();
+  RebuildPonderingContext();
   pondering_thread_.reset(new std::thread([this] {
     SearchParams ponder_params;
     ponder_params.thinking_output = false;
     ponder_params.antichess_pns = false;
     // Just seeding transposition table for now.
-    this->ponderer_->Search(ponder_params, 300 * 100);
+    this->pondering_context_->player->Search(ponder_params, 300 * 100);
   }));
 }
 
@@ -114,7 +126,7 @@ void Executor::StopPondering() {
   if (!pondering_thread_) {
     return;
   }
-  ponderer_builder_->timer->Invalidate();
+  pondering_context_->timer->Invalidate();
   pondering_thread_->join();
   pondering_thread_.reset(nullptr);
 }
@@ -131,7 +143,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     force_mode_ = false;
     think_time_centis_ = -1;
     search_params_.search_depth = MAX_DEPTH;
-    ReBuildPlayer();
+    RebuildMainContext();
   } else if (cmd == "variant") {
     StopPondering();
     force_mode_ = false;
@@ -140,7 +152,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
         cmd_parts.at(1) == "S") {
       variant_ = Variant::ANTICHESS;
     }
-    ReBuildPlayer();
+    RebuildMainContext();
   } else if (cmd == "sd") {
     std::stringstream ss(cmd_parts.at(1));
     ss >> search_params_.search_depth;
@@ -155,16 +167,17 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     if (!init_fen_.empty()) {
       init_fen_.erase(init_fen_.end() - 1);
     }
-    ReBuildPlayer();
+    RebuildMainContext();
   } else if (cmd == "go") {
-    if (player_ == nullptr) {
-      ReBuildPlayer();
+    if (!main_context_) {
+      RebuildMainContext();
     }
     StopPondering();
     if (!MatchResult(response)) {
       force_mode_ = false;
-      Move cmove = player_->Search(search_params_, AllocateTime());
-      player_builder_->board->MakeMove(cmove);
+      Move cmove =
+          main_context_->player->Search(search_params_, AllocateTime());
+      main_context_->board->MakeMove(cmove);
       OutputFEN();
       response->push_back("move " + cmove.str());
       StartPondering(time_centis_);
@@ -176,24 +189,25 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   } else if (cmd == "otim") {
     otime_centis_ = StringToInt(cmd_parts.at(1));
   } else if (cmd == "usermove") {
-    if (player_ == nullptr) {
-      ReBuildPlayer();
+    if (!main_context_) {
+      RebuildMainContext();
     }
     StopPondering();
     Move move(cmd_parts.at(1));
     if (force_mode_) {
-      std::cout << "# Forced: " << player_builder_->board->ParseIntoFEN() << "|"
+      std::cout << "# Forced: " << main_context_->board->ParseIntoFEN() << "|"
                 << move.str() << std::endl;
-      player_builder_->board->MakeMove(move);
+      main_context_->board->MakeMove(move);
       OutputFEN();
-    } else if (!IsValidMove(variant_, player_builder_->board.get(), move)) {
+    } else if (!IsValidMove(variant_, main_context_->board.get(), move)) {
       response->push_back("Illegal move: " + move.str());
     } else {
-      player_builder_->board->MakeMove(move);
+      main_context_->board->MakeMove(move);
       OutputFEN();
       if (!MatchResult(response)) {
-        Move cmove = player_->Search(search_params_, AllocateTime());
-        player_builder_->board->MakeMove(cmove);
+        Move cmove =
+            main_context_->player->Search(search_params_, AllocateTime());
+        main_context_->board->MakeMove(cmove);
         OutputFEN();
         response->push_back("move " + cmove.str());
         if (!MatchResult(response)) {
@@ -205,12 +219,12 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     StopPondering();
     force_mode_ = true;
   } else if (cmd == "sb") {
-    player_builder_->board->DebugPrintBoard();
+    main_context_->board->DebugPrintBoard();
   } else if (cmd == "unmake") {
-    player_builder_->board->UnmakeLastMove();
+    main_context_->board->UnmakeLastMove();
   } else if (cmd == "movelist") {
     MoveArray move_array;
-    GenerateMoves(variant_, player_builder_->board.get(), &move_array);
+    GenerateMoves(variant_, main_context_->board.get(), &move_array);
     for (size_t i = 0; i < move_array.size(); ++i) {
       std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
     }
@@ -236,9 +250,9 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     response->push_back("Error (Unknown command): " + command_str);
   }
 
-  if (quit_ && player_builder_.get()) {
+  if (quit_ && main_context_.get()) {
     StopPondering();
-    player_builder_->transpos->LogStats();
+    main_context_->transpos->LogStats();
     auto egtb = GetEGTB(variant_);
     if (egtb) {
       egtb->LogStats();
@@ -267,5 +281,5 @@ long Executor::AllocateTime() const {
 }
 
 void Executor::OutputFEN() const {
-  std::cout << "# FEN: " << player_builder_->board->ParseIntoFEN() << std::endl;
+  std::cout << "# FEN: " << main_context_->board->ParseIntoFEN() << std::endl;
 }

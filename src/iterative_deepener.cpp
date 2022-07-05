@@ -44,7 +44,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
     root_move_array_ = ids_params.pruned_ordered_moves;
   } else {
     MoveInfoArray move_info_array;
-    move_orderer_->Order(root_move_array_, nullptr, &move_info_array);
+    OrderMovesByEvalScore(variant_, board_, root_move_array_, nullptr,
+                          &move_info_array);
     root_move_array_.clear();
     for (size_t i = 0; i < move_info_array.size; ++i) {
       root_move_array_.Add(move_info_array.moves[i].move);
@@ -225,7 +226,6 @@ IterativeDeepener::FindBestMove(int max_depth) {
 
   struct Context {
     std::unique_ptr<Board> board;
-    std::unique_ptr<MoveOrderer> move_orderer;
     std::unique_ptr<SearchAlgorithm> search_algorithm;
     IterationStat istat;
   };
@@ -236,16 +236,9 @@ IterativeDeepener::FindBestMove(int max_depth) {
   for (int i = 0; i < num_threads; ++i) {
     Context ctxt;
     ctxt.board = std::make_unique<Board>(*board_);
-    if (variant_ == Variant::STANDARD) {
-      ctxt.move_orderer =
-          std::make_unique<StandardMoveOrderer>(ctxt.board.get());
-    } else if (variant_ == Variant::ANTICHESS) {
-      ctxt.move_orderer =
-          std::make_unique<AntichessMoveOrderer>(ctxt.board.get());
-    }
-    ctxt.search_algorithm = std::make_unique<SearchAlgorithm>(
-        variant_, ctxt.board.get(), timer_, transpos_, ctxt.move_orderer.get(),
-        i == 0 ? nullptr : &abort);
+    ctxt.search_algorithm =
+        std::make_unique<SearchAlgorithm>(variant_, ctxt.board.get(), timer_,
+                                          transpos_, i == 0 ? nullptr : &abort);
     contexts.push_back(std::move(ctxt));
   }
 

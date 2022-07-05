@@ -16,10 +16,10 @@ struct SearchStats;
 class SearchAlgorithm {
 public:
   SearchAlgorithm(const Variant variant, Board* board, Timer* timer,
-                  TranspositionTable* transpos, MoveOrderer* move_orderer,
+                  TranspositionTable* transpos,
                   std::atomic<bool>* abort = nullptr)
       : variant_(variant), board_(board), timer_(timer), transpos_(transpos),
-        move_orderer_(move_orderer), abort_(abort) {}
+        abort_(abort) {}
 
   int Search(int max_depth, int alpha, int beta, SearchStats* search_stats);
 
@@ -31,7 +31,6 @@ private:
   Board* board_;
   Timer* timer_;
   TranspositionTable* transpos_;
-  MoveOrderer* move_orderer_;
   std::atomic<bool>* abort_ = nullptr;
   Move killers_[MAX_DEPTH][2];
 };

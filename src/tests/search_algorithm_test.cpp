@@ -20,12 +20,9 @@ TEST_F(SearchAlgorithmTest, Search) {
   // This position can be won by white at depth 7.
   const std::string board_str = "8/R7/8/8/8/8/8/7k w - -";
   Board board(Variant::ANTICHESS, board_str);
-
-  AntichessMoveOrderer orderer(&board);
-
   TranspositionTable transpos(1U << 20); // 1 MB
   SearchAlgorithm search_algorithm(Variant::ANTICHESS, &board, nullptr,
-                                   &transpos, &orderer);
+                                   &transpos);
   // Not a win up to depth 6.
   for (int depth = 1; depth <= 6; ++depth) {
     SearchStats search_stats;
@@ -42,8 +39,7 @@ TEST_F(SearchAlgorithmTest, Search) {
 TEST_F(SearchAlgorithmTest, Repetition) {
   Board board(Variant::STANDARD, "k7/n7/8/8/8/7B/7N/7K w - -");
   TranspositionTable tt(256);
-  StandardMoveOrderer orderer(&board);
-  SearchAlgorithm search(Variant::STANDARD, &board, nullptr, &tt, &orderer);
+  SearchAlgorithm search(Variant::STANDARD, &board, nullptr, &tt);
   SearchStats stats;
   EXPECT_GT(search.Search(1, -INF, INF, &stats), 0);
   board.MakeMove(Move("h2f3"));

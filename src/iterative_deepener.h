@@ -26,9 +26,9 @@ struct IDSParams {
 class IterativeDeepener {
 public:
   IterativeDeepener(const Variant variant, Board* board, Timer* timer,
-                    TranspositionTable* transpos, MoveOrderer* move_orderer)
+                    TranspositionTable* transpos)
       : variant_(variant), board_(board), timer_(timer), transpos_(transpos),
-        move_orderer_(move_orderer), egtb_(GetEGTB(variant)) {}
+        egtb_(GetEGTB(variant)) {}
 
   void Search(const IDSParams& ids_params, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);
@@ -79,7 +79,6 @@ private:
   Board* board_;
   Timer* timer_;
   TranspositionTable* transpos_;
-  MoveOrderer* move_orderer_;
   EGTB* egtb_;
 
   // Maintains list of moves at the root node.

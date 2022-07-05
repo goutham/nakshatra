@@ -2,16 +2,35 @@
 #define EXECUTOR_H
 
 #include "common.h"
-#include "creation.h"
 #include "player.h"
+#include "transpos.h"
 
 #include <memory>
 #include <string>
 #include <thread>
 #include <vector>
 
-class Player;
-class TranspositionTable;
+struct ExecutionContext final {
+  Variant variant;
+  std::unique_ptr<Timer> timer;
+  std::unique_ptr<Board> board;
+  std::unique_ptr<TranspositionTable> transpos;
+  std::unique_ptr<Player> player;
+  bool own_transpos = true;
+
+  struct Options {
+    // Initial FEN to construct board with. If this is empty, use default
+    // initialization for given variant.
+    std::string init_fen;
+
+    // Use this transposition table instead of building a new one. This is
+    // useful
+    TranspositionTable* transpos = nullptr;
+  };
+
+  ExecutionContext(const Variant variant, const Options& options);
+  ~ExecutionContext();
+};
 
 class Executor {
 public:
@@ -19,9 +38,8 @@ public:
 
   Executor(const std::string& name, const std::string& init_fen,
            const Variant variant)
-      : name_(name), player_(nullptr), variant_(variant),
-        time_centis_(10 * 60 * 100), otime_centis_(10 * 60 * 100),
-        init_fen_(init_fen) {}
+      : name_(name), variant_(variant), time_centis_(10 * 60 * 100),
+        otime_centis_(10 * 60 * 100), init_fen_(init_fen) {}
 
   ~Executor() { StopPondering(); }
 
@@ -39,13 +57,11 @@ private:
   // false.
   bool MatchResult(std::vector<std::string>* response);
 
-  void ReBuildPlayer();
-  void ReBuildPonderer();
+  void RebuildMainContext();
+  void RebuildPonderingContext();
 
   void StartPondering(double time_centis);
   void StopPondering();
-
-  void MakeRandomMove(std::vector<std::string>* response);
 
   void OutputFEN() const;
 
@@ -54,11 +70,9 @@ private:
   // Name of the computer player.
   std::string name_;
 
-  Player* player_;   // not owned.
-  Player* ponderer_; // not owned.
   SearchParams search_params_;
-  std::unique_ptr<PlayerBuilder> player_builder_;
-  std::unique_ptr<PlayerBuilder> ponderer_builder_;
+  std::unique_ptr<ExecutionContext> main_context_;
+  std::unique_ptr<ExecutionContext> pondering_context_;
   std::unique_ptr<std::thread> pondering_thread_;
   Variant variant_;
   bool quit_ = false;

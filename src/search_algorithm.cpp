@@ -87,7 +87,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   pref_moves.tt_move = tt_move;
   pref_moves.killer1 = killers_[ply][0];
   pref_moves.killer2 = killers_[ply][1];
-  move_orderer_->Order(move_array, &pref_moves, &move_info_array);
+  OrderMoves(variant_, board_, move_array, &pref_moves, &move_info_array);
 
   // Decide whether to use null move pruning. Disabled for ANTICHESS where
   // zugzwangs are common.

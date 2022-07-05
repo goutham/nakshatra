@@ -102,8 +102,7 @@ Move Player::Search(const SearchParams& search_params,
   SearchStats id_search_stats;
   int move_score;
   Move best_move;
-  EvalScoreOrderer root_move_orderer(variant_, board_);
-  IterativeDeepener id(variant_, board_, timer_, transpos_, &root_move_orderer);
+  IterativeDeepener id(variant_, board_, timer_, transpos_);
   id.Search(ids_params, &best_move, &move_score, &id_search_stats);
   return best_move;
 }
