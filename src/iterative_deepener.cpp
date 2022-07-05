@@ -3,9 +3,6 @@
 #include "common.h"
 #include "config.h"
 #include "egtb.h"
-#include "eval.h"
-#include "eval_antichess.h"
-#include "eval_standard.h"
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -228,7 +225,6 @@ IterativeDeepener::FindBestMove(int max_depth) {
 
   struct Context {
     std::unique_ptr<Board> board;
-    std::unique_ptr<Evaluator> eval;
     std::unique_ptr<MoveOrderer> move_orderer;
     std::unique_ptr<SearchAlgorithm> search_algorithm;
     IterationStat istat;
@@ -243,15 +239,13 @@ IterativeDeepener::FindBestMove(int max_depth) {
     if (variant_ == Variant::STANDARD) {
       ctxt.move_orderer =
           std::make_unique<StandardMoveOrderer>(ctxt.board.get());
-      ctxt.eval = std::make_unique<EvalStandard>(ctxt.board.get());
     } else if (variant_ == Variant::ANTICHESS) {
       ctxt.move_orderer =
           std::make_unique<AntichessMoveOrderer>(ctxt.board.get());
-      ctxt.eval = std::make_unique<EvalAntichess>(ctxt.board.get());
     }
     ctxt.search_algorithm = std::make_unique<SearchAlgorithm>(
-        variant_, ctxt.board.get(), ctxt.eval.get(), timer_, transpos_,
-        ctxt.move_orderer.get(), i == 0 ? nullptr : &abort);
+        variant_, ctxt.board.get(), timer_, transpos_, ctxt.move_orderer.get(),
+        i == 0 ? nullptr : &abort);
     contexts.push_back(std::move(ctxt));
   }
 

@@ -57,7 +57,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
 
   if (max_depth <= 0 || (timer_ && timer_->Lapsed()) ||
       (abort_ && abort_->load(std::memory_order_relaxed))) {
-    return evaluator_->Evaluate(alpha, beta);
+    return Evaluate(variant_, board_, alpha, beta);
   }
 
   Move tt_move = Move();
@@ -79,7 +79,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
-    return evaluator_->Evaluate(alpha, beta);
+    return Evaluate(variant_, board_, alpha, beta);
   }
 
   MoveInfoArray move_info_array;

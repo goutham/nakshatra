@@ -11,7 +11,6 @@
 #define INF_NODES INT_MAX
 
 class Board;
-class Evaluator;
 class MoveGenerator;
 class Timer;
 class TranspositionTable;
@@ -71,11 +70,9 @@ class PNSearch {
 public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
-  PNSearch(Board* board, Evaluator* evaluator, TranspositionTable* transpos,
-           Timer* timer)
-      : board_(board), evaluator_(evaluator),
-        egtb_(GetEGTB(Variant::ANTICHESS)), transpos_(transpos), timer_(timer) {
-  }
+  PNSearch(Board* board, TranspositionTable* transpos, Timer* timer)
+      : board_(board), egtb_(GetEGTB(Variant::ANTICHESS)), transpos_(transpos),
+        timer_(timer) {}
 
   ~PNSearch() {
     if (pns_tree_) {
@@ -107,7 +104,6 @@ private:
   void Delete(std::vector<PNSNode*>& pns_nodes);
 
   Board* board_;
-  Evaluator* evaluator_;
   EGTB* egtb_;
   TranspositionTable* transpos_;
   Timer* timer_;

@@ -3,8 +3,6 @@
 #include "common.h"
 #include "creation.h"
 #include "eval.h"
-#include "eval_antichess.h"
-#include "eval_standard.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
@@ -31,7 +29,7 @@ double Interpolate(double x1, double y1, double x2, double y2, double x3) {
 } // namespace
 
 bool Executor::MatchResult(vector<string>* response) {
-  int result = player_builder_->evaluator->Result();
+  int result = EvalResult(variant_, player_builder_->board.get());
   if (!(result == WIN || result == -WIN || result == DRAW)) {
     return false;
   }

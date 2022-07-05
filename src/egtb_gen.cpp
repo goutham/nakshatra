@@ -2,7 +2,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "eval_antichess.h"
+#include "eval.h"
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
@@ -76,8 +76,7 @@ void EGTBStore::Write() {
 void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::ANTICHESS, *iter);
-    EvalAntichess eval(&board);
-    int result = eval.Result();
+    int result = EvalResult(Variant::ANTICHESS, &board);
     if (result == WIN) {
       store->Put(board, 0, Move(), 1);
       iter = all_pos_list.erase(iter);

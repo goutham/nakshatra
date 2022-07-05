@@ -1,8 +1,6 @@
 #include "board.h"
 #include "common.h"
 #include "eval.h"
-#include "eval_antichess.h"
-#include "eval_standard.h"
 #include "move_order.h"
 #include "movegen.h"
 #include "search_algorithm.h"
@@ -23,12 +21,11 @@ TEST_F(SearchAlgorithmTest, Search) {
   const std::string board_str = "8/R7/8/8/8/8/8/7k w - -";
   Board board(Variant::ANTICHESS, board_str);
 
-  std::unique_ptr<Evaluator> eval(new EvalAntichess(&board));
   AntichessMoveOrderer orderer(&board);
 
   TranspositionTable transpos(1U << 20); // 1 MB
-  SearchAlgorithm search_algorithm(Variant::ANTICHESS, &board, eval.get(),
-                                   nullptr, &transpos, &orderer);
+  SearchAlgorithm search_algorithm(Variant::ANTICHESS, &board, nullptr,
+                                   &transpos, &orderer);
   // Not a win up to depth 6.
   for (int depth = 1; depth <= 6; ++depth) {
     SearchStats search_stats;
@@ -44,11 +41,9 @@ TEST_F(SearchAlgorithmTest, Search) {
 
 TEST_F(SearchAlgorithmTest, Repetition) {
   Board board(Variant::STANDARD, "k7/n7/8/8/8/7B/7N/7K w - -");
-  EvalStandard eval(&board);
   TranspositionTable tt(256);
   StandardMoveOrderer orderer(&board);
-  SearchAlgorithm search(Variant::STANDARD, &board, &eval, nullptr, &tt,
-                         &orderer);
+  SearchAlgorithm search(Variant::STANDARD, &board, nullptr, &tt, &orderer);
   SearchStats stats;
   EXPECT_GT(search.Search(1, -INF, INF, &stats), 0);
   board.MakeMove(Move("h2f3"));

@@ -5,8 +5,6 @@
 #include "common.h"
 #include "config.h"
 #include "eval.h"
-#include "eval_antichess.h"
-#include "eval_standard.h"
 #include "move_order.h"
 #include "player.h"
 #include "pn_search.h"
@@ -45,7 +43,6 @@ class PlayerBuilder {
 public:
   const Variant variant;
   std::unique_ptr<Board> board;
-  std::unique_ptr<Evaluator> evaluator;
   std::unique_ptr<TranspositionTable> transpos;
   std::unique_ptr<Timer> timer;
   std::unique_ptr<Player> player;
@@ -63,7 +60,6 @@ public:
   virtual void BuildBoard(const std::string& fen) {
     board.reset(new Board(variant, fen));
   }
-  virtual void BuildEvaluator() = 0;
   virtual void BuildTranspositionTable() = 0;
 
   virtual void
@@ -84,13 +80,9 @@ public:
     transpos.reset(new TranspositionTable(STANDARD_TRANSPOS_SIZE));
   }
 
-  void BuildEvaluator() override {
-    evaluator.reset(new EvalStandard(RawPtr(board)));
-  }
-
   void BuildPlayer() override {
-    player.reset(new Player(variant, RawPtr(board), RawPtr(transpos),
-                            RawPtr(evaluator), RawPtr(timer)));
+    player.reset(
+        new Player(variant, RawPtr(board), RawPtr(transpos), RawPtr(timer)));
   }
 };
 
@@ -102,13 +94,9 @@ public:
     transpos.reset(new TranspositionTable(ANTICHESS_TRANSPOS_SIZE));
   }
 
-  void BuildEvaluator() override {
-    evaluator.reset(new EvalAntichess(RawPtr(board)));
-  }
-
   void BuildPlayer() override {
-    player.reset(new Player(variant, RawPtr(board), RawPtr(transpos),
-                            RawPtr(evaluator), RawPtr(timer)));
+    player.reset(
+        new Player(variant, RawPtr(board), RawPtr(transpos), RawPtr(timer)));
   }
 };
 
@@ -128,7 +116,6 @@ public:
     } else {
       player_builder_->BuildBoard(options.init_fen);
     }
-    player_builder_->BuildEvaluator();
     player_builder_->BuildTimer();
     player_builder_->BuildPlayer();
     return player_builder_->player.get();

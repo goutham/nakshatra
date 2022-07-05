@@ -54,7 +54,7 @@ Move Player::Search(const SearchParams& search_params,
     StopWatch pn_stop_watch;
     pn_stop_watch.Start();
 
-    PNSearch pn_search(board_, evaluator_, transpos_, &pns_timer);
+    PNSearch pn_search(board_, transpos_, &pns_timer);
     PNSParams pns_params;
     pns_params.quiet = !search_params.thinking_output;
     pns_params.max_nodes = 10000000;
@@ -102,7 +102,7 @@ Move Player::Search(const SearchParams& search_params,
   SearchStats id_search_stats;
   int move_score;
   Move best_move;
-  EvalScoreOrderer root_move_orderer(board_, evaluator_);
+  EvalScoreOrderer root_move_orderer(variant_, board_);
   IterativeDeepener id(variant_, board_, timer_, transpos_, &root_move_orderer);
   id.Search(ids_params, &best_move, &move_score, &id_search_stats);
   return best_move;

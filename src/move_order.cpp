@@ -72,7 +72,7 @@ void EvalScoreOrderer::Order(const MoveArray& move_array,
     const Move move = move_array.get(i);
     board_->MakeMove(move);
     move_info_array->moves[i] = {move, MoveType::UNCATEGORIZED,
-                                 -eval_->Evaluate(-INF, +INF)};
+                                 -Evaluate(variant_, board_, -INF, +INF)};
     board_->UnmakeLastMove();
   }
   move_info_array->Sort();

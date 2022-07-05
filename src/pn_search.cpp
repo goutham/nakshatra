@@ -236,7 +236,7 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
       child->move = move_array.get(i);
       child->parent = pns_node;
       board_->MakeMove(child->move);
-      int result = evaluator_->Result();
+      int result = EvalResult(Variant::ANTICHESS, board_);
       if (result == UNKNOWN && egtb_ &&
           OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
           OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {

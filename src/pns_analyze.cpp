@@ -1,7 +1,5 @@
 #include "board.h"
 #include "common.h"
-#include "eval.h"
-#include "eval_antichess.h"
 #include "move.h"
 #include "movegen.h"
 #include "pn_search.h"
@@ -47,14 +45,13 @@ int main(int argc, char* argv[]) {
   const std::string position = GetPosition(argv[3]);
 
   Board board(Variant::ANTICHESS, position);
-  EvalAntichess eval(&board);
 
   PNSParams pns_params;
   pns_params.max_nodes = max_nodes;
   pns_params.pns_type = pns_type;
   pns_params.quiet = false;
   pns_params.log_progress = 10;
-  PNSearch pn_search(&board, &eval, nullptr, nullptr);
+  PNSearch pn_search(&board, nullptr, nullptr);
   PNSResult pns_result;
   pn_search.Search(pns_params, &pns_result);
   std::cout << "tree_size: " << pns_result.pns_tree->tree_size << "\n"
