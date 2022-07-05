@@ -10,25 +10,25 @@ class Timer;
 class TranspositionTable;
 struct SearchStats;
 
-class SearchAlgorithm {
+class PVSearch {
 public:
-  SearchAlgorithm(const Variant variant, Board* board, Timer* timer,
-                  TranspositionTable* transpos,
-                  std::atomic<bool>* abort = nullptr)
+  PVSearch(const Variant variant, Board* board, Timer* timer,
+           TranspositionTable* transpos,
+           std::atomic<bool>* abort_flag = nullptr)
       : variant_(variant), board_(board), timer_(timer), transpos_(transpos),
-        abort_(abort) {}
+        abort_flag_(abort_flag) {}
 
   int Search(int max_depth, int alpha, int beta, SearchStats* search_stats);
 
 private:
-  int NegaScout(int max_depth, int alpha, int beta, int ply,
-                bool allow_null_move, SearchStats* search_stats);
+  int PVS(int max_depth, int alpha, int beta, int ply, bool allow_null_move,
+          SearchStats* search_stats);
 
   const Variant variant_;
   Board* board_;
   Timer* timer_;
   TranspositionTable* transpos_;
-  std::atomic<bool>* abort_ = nullptr;
+  std::atomic<bool>* abort_flag_ = nullptr;
   Move killers_[MAX_DEPTH][2];
 };
 

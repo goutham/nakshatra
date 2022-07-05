@@ -1,4 +1,4 @@
-#include "search_algorithm.h"
+#include "pv_search.h"
 #include "attacks.h"
 #include "board.h"
 #include "common.h"
@@ -37,12 +37,12 @@ bool Probe(int max_depth, int alpha, int beta, U64 zkey,
 }
 } // namespace
 
-int SearchAlgorithm::Search(int max_depth, int alpha, int beta,
+int PVSearch::Search(int max_depth, int alpha, int beta,
                             SearchStats* search_stats) {
-  return NegaScout(max_depth, alpha, beta, 0, true, search_stats);
+  return PVS(max_depth, alpha, beta, 0, true, search_stats);
 }
 
-int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
+int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
                                bool allow_null_move,
                                SearchStats* search_stats) {
   ++search_stats->nodes_searched;
@@ -56,7 +56,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   }
 
   if (max_depth <= 0 || (timer_ && timer_->Lapsed()) ||
-      (abort_ && abort_->load(std::memory_order_relaxed))) {
+      (abort_flag_ && abort_flag_->load(std::memory_order_relaxed))) {
     return Evaluate(variant_, board_, alpha, beta);
   }
 
@@ -68,7 +68,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   // Search to a reduced depth to get a good first move to try (internal
   // iterative deepening).
   if (!tt_move.is_valid() && max_depth > 3) {
-    NegaScout(max_depth - 3, alpha, beta, ply, allow_null_move, search_stats);
+    PVS(max_depth - 3, alpha, beta, ply, allow_null_move, search_stats);
     if (Probe(max_depth, alpha, beta, zkey, transpos_, &tt_score, &tt_move)) {
       return tt_score;
     }
@@ -97,7 +97,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
                     !attacks::InCheck(*board_, board_->SideToMove());
   if (allow_null_move) {
     board_->MakeNullMove();
-    int value = -NegaScout(max_depth - 2, -beta, -beta + 1, ply + 1,
+    int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1,
                            !allow_null_move, search_stats);
     board_->UnmakeNullMove();
     if (value >= beta) {
@@ -119,7 +119,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;
     if (index >= 4 && max_depth >= 2) {
-      value = -NegaScout(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
+      value = -PVS(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
                          search_stats);
       lmr_triggered = true;
     }
@@ -128,13 +128,13 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     // search.
     if (!lmr_triggered || value > alpha) {
       value =
-          -NegaScout(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
+          -PVS(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
       value =
-          -NegaScout(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
+          -PVS(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
     }
 
     board_->UnmakeLastMove();
@@ -161,7 +161,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   }
 
   if (!(timer_ && timer_->Lapsed()) &&
-      !(abort_ && abort_->load(std::memory_order_relaxed))) {
+      !(abort_flag_ && abort_flag_->load(std::memory_order_relaxed))) {
     transpos_->Put(score, node_type, max_depth, zkey, best_move);
   }
   return score;

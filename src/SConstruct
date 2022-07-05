@@ -45,7 +45,7 @@ player = env.Library(
               'pn_search.cpp',
               'id_search.cpp',
               'move_order.cpp',
-              'search_algorithm.cpp',
+              'pv_search.cpp',
               'transpos.cpp'])
 
 executor = env.Library(
