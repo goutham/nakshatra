@@ -9,7 +9,6 @@
 #include <vector>
 
 class Board;
-class Evaluator;
 
 enum class MoveType {
   TT,

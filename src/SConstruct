@@ -43,7 +43,7 @@ player = env.Library(
     target = 'player',
     source = ['player.cpp',
               'pn_search.cpp',
-              'iterative_deepener.cpp',
+              'id_search.cpp',
               'move_order.cpp',
               'search_algorithm.cpp',
               'transpos.cpp'])

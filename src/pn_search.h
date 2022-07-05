@@ -11,7 +11,6 @@
 #define INF_NODES INT_MAX
 
 class Board;
-class MoveGenerator;
 class Timer;
 class TranspositionTable;
 

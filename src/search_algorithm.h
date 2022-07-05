@@ -6,9 +6,6 @@
 #include <atomic>
 
 class Board;
-class Evaluator;
-class MoveGenerator;
-class MoveOrderer;
 class Timer;
 class TranspositionTable;
 struct SearchStats;

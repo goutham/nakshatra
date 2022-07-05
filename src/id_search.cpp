@@ -1,4 +1,4 @@
-#include "iterative_deepener.h"
+#include "id_search.h"
 #include "board.h"
 #include "common.h"
 #include "config.h"
@@ -17,14 +17,79 @@
 #include <atomic>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <thread>
 
-void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
-                               int* best_move_score,
+namespace {
+
+class IterativeDeepener {
+public:
+  IterativeDeepener(const Variant variant, const IDSParams& ids_params,
+                    Board* board, Timer* timer, TranspositionTable* transpos)
+      : variant_(variant), ids_params_(ids_params), board_(board),
+        timer_(timer), transpos_(transpos), egtb_(GetEGTB(variant)) {}
+
+  void Search(Move* best_move, int* best_move_score,
+              SearchStats* id_search_stats);
+
+private:
+  // Stat associated with each iteration of the iterative deepening search
+  // is stored in the corresponding IterationStat object and pushed in the
+  // iteration_stats_ vector.
+  struct IterationStat {
+    // Depth of search for current iteration.
+    int depth = 0;
+
+    // Best move found in this iteration.
+    Move best_move = Move();
+
+    // Score for the best move.
+    int score = 0;
+
+    // Number of root moves completely searched before timer
+    // expired at current depth.
+    int root_moves_covered = 0;
+
+    // Stats for searching to this depth.
+    std::vector<std::pair<Move, SearchStats>> move_stats;
+
+    void MergeStats(const IterationStat& istat) {
+      std::map<Move, SearchStats> stats_by_move;
+      for (const auto& item : istat.move_stats) {
+        stats_by_move[item.first] = item.second;
+      }
+      for (auto& item : move_stats) {
+        auto iter = stats_by_move.find(item.first);
+        if (iter != stats_by_move.end()) {
+          item.second.nodes_searched += iter->second.nodes_searched;
+        }
+      }
+    }
+  };
+
+  IterationStat FindBestMove(int max_depth);
+
+  // Returns principal variation as a string of moves.
+  std::string PV(const Move& root_move);
+
+  const Variant variant_;
+  IDSParams ids_params_;
+  Board* board_;
+  Timer* timer_;
+  TranspositionTable* transpos_;
+  EGTB* egtb_;
+
+  // Maintains list of moves at the root node.
+  MoveArray root_move_array_;
+
+  std::vector<IterationStat> iteration_stats_;
+};
+
+void IterativeDeepener::Search(Move* best_move, int* best_move_score,
                                SearchStats* id_search_stats) {
-  std::ostream& out = ids_params.thinking_output ? std::cout : nullstream;
+  std::ostream& out = ids_params_.thinking_output ? std::cout : nullstream;
   StopWatch stop_watch;
   stop_watch.Start();
 
@@ -40,8 +105,8 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
   }
 
   // Caller provided move ordering and pruning takes priority over move orderer.
-  if (ids_params.pruned_ordered_moves.size()) {
-    root_move_array_ = ids_params.pruned_ordered_moves;
+  if (ids_params_.pruned_ordered_moves.size()) {
+    root_move_array_ = ids_params_.pruned_ordered_moves;
   } else {
     MoveInfoArray move_info_array;
     OrderMovesByEvalScore(variant_, board_, root_move_array_, nullptr,
@@ -64,7 +129,7 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
   }
 
   // Iterative deepening starts here.
-  for (unsigned depth = 1; depth <= ids_params.search_depth; ++depth) {
+  for (unsigned depth = 1; depth <= ids_params_.search_depth; ++depth) {
     if (!iteration_stats_.empty()) {
       auto& move_stats = iteration_stats_.back().move_stats;
       // A common technique for root move ordering: sort moves by size of their
@@ -80,7 +145,7 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
         root_move_array_.Add(stat.first);
       }
       root_move_array_.PushToFront(iteration_stats_.back().best_move);
-    } else if (ids_params.pruned_ordered_moves.size() == 0) {
+    } else if (ids_params_.pruned_ordered_moves.size() == 0) {
       bool found = false;
       const TTData tdata = transpos_->Get(board_->ZobristKey(), &found);
       if (found && tdata.best_move.is_valid()) {
@@ -111,9 +176,9 @@ void IterativeDeepener::Search(const IDSParams& ids_params, Move* best_move,
     }
 
     // XBoard style thinking output.
-    if (ids_params.thinking_output) {
+    if (ids_params_.thinking_output) {
       char output[256];
-      snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth, last_istat.score,
+      snprintf(output, 256, "%2d\t%5d\t%5d\t%10llu\t%s", depth, last_istat.score,
                int(elapsed_time), id_search_stats->nodes_searched,
                PV(*best_move).c_str());
       std::cout << output << std::endl;
@@ -291,4 +356,13 @@ std::string IterativeDeepener::PV(const Move& root_move) {
 
   board_->UnmakeLastMove(); // root move
   return pv;
+}
+
+} // namespace
+
+void IDSearch(const Variant variant, const IDSParams& ids_params, Board* board,
+              Timer* timer, TranspositionTable* transpos, Move* best_move,
+              int* best_move_score, SearchStats* id_search_stats) {
+  return IterativeDeepener(variant, ids_params, board, timer, transpos)
+      .Search(best_move, best_move_score, id_search_stats);
 }

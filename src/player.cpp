@@ -2,7 +2,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "iterative_deepener.h"
+#include "id_search.h"
 #include "movegen.h"
 #include "piece.h"
 #include "pn_search.h"
@@ -102,7 +102,7 @@ Move Player::Search(const SearchParams& search_params,
   SearchStats id_search_stats;
   int move_score;
   Move best_move;
-  IterativeDeepener id(variant_, board_, timer_, transpos_);
-  id.Search(ids_params, &best_move, &move_score, &id_search_stats);
+  IDSearch(variant_, ids_params, board_, timer_, transpos_, &best_move,
+           &move_score, &id_search_stats);
   return best_move;
 }

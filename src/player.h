@@ -10,10 +10,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
-class MoveGenerator;
-class MoveOrderer;
 class TranspositionTable;
-class Evaluator;
 
 struct SearchParams {
   bool thinking_output = false;
