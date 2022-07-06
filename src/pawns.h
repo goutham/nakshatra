@@ -1,6 +1,5 @@
 #include "common.h"
-
-class Board;
+#include "board.h"
 
 namespace pawns {
 

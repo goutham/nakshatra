@@ -37,13 +37,15 @@ bool Probe(int max_depth, int alpha, int beta, U64 zkey,
 }
 } // namespace
 
-int PVSearch::Search(int max_depth, int alpha, int beta,
-                     SearchStats* search_stats) {
+template <Variant variant>
+int PVSearch<variant>::Search(int max_depth, int alpha, int beta,
+                              SearchStats* search_stats) {
   return PVS(max_depth, alpha, beta, 0, true, search_stats);
 }
 
-int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
-                  bool allow_null_move, SearchStats* search_stats) {
+template <Variant variant>
+int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
+                           bool allow_null_move, SearchStats* search_stats) {
   ++search_stats->nodes_searched;
   const U64 zkey = board_->ZobristKey();
 
@@ -55,7 +57,7 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
   }
 
   if (max_depth <= 0 || (timer_ && timer_->Lapsed())) {
-    return Evaluate(variant_, board_, alpha, beta);
+    return Evaluate<variant>(board_, alpha, beta);
   }
 
   Move tt_move = Move();
@@ -73,11 +75,11 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
   }
 
   MoveArray move_array;
-  GenerateMoves(variant_, board_, &move_array);
+  GenerateMoves<variant>(board_, &move_array);
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
-    return Evaluate(variant_, board_, alpha, beta);
+    return Evaluate<variant>(board_, alpha, beta);
   }
 
   MoveInfoArray move_info_array;
@@ -85,11 +87,11 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
   pref_moves.tt_move = tt_move;
   pref_moves.killer1 = killers_[ply][0];
   pref_moves.killer2 = killers_[ply][1];
-  OrderMoves(variant_, board_, move_array, &pref_moves, &move_info_array);
+  OrderMoves<variant>(board_, move_array, &pref_moves, &move_info_array);
 
   // Decide whether to use null move pruning. Disabled for ANTICHESS where
   // zugzwangs are common.
-  allow_null_move = variant_ != Variant::ANTICHESS && allow_null_move &&
+  allow_null_move = variant != Variant::ANTICHESS && allow_null_move &&
                     max_depth >= 2 && beta < INF &&
                     PopCount(board_->BitBoard()) > 10 &&
                     !attacks::InCheck(*board_, board_->SideToMove());
@@ -144,7 +146,7 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
         if (alpha >= beta) {
           node_type = FAIL_HIGH_NODE;
           if (move != tt_move && move != killers_[ply][0] &&
-              (variant_ == Variant::ANTICHESS ||
+              (variant == Variant::ANTICHESS ||
                board_->PieceAt(move.to_index()) == NULLPIECE)) {
             killers_[ply][1] = killers_[ply][0];
             killers_[ply][0] = move;
@@ -161,3 +163,6 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
   }
   return score;
 }
+
+template class PVSearch<Variant::STANDARD>;
+template class PVSearch<Variant::ANTICHESS>;

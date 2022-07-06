@@ -349,48 +349,56 @@ void GenerateMoves_Standard(Board* board, MoveArray* move_array) {
 
 } // namespace
 
-void GenerateMoves(const Variant variant, Board* board, MoveArray* move_array) {
+template <>
+void GenerateMoves<Variant::STANDARD>(Board* board, MoveArray* move_array) {
   const Side side = board->SideToMove();
-  if (variant == Variant::STANDARD) {
-    if (side == Side::BLACK) {
-      GenerateMoves_Standard<Side::BLACK>(board, move_array);
-    } else {
-      assert(side == Side::WHITE);
-      GenerateMoves_Standard<Side::WHITE>(board, move_array);
-    }
+  if (side == Side::BLACK) {
+    GenerateMoves_Standard<Side::BLACK>(board, move_array);
   } else {
-    assert(variant == Variant::ANTICHESS);
-    if (side == Side::BLACK) {
-      GenerateMoves_Antichess<Side::BLACK>(*board, move_array);
-    } else {
-      assert(side == Side::WHITE);
-      GenerateMoves_Antichess<Side::WHITE>(*board, move_array);
-    }
+    assert(side == Side::WHITE);
+    GenerateMoves_Standard<Side::WHITE>(board, move_array);
   }
 }
 
-int CountMoves(const Variant variant, Board* board) {
+template <>
+void GenerateMoves<Variant::ANTICHESS>(Board* board, MoveArray* move_array) {
   const Side side = board->SideToMove();
-  if (variant == Variant::STANDARD) {
-    MoveArray move_array;
-    GenerateMoves(Variant::STANDARD, board, &move_array);
-    return move_array.size();
+  if (side == Side::BLACK) {
+    GenerateMoves_Antichess<Side::BLACK>(*board, move_array);
   } else {
-    assert(variant == Variant::ANTICHESS);
-    int move_count = 0;
-    if (side == Side::BLACK) {
-      GenerateMoves_Antichess<Side::BLACK>(*board, &move_count);
-    } else {
-      assert(side == Side::WHITE);
-      GenerateMoves_Antichess<Side::WHITE>(*board, &move_count);
-    }
-    return move_count;
+    assert(side == Side::WHITE);
+    GenerateMoves_Antichess<Side::WHITE>(*board, move_array);
   }
+}
+
+template <>
+int CountMoves<Variant::STANDARD>(Board* board) {
+  MoveArray move_array;
+  GenerateMoves<Variant::STANDARD>(board, &move_array);
+  return move_array.size();
+}
+
+template <>
+int CountMoves<Variant::ANTICHESS>(Board* board) {
+  const Side side = board->SideToMove();
+  int move_count = 0;
+  if (side == Side::BLACK) {
+    GenerateMoves_Antichess<Side::BLACK>(*board, &move_count);
+  } else {
+    assert(side == Side::WHITE);
+    GenerateMoves_Antichess<Side::WHITE>(*board, &move_count);
+  }
+  return move_count;
 }
 
 bool IsValidMove(const Variant variant, Board* board, const Move& move) {
   MoveArray move_array;
-  GenerateMoves(variant, board, &move_array);
+  if (variant == Variant::STANDARD) {
+    GenerateMoves<Variant::STANDARD>(board, &move_array);
+  } else {
+    assert(variant == Variant::ANTICHESS);
+    GenerateMoves<Variant::ANTICHESS>(board, &move_array);
+  }
   return move_array.Contains(move);
 }
 

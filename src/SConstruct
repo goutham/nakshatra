@@ -35,7 +35,6 @@ evaluator = env.Library(
     target = 'evaluator',
     source = ['eval_antichess.cpp',
               'eval_standard.cpp',
-              'eval.cpp',
               'egtb.cpp',
               'pawns.cpp'])
 

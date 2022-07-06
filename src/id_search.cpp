@@ -22,57 +22,57 @@
 
 namespace {
 
+// Stat associated with each iteration of the iterative deepening search
+// is stored in the corresponding IterationStat object and pushed in the
+// iteration_stats_ vector.
+struct IterationStat {
+  // Depth of search for current iteration.
+  int depth = 0;
+
+  // Best move found in this iteration.
+  Move best_move = Move();
+
+  // Score for the best move.
+  int score = 0;
+
+  // Number of root moves completely searched before timer
+  // expired at current depth.
+  int root_moves_covered = 0;
+
+  // Stats for searching to this depth.
+  std::vector<std::pair<Move, SearchStats>> move_stats;
+
+  void MergeStats(const IterationStat& istat) {
+    std::map<Move, SearchStats> stats_by_move;
+    for (const auto& item : istat.move_stats) {
+      stats_by_move[item.first] = item.second;
+    }
+    for (auto& item : move_stats) {
+      auto iter = stats_by_move.find(item.first);
+      if (iter != stats_by_move.end()) {
+        item.second.nodes_searched += iter->second.nodes_searched;
+      }
+    }
+  }
+};
+
+template <Variant variant>
 class IterativeDeepener {
 public:
-  IterativeDeepener(const Variant variant, const IDSParams& ids_params,
-                    Board* board, Timer* timer, TranspositionTable* transpos)
-      : variant_(variant), ids_params_(ids_params), board_(board),
-        timer_(timer), transpos_(transpos), egtb_(GetEGTB(variant)) {}
+  IterativeDeepener(const IDSParams& ids_params, Board* board, Timer* timer,
+                    TranspositionTable* transpos)
+      : ids_params_(ids_params), board_(board), timer_(timer),
+        transpos_(transpos), egtb_(GetEGTB(variant)) {}
 
   void Search(Move* best_move, int* best_move_score,
               SearchStats* id_search_stats);
 
 private:
-  // Stat associated with each iteration of the iterative deepening search
-  // is stored in the corresponding IterationStat object and pushed in the
-  // iteration_stats_ vector.
-  struct IterationStat {
-    // Depth of search for current iteration.
-    int depth = 0;
-
-    // Best move found in this iteration.
-    Move best_move = Move();
-
-    // Score for the best move.
-    int score = 0;
-
-    // Number of root moves completely searched before timer
-    // expired at current depth.
-    int root_moves_covered = 0;
-
-    // Stats for searching to this depth.
-    std::vector<std::pair<Move, SearchStats>> move_stats;
-
-    void MergeStats(const IterationStat& istat) {
-      std::map<Move, SearchStats> stats_by_move;
-      for (const auto& item : istat.move_stats) {
-        stats_by_move[item.first] = item.second;
-      }
-      for (auto& item : move_stats) {
-        auto iter = stats_by_move.find(item.first);
-        if (iter != stats_by_move.end()) {
-          item.second.nodes_searched += iter->second.nodes_searched;
-        }
-      }
-    }
-  };
-
   IterationStat FindBestMove(int max_depth);
 
   // Returns principal variation as a string of moves.
   std::string PV(const Move& root_move);
 
-  const Variant variant_;
   IDSParams ids_params_;
   Board* board_;
   Timer* timer_;
@@ -85,13 +85,14 @@ private:
   std::vector<IterationStat> iteration_stats_;
 };
 
-void IterativeDeepener::Search(Move* best_move, int* best_move_score,
-                               SearchStats* id_search_stats) {
+template <Variant variant>
+void IterativeDeepener<variant>::Search(Move* best_move, int* best_move_score,
+                                        SearchStats* id_search_stats) {
   std::ostream& out = ids_params_.thinking_output ? std::cout : nullstream;
   StopWatch stop_watch;
   stop_watch.Start();
 
-  GenerateMoves(variant_, board_, &root_move_array_);
+  GenerateMoves<variant>(board_, &root_move_array_);
   out << "# Number of moves at root: " << root_move_array_.size() << std::endl;
 
   // No moves to make. Just return by setting invalid move. This can happen if
@@ -107,8 +108,8 @@ void IterativeDeepener::Search(Move* best_move, int* best_move_score,
     root_move_array_ = ids_params_.pruned_ordered_moves;
   } else {
     MoveInfoArray move_info_array;
-    OrderMovesByEvalScore(variant_, board_, root_move_array_, nullptr,
-                          &move_info_array);
+    OrderMovesByEvalScore<variant>(board_, root_move_array_, nullptr,
+                                   &move_info_array);
     root_move_array_.clear();
     for (size_t i = 0; i < move_info_array.size; ++i) {
       root_move_array_.Add(move_info_array.moves[i].move);
@@ -189,7 +190,7 @@ void IterativeDeepener::Search(Move* best_move, int* best_move_score,
 
 // Lower accuracy but saves time on "easy" moves.
 #ifdef SAVETIME
-    if (variant_ == Variant::STANDARD) {
+    if (variant == Variant::STANDARD) {
       if (depth >= 8) {
         int iters = 0;
         for (auto it = iteration_stats_.rbegin(); it != iteration_stats_.rend();
@@ -215,78 +216,77 @@ void IterativeDeepener::Search(Move* best_move, int* best_move_score,
 // Finds the best move by searching up to given max_depth. Stops and returns
 // quickly if timer expires during computation. Updates iteration_stats_ with
 // details of current iteration.
-IterativeDeepener::IterationStat
-IterativeDeepener::FindBestMove(int max_depth) {
+template <Variant variant>
+IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
 
-  auto search = [variant = variant_, max_depth,
-                 root_move_array = root_move_array_, transpos = transpos_](
-                    int thread_num,
-                    Board board /* copy of board for each thread */,
-                    Timer* timer, IterationStat* ret_istat) mutable {
-    if (thread_num % 2 == 1) {
-      ++max_depth;
-    }
-    PVSearch pv_search(variant, &board, timer, transpos);
-    IterationStat istat;
-    istat.depth = max_depth;
-    istat.best_move = root_move_array.get(0);
-    istat.score = -INF;
-    istat.root_moves_covered = 0;
-    for (unsigned int i = 0; i < root_move_array.size(); ++i) {
-      const Move& move = root_move_array.get(i);
-      board.MakeMove(move);
-      SearchStats search_stats;
-      int score = -INF;
-      if (i == 0 || max_depth < 5) {
-        score =
-            -pv_search.Search(max_depth - 1, -INF, -istat.score, &search_stats);
-      } else {
-        bool lmr_triggered = false;
-        if (i >= 4 && max_depth >= 2) {
-          score = -pv_search.Search(max_depth - 2, -istat.score - 1,
-                                    -istat.score, &search_stats);
-          lmr_triggered = true;
+  auto search =
+      [max_depth, root_move_array = root_move_array_, transpos = transpos_](
+          int thread_num, Board board /* copy of board for each thread */,
+          Timer* timer, IterationStat* ret_istat) mutable {
+        if (thread_num % 2 == 1) {
+          ++max_depth;
         }
-        if (!lmr_triggered || score > istat.score) {
-          score = -pv_search.Search(max_depth - 1, -istat.score - 1,
-                                    -istat.score, &search_stats);
-        }
-        if (score > istat.score) {
-          score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
-                                    &search_stats);
-        }
-      }
-      board.UnmakeLastMove();
-      istat.move_stats.push_back(std::make_pair(move, search_stats));
+        PVSearch<variant> pv_search(&board, timer, transpos);
+        IterationStat istat;
+        istat.depth = max_depth;
+        istat.best_move = root_move_array.get(0);
+        istat.score = -INF;
+        istat.root_moves_covered = 0;
+        for (unsigned int i = 0; i < root_move_array.size(); ++i) {
+          const Move& move = root_move_array.get(i);
+          board.MakeMove(move);
+          SearchStats search_stats;
+          int score = -INF;
+          if (i == 0 || max_depth < 5) {
+            score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
+                                      &search_stats);
+          } else {
+            bool lmr_triggered = false;
+            if (i >= 4 && max_depth >= 2) {
+              score = -pv_search.Search(max_depth - 2, -istat.score - 1,
+                                        -istat.score, &search_stats);
+              lmr_triggered = true;
+            }
+            if (!lmr_triggered || score > istat.score) {
+              score = -pv_search.Search(max_depth - 1, -istat.score - 1,
+                                        -istat.score, &search_stats);
+            }
+            if (score > istat.score) {
+              score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
+                                        &search_stats);
+            }
+          }
+          board.UnmakeLastMove();
+          istat.move_stats.push_back(std::make_pair(move, search_stats));
 
-      // Return on timer expiry only if we are not searching at depth 1. If
-      // searching at depth 1, we should at least quickly find a meaningful
-      // move even if timer expires before all the root moves are evaluated.
-      // Without this, there is a possibility of iterative deepener not
-      // reporting any moves at all in some extremely time constrained
-      // situations. Searching all root moves at depth 1 is very quick
-      // (sub-millisecond latency).
-      if (timer->Lapsed() && max_depth > 1) {
-        break;
-      }
-      if (score > istat.score) {
-        istat.best_move = move;
-        istat.score = score;
-      }
-      ++istat.root_moves_covered;
-    }
-    // Add move to transposition table if at least the first root move was
-    // completely searched to current depth before timer lapsed. Otherwise,
-    // we don't really have any valid move to update. Due to move ordering
-    // guarantees, the first move in root_move_array_ is guaranteed to be
-    // the best known move before current iteration, which means any other
-    // move found to be better at this depth is at least better than that.
-    if (istat.root_moves_covered > 0) {
-      transpos->Put(istat.score, EXACT_NODE, max_depth, board.ZobristKey(),
-                    istat.best_move);
-    }
-    *ret_istat = istat;
-  };
+          // Return on timer expiry only if we are not searching at depth 1. If
+          // searching at depth 1, we should at least quickly find a meaningful
+          // move even if timer expires before all the root moves are evaluated.
+          // Without this, there is a possibility of iterative deepener not
+          // reporting any moves at all in some extremely time constrained
+          // situations. Searching all root moves at depth 1 is very quick
+          // (sub-millisecond latency).
+          if (timer->Lapsed() && max_depth > 1) {
+            break;
+          }
+          if (score > istat.score) {
+            istat.best_move = move;
+            istat.score = score;
+          }
+          ++istat.root_moves_covered;
+        }
+        // Add move to transposition table if at least the first root move was
+        // completely searched to current depth before timer lapsed. Otherwise,
+        // we don't really have any valid move to update. Due to move ordering
+        // guarantees, the first move in root_move_array_ is guaranteed to be
+        // the best known move before current iteration, which means any other
+        // move found to be better at this depth is at least better than that.
+        if (istat.root_moves_covered > 0) {
+          transpos->Put(istat.score, EXACT_NODE, max_depth, board.ZobristKey(),
+                        istat.best_move);
+        }
+        *ret_istat = istat;
+      };
 
   const int num_threads = (max_depth < 3 ? 1 : NUM_THREADS);
   std::vector<std::thread> threads;
@@ -315,7 +315,8 @@ IterativeDeepener::FindBestMove(int max_depth) {
   return istats.at(0);
 }
 
-std::string IterativeDeepener::PV(const Move& root_move) {
+template <Variant variant>
+std::string IterativeDeepener<variant>::PV(const Move& root_move) {
   std::string pv;
 
   // Root move may not always be in the transposition table or the one in
@@ -347,9 +348,23 @@ std::string IterativeDeepener::PV(const Move& root_move) {
 
 } // namespace
 
-void IDSearch(const Variant variant, const IDSParams& ids_params, Board* board,
-              Timer* timer, TranspositionTable* transpos, Move* best_move,
+template <Variant variant>
+void IDSearch(const IDSParams& ids_params, Board* board, Timer* timer,
+              TranspositionTable* transpos, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats) {
-  return IterativeDeepener(variant, ids_params, board, timer, transpos)
+  return IterativeDeepener<variant>(ids_params, board, timer, transpos)
       .Search(best_move, best_move_score, id_search_stats);
 }
+
+template void IDSearch<Variant::STANDARD>(const IDSParams& ids_params,
+                                          Board* board, Timer* timer,
+                                          TranspositionTable* transpos,
+                                          Move* best_move, int* best_move_score,
+                                          SearchStats* id_search_stats);
+
+template void IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
+                                           Board* board, Timer* timer,
+                                           TranspositionTable* transpos,
+                                           Move* best_move,
+                                           int* best_move_score,
+                                           SearchStats* id_search_stats);

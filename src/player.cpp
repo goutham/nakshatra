@@ -20,8 +20,9 @@ namespace {
 int kPNSTimeForMovePercent = 5;
 }
 
-Move Player::Search(const SearchParams& search_params,
-                    long time_for_move_centis) {
+template <Variant variant>
+Move Player::SearchInternal(const SearchParams& search_params,
+                            long time_for_move_centis) {
   transpos_->SetEpoch(board_->HalfMoves());
 
   std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
@@ -37,9 +38,9 @@ Move Player::Search(const SearchParams& search_params,
     }
   }
   // If the move is forced, just move.
-  if (CountMoves(variant_, board_) == 1) {
+  if (CountMoves<variant>(board_) == 1) {
     MoveArray move_array;
-    GenerateMoves(variant_, board_, &move_array);
+    GenerateMoves<variant>(board_, &move_array);
     return move_array.get(0);
   }
 
@@ -47,7 +48,7 @@ Move Player::Search(const SearchParams& search_params,
   ids_params.thinking_output = search_params.thinking_output;
   ids_params.search_depth = search_params.search_depth;
 
-  if (variant_ == Variant::ANTICHESS && search_params.antichess_pns) {
+  if (variant == Variant::ANTICHESS && search_params.antichess_pns) {
     Timer pns_timer;
     pns_timer.Run(time_for_move_centis * (kPNSTimeForMovePercent / 100.0));
 
@@ -102,7 +103,19 @@ Move Player::Search(const SearchParams& search_params,
   SearchStats id_search_stats;
   int move_score;
   Move best_move;
-  IDSearch(variant_, ids_params, board_, timer_, transpos_, &best_move,
-           &move_score, &id_search_stats);
+  IDSearch<variant>(ids_params, board_, timer_, transpos_, &best_move,
+                    &move_score, &id_search_stats);
   return best_move;
+}
+
+Move Player::Search(const SearchParams& search_params,
+                    long time_for_move_centis) {
+  if (variant_ == Variant::STANDARD) {
+    return SearchInternal<Variant::STANDARD>(search_params,
+                                             time_for_move_centis);
+  } else {
+    assert(variant_ == Variant::ANTICHESS);
+    return SearchInternal<Variant::ANTICHESS>(search_params,
+                                              time_for_move_centis);
+  }
 }

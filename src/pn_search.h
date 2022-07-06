@@ -1,18 +1,17 @@
 #ifndef PN_SEARCH_H
 #define PN_SEARCH_H
 
+#include "board.h"
 #include "common.h"
 #include "egtb.h"
 #include "move.h"
+#include "timer.h"
+#include "transpos.h"
 
 #include <iostream>
 #include <vector>
 
 #define INF_NODES INT_MAX
-
-class Board;
-class Timer;
-class TranspositionTable;
 
 typedef int PNSNodeOffset;
 

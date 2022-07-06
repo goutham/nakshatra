@@ -63,7 +63,9 @@ ExecutionContext::~ExecutionContext() {
 }
 
 bool Executor::MatchResult(vector<string>* response) {
-  int result = EvalResult(variant_, main_context_->board.get());
+  int result = variant_ == Variant::STANDARD
+                   ? EvalResult<Variant::STANDARD>(main_context_->board.get())
+                   : EvalResult<Variant::ANTICHESS>(main_context_->board.get());
   if (!(result == WIN || result == -WIN || result == DRAW)) {
     return false;
   }
@@ -222,12 +224,6 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     main_context_->board->DebugPrintBoard();
   } else if (cmd == "unmake") {
     main_context_->board->UnmakeLastMove();
-  } else if (cmd == "movelist") {
-    MoveArray move_array;
-    GenerateMoves(variant_, main_context_->board.get(), &move_array);
-    for (size_t i = 0; i < move_array.size(); ++i) {
-      std::cout << "# " << i + 1 << " " << move_array.get(i).str() << std::endl;
-    }
   } else if (cmd == "easy") {
     ponder_ = false;
   } else if (cmd == "hard") {

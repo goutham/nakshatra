@@ -21,11 +21,11 @@ PNSParams::PNSearchType GetPNSType(const char* arg) {
 }
 
 std::string GetPosition(const char* arg) {
-  const Variant variant = Variant::ANTICHESS;
+  constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant);
   const auto move_str_vec = SplitString(arg, ' ');
   for (const auto& move_str : move_str_vec) {
-    const Move move = SANToMove(variant, move_str, &board);
+    const Move move = SANToMove<variant>(move_str, &board);
     if (!move.is_valid()) {
       throw std::invalid_argument("Invalid move " + move_str);
     }

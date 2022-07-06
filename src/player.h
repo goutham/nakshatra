@@ -6,11 +6,10 @@
 #include "egtb.h"
 #include "move.h"
 #include "timer.h"
+#include "transpos.h"
 
 #include <signal.h>
 #include <sys/time.h>
-
-class TranspositionTable;
 
 struct SearchParams {
   bool thinking_output = false;
@@ -28,6 +27,10 @@ public:
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
 private:
+  template <Variant variant>
+  Move SearchInternal(const SearchParams& search_params,
+                      long time_for_move_centis);
+
   const Variant variant_;
   Board* board_;
   TranspositionTable* transpos_;

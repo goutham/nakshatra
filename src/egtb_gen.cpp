@@ -76,7 +76,7 @@ void EGTBStore::Write() {
 void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::ANTICHESS, *iter);
-    int result = EvalResult(Variant::ANTICHESS, &board);
+    int result = EvalResult<Variant::ANTICHESS>(&board);
     if (result == WIN) {
       store->Put(board, 0, Move(), 1);
       iter = all_pos_list.erase(iter);
@@ -110,7 +110,7 @@ void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
       ++progress;
       Board board(Variant::ANTICHESS, *iter);
       MoveArray movelist;
-      GenerateMoves(Variant::ANTICHESS, &board, &movelist);
+      GenerateMoves<Variant::ANTICHESS>(&board, &movelist);
       int count_winning = 0;
       int count_losing = 0;
       int count_draw = 0;

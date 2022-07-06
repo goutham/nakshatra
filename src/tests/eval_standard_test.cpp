@@ -8,5 +8,5 @@
 
 TEST(EvalStandardTest, Result) {
   Board board(Variant::STANDARD, "4k3/8/1npp3p/p7/7p/K1r5/5r1P/8 w - -");
-  EXPECT_EQ(-WIN, EvalResult(Variant::STANDARD, &board));
+  EXPECT_EQ(-WIN, EvalResult<Variant::STANDARD>(&board));
 }

@@ -13,6 +13,7 @@ namespace {
 constexpr int MOBILITY_FACTOR = 25;
 constexpr int PIECE_COUNT_FACTOR = -50;
 constexpr int TEMPO = 250;
+constexpr int EVAL_MAX_DEPTH = 5;
 
 namespace pv = antichess::piece_value;
 
@@ -28,7 +29,8 @@ bool RivalBishopsOnOppositeColoredSquares(Board* board) {
            ((white_bishop & BLACK_SQUARES) && (black_bishop & WHITE_SQUARES))));
 }
 
-int EvaluateInternal(Board* board, int alpha, int beta, int max_depth) {
+int EvaluateInternal(Board* board, int alpha, int beta,
+                     int max_depth = EVAL_MAX_DEPTH) {
   const Side side = board->SideToMove();
   const int self_pieces = board->NumPieces(side);
   const int opp_pieces = board->NumPieces(OppositeSide(side));
@@ -46,7 +48,7 @@ int EvaluateInternal(Board* board, int alpha, int beta, int max_depth) {
     }
   }
 
-  const int self_moves = CountMoves(Variant::ANTICHESS, board);
+  const int self_moves = CountMoves<Variant::ANTICHESS>(board);
   if (self_moves == 0) {
     return self_pieces < opp_pieces ? WIN
                                     : (self_pieces == opp_pieces ? DRAW : -WIN);
@@ -54,7 +56,7 @@ int EvaluateInternal(Board* board, int alpha, int beta, int max_depth) {
 
   if (self_moves == 1) {
     MoveArray move_array;
-    GenerateMoves(Variant::ANTICHESS, board, &move_array);
+    GenerateMoves<Variant::ANTICHESS>(board, &move_array);
     board->MakeMove(move_array.get(0));
     const int eval = -EvaluateInternal(board, -beta, -alpha, max_depth);
     board->UnmakeLastMove();
@@ -62,7 +64,7 @@ int EvaluateInternal(Board* board, int alpha, int beta, int max_depth) {
   }
   if (self_moves <= 3 && max_depth > 0) {
     MoveArray move_array;
-    GenerateMoves(Variant::ANTICHESS, board, &move_array);
+    GenerateMoves<Variant::ANTICHESS>(board, &move_array);
     int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       board->MakeMove(move_array.get(i));
@@ -83,16 +85,16 @@ int EvaluateInternal(Board* board, int alpha, int beta, int max_depth) {
   }
 
   board->FlipSideToMove();
-  const int opp_moves = CountMoves(Variant::ANTICHESS, board);
+  const int opp_moves = CountMoves<Variant::ANTICHESS>(board);
   board->FlipSideToMove();
   if (opp_moves == 0) {
     MoveArray move_array;
-    GenerateMoves(Variant::ANTICHESS, board, &move_array);
+    GenerateMoves<Variant::ANTICHESS>(board, &move_array);
     int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       const Move& move = move_array.get(i);
       board->MakeMove(move);
-      const int eval = -Evaluate(Variant::ANTICHESS, board, -beta, -alpha);
+      const int eval = -EvaluateInternal(board, -beta, -alpha);
       board->UnmakeLastMove();
       if (eval > score) {
         score = eval;
@@ -123,7 +125,7 @@ int EvaluateInternal(Board* board, int alpha, int beta, int max_depth) {
 
 template <>
 int Evaluate<Variant::ANTICHESS>(Board* board, int alpha, int beta) {
-  return EvaluateInternal(board, alpha, beta, 5);
+  return EvaluateInternal(board, alpha, beta);
 }
 
 template <>
@@ -137,7 +139,7 @@ int EvalResult<Variant::ANTICHESS>(Board* board) {
     return DRAW;
   }
 
-  const int self_moves = CountMoves(Variant::ANTICHESS, board);
+  const int self_moves = CountMoves<Variant::ANTICHESS>(board);
   if (self_moves == 0) {
     return self_pieces < opp_pieces ? WIN
                                     : (self_pieces == opp_pieces ? DRAW : -WIN);

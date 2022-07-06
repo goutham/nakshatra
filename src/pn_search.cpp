@@ -229,14 +229,14 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
     }
   } else {
     MoveArray move_array;
-    GenerateMoves(Variant::ANTICHESS, board_, &move_array);
+    GenerateMoves<Variant::ANTICHESS>(board_, &move_array);
     for (size_t i = 0; i < move_array.size(); ++i) {
       PNSNode* child = new PNSNode;
       pns_node->children.push_back(child);
       child->move = move_array.get(i);
       child->parent = pns_node;
       board_->MakeMove(child->move);
-      int result = EvalResult(Variant::ANTICHESS, board_);
+      int result = EvalResult<Variant::ANTICHESS>(board_);
       if (result == UNKNOWN && egtb_ &&
           OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
           OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
@@ -256,7 +256,7 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
         child->disproof = INF_NODES;
       } else {
         child->proof = 1;
-        child->disproof = CountMoves(Variant::ANTICHESS, board_);
+        child->disproof = CountMoves<Variant::ANTICHESS>(board_);
       }
       if ((result == WIN || result == -WIN) && transpos_) {
         transpos_->Put(result, EXACT_NODE, 0, board_->ZobristKey(), Move());

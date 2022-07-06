@@ -1,14 +1,13 @@
 #ifndef ITERATIVE_DEEPENER_H
 #define ITERATIVE_DEEPENER_H
 
+#include "board.h"
 #include "common.h"
 #include "move.h"
 #include "move_array.h"
 #include "stats.h"
-
-class Board;
-class Timer;
-class TranspositionTable;
+#include "timer.h"
+#include "transpos.h"
 
 // Iterative deepening search parameters.
 struct IDSParams {
@@ -17,8 +16,9 @@ struct IDSParams {
   MoveArray pruned_ordered_moves;
 };
 
-void IDSearch(const Variant variant, const IDSParams& ids_params, Board* board,
-              Timer* timer, TranspositionTable* transpos, Move* best_move,
+template <Variant variant>
+void IDSearch(const IDSParams& ids_params, Board* board, Timer* timer,
+              TranspositionTable* transpos, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);
 
 #endif
