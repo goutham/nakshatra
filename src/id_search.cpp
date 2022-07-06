@@ -14,7 +14,6 @@
 #include "transpos.h"
 
 #include <algorithm>
-#include <atomic>
 #include <cstring>
 #include <iostream>
 #include <map>
@@ -294,15 +293,16 @@ IterativeDeepener::FindBestMove(int max_depth) {
     IterationStat istat;
   };
 
-  std::atomic<bool> abort_flag(false);
+  Timer threads_timer;
+  threads_timer.Run();
   std::vector<Context> contexts;
   const int num_threads = (max_depth < 3 ? 1 : NUM_THREADS);
   for (int i = 0; i < num_threads; ++i) {
     Context ctxt;
     ctxt.board = std::make_unique<Board>(*board_);
     ctxt.pv_search =
-        std::make_unique<PVSearch>(variant_, ctxt.board.get(), timer_,
-                                   transpos_, i == 0 ? nullptr : &abort_flag);
+        std::make_unique<PVSearch>(variant_, ctxt.board.get(),
+                                   i == 0 ? timer_ : &threads_timer, transpos_);
     contexts.push_back(std::move(ctxt));
   }
 
@@ -315,7 +315,7 @@ IterativeDeepener::FindBestMove(int max_depth) {
 
   auto& ctxt = contexts.at(0);
   search(0, ctxt.board.get(), ctxt.pv_search.get(), &ctxt.istat);
-  abort_flag.store(true, std::memory_order_relaxed);
+  threads_timer.Invalidate();
 
   for (auto& thread : threads) {
     thread.join();

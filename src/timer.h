@@ -4,10 +4,11 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <limits>
 
 class Timer {
 public:
-  void Run(int32_t centis) {
+  void Run(int32_t centis = std::numeric_limits<int32_t>::max()) {
     centis_.store(centis, std::memory_order_relaxed);
     start_ = std::chrono::steady_clock::now();
   }

@@ -38,13 +38,12 @@ bool Probe(int max_depth, int alpha, int beta, U64 zkey,
 } // namespace
 
 int PVSearch::Search(int max_depth, int alpha, int beta,
-                            SearchStats* search_stats) {
+                     SearchStats* search_stats) {
   return PVS(max_depth, alpha, beta, 0, true, search_stats);
 }
 
 int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
-                               bool allow_null_move,
-                               SearchStats* search_stats) {
+                  bool allow_null_move, SearchStats* search_stats) {
   ++search_stats->nodes_searched;
   const U64 zkey = board_->ZobristKey();
 
@@ -55,8 +54,7 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
     }
   }
 
-  if (max_depth <= 0 || (timer_ && timer_->Lapsed()) ||
-      (abort_flag_ && abort_flag_->load(std::memory_order_relaxed))) {
+  if (max_depth <= 0 || (timer_ && timer_->Lapsed())) {
     return Evaluate(variant_, board_, alpha, beta);
   }
 
@@ -97,8 +95,8 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
                     !attacks::InCheck(*board_, board_->SideToMove());
   if (allow_null_move) {
     board_->MakeNullMove();
-    int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1,
-                           !allow_null_move, search_stats);
+    int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1, !allow_null_move,
+                     search_stats);
     board_->UnmakeNullMove();
     if (value >= beta) {
       return beta;
@@ -119,22 +117,20 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;
     if (index >= 4 && max_depth >= 2) {
-      value = -PVS(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
-                         search_stats);
+      value =
+          -PVS(max_depth - 2, -alpha - 1, -alpha, ply + 1, true, search_stats);
       lmr_triggered = true;
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal
     // search.
     if (!lmr_triggered || value > alpha) {
-      value =
-          -PVS(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
+      value = -PVS(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
-      value =
-          -PVS(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
+      value = -PVS(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
     }
 
     board_->UnmakeLastMove();
@@ -160,8 +156,7 @@ int PVSearch::PVS(int max_depth, int alpha, int beta, int ply,
     b = alpha + 1;
   }
 
-  if (!(timer_ && timer_->Lapsed()) &&
-      !(abort_flag_ && abort_flag_->load(std::memory_order_relaxed))) {
+  if (!(timer_ && timer_->Lapsed())) {
     transpos_->Put(score, node_type, max_depth, zkey, best_move);
   }
   return score;

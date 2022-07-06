@@ -13,7 +13,8 @@ TEST(SEETest, SEE) {
 }
 
 TEST(SEETest, SEEDeepExchange) {
-  Board board(Variant::STANDARD, "1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - -");
+  Board board(Variant::STANDARD,
+              "1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - -");
   EXPECT_EQ(-220, SEE(Move("d3e5"), board));
 }
 

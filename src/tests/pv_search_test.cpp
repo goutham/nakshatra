@@ -21,8 +21,7 @@ TEST_F(SearchAlgorithmTest, Search) {
   const std::string board_str = "8/R7/8/8/8/8/8/7k w - -";
   Board board(Variant::ANTICHESS, board_str);
   TranspositionTable transpos(1U << 20); // 1 MB
-  PVSearch search_algorithm(Variant::ANTICHESS, &board, nullptr,
-                                   &transpos);
+  PVSearch search_algorithm(Variant::ANTICHESS, &board, nullptr, &transpos);
   // Not a win up to depth 6.
   for (int depth = 1; depth <= 6; ++depth) {
     SearchStats search_stats;
