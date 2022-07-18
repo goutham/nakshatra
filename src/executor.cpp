@@ -9,6 +9,7 @@
 #include "player.h"
 #include "transpos.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -20,11 +21,6 @@ using std::string;
 using std::vector;
 
 namespace {
-
-// Linear interpolation - given x1, y1, x2, y2 and x3, find y3.
-double Interpolate(double x1, double y1, double x2, double y2, double x3) {
-  return y1 + ((y2 - y1) / (x2 - x1)) * (x3 - x1);
-}
 
 int TransposSize(const Variant variant) {
   if (variant == Variant::STANDARD) {
@@ -261,19 +257,34 @@ long Executor::AllocateTime() const {
   if (think_time_centis_ > 0) {
     return think_time_centis_;
   }
-  if (time_centis_ >= 60000) {
-    return 2250l;
+  if (time_centis_ < 500) {
+    return 1l;
   }
-  if (time_centis_ >= 6000) {
-    return Interpolate(6000, 500, 60000, 2250, time_centis_);
+  double a, b, c, d, e;
+  if (variant_ == Variant::STANDARD) {
+    a = -1.50140990e-08;
+    b = 7.61654331e-06;
+    c = 1.86255488e-04;
+    d = -5.43305966e-01;
+    e = 9.66625927e+01;
+  } else {
+    assert(variant_ == Variant::ANTICHESS);
+    a = 1.04978830e-06;
+    b = -3.17302622e-04;
+    c = 3.41067191e-02;
+    d = -1.57304241e+00;
+    e = 4.83298816e+01;
   }
-  if (time_centis_ >= 1000) {
-    return Interpolate(1000, 100, 6000, 500, time_centis_);
-  }
-  if (time_centis_ >= 300) {
-    return Interpolate(300, 10, 1000, 100, time_centis_);
-  }
-  return 5l;
+  const int movenum = main_context_->board->HalfMoveClock();
+  const double est_self_moves_remaining =
+      (std::max(a * pow(movenum, 4) + b * pow(movenum, 3) +
+                    c * pow(movenum, 2) + d * movenum + e,
+                20.0)) /
+      2;
+  const long alloc_centis =
+      static_cast<long>(time_centis_ / est_self_moves_remaining);
+  std::cout << "# Allocating time: " << alloc_centis << " centis" << std::endl;
+  return alloc_centis;
 }
 
 void Executor::OutputFEN() const {
