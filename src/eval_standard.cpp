@@ -14,20 +14,6 @@ namespace sc = standard_chess;
 namespace pv = standard_chess::piece_value;
 
 int StaticEval(Board* board) {
-  const Side side = board->SideToMove();
-  if (attacks::InCheck(*board, side)) {
-    MoveArray move_array;
-    GenerateMoves<Variant::STANDARD>(board, &move_array);
-    const int self_moves = move_array.size();
-    if (self_moves == 0) {
-      return -WIN;
-    }
-  }
-  const Side opp_side = OppositeSide(side);
-  if (attacks::InCheck(*board, opp_side)) {
-    return WIN;
-  }
-
   const U64 w_king = board->BitBoard(KING);
   const U64 w_queen = board->BitBoard(QUEEN);
   const U64 w_rook = board->BitBoard(ROOK);
@@ -58,7 +44,7 @@ int StaticEval(Board* board) {
   score -= PopCount(b_knight) * pv::KNIGHT + sc::PSTScore<-KNIGHT>(b_knight);
   score -= PopCount(b_pawn) * pv::PAWN + sc::PSTScore<-PAWN>(b_pawn);
 
-  if (side == Side::BLACK) {
+  if (board->SideToMove() == Side::BLACK) {
     score = -score;
   }
   return score;
@@ -80,6 +66,15 @@ int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta) {
   }
   MoveArray move_array;
   GenerateMoves<Variant::STANDARD>(board, &move_array);
+  if (move_array.size() == 0) {
+    const Side side = board->SideToMove();
+    const U64 attack_map = ComputeAttackMap(*board, OppositeSide(side));
+    if (attack_map & board->BitBoard(PieceOfSide(KING, side))) {
+      return -WIN;
+    } else {
+      return DRAW; // stalemate
+    }
+  }
   MoveInfoArray move_info_array;
   OrderMoves<Variant::STANDARD>(board, move_array, nullptr, &move_info_array);
   for (size_t i = 0; i < move_info_array.size; ++i) {
