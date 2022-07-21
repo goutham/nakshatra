@@ -67,6 +67,27 @@ using AttacksFn = U64 (*)(const U64, const int);
 AttacksFn attacks_fns[6] = {nullptr,     KingAttacks,   QueenAttacks,
                             RookAttacks, BishopAttacks, KnightAttacks};
 
+template <Side side>
+bool InCheckInternal(const Board& board) {
+  const U64 king_bb = board.BitBoard(PieceOfSide(KING, side));
+  if (!king_bb) {
+    return false;
+  }
+  const int king_sq = Lsb1(king_bb);
+  const U64 occ = board.BitBoard();
+  constexpr Side opp_side = OppositeSide(side);
+  const U64 rook = magic_bits_attacks.Rook(occ, king_sq);
+  const U64 bishop = magic_bits_attacks.Bishop(occ, king_sq);
+  return (rook & board.BitBoard(PieceOfSide(ROOK, opp_side))) ||
+         (bishop & board.BitBoard(PieceOfSide(BISHOP, opp_side))) ||
+         ((rook | bishop) & board.BitBoard(PieceOfSide(QUEEN, opp_side))) ||
+         (knight_attacks[king_sq] &
+          board.BitBoard(PieceOfSide(KNIGHT, opp_side))) ||
+         ((side_relative::PushNorthEast<side>(king_bb) |
+           side_relative::PushNorthWest<side>(king_bb)) &
+          board.BitBoard(PieceOfSide(PAWN, opp_side)));
+}
+
 } // namespace
 
 namespace attacks {
@@ -100,23 +121,11 @@ U64 SquareAttackers(const int square, const Piece attacking_piece,
 }
 
 bool InCheck(const Board& board, const Side side) {
-  const U64 king_bb = board.BitBoard(PieceOfSide(KING, side));
-  if (!king_bb) {
-    return false;
+  if (side == Side::BLACK) {
+    return InCheckInternal<Side::BLACK>(board);
   }
-  const int sq = Lsb1(king_bb);
-  const U64 occ = board.BitBoard();
-  const Side opp_side = OppositeSide(side);
-  const Piece queen = PieceOfSide(QUEEN, opp_side);
-  const Piece rook = PieceOfSide(ROOK, opp_side);
-  const Piece bishop = PieceOfSide(BISHOP, opp_side);
-  const Piece knight = PieceOfSide(KNIGHT, opp_side);
-  const Piece pawn = PieceOfSide(PAWN, opp_side);
-  return attacks::SquareAttackers(sq, queen, occ, board.BitBoard(queen)) ||
-         attacks::SquareAttackers(sq, rook, occ, board.BitBoard(rook)) ||
-         attacks::SquareAttackers(sq, bishop, occ, board.BitBoard(bishop)) ||
-         attacks::SquareAttackers(sq, knight, occ, board.BitBoard(knight)) ||
-         attacks::SquareAttackers(sq, pawn, occ, board.BitBoard(pawn));
+  assert(side == Side::WHITE);
+  return InCheckInternal<Side::WHITE>(board);
 }
 
 } // namespace attacks
