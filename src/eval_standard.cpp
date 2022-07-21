@@ -67,13 +67,7 @@ int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta) {
   MoveArray move_array;
   GenerateMoves<Variant::STANDARD>(board, &move_array);
   if (move_array.size() == 0) {
-    const Side side = board->SideToMove();
-    const U64 attack_map = ComputeAttackMap(*board, OppositeSide(side));
-    if (attack_map & board->BitBoard(PieceOfSide(KING, side))) {
-      return -WIN;
-    } else {
-      return DRAW; // stalemate
-    }
+    return in_check ? -WIN : DRAW;
   }
   MoveInfoArray move_info_array;
   OrderMoves<Variant::STANDARD>(board, move_array, nullptr, &move_info_array);
