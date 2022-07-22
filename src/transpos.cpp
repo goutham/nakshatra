@@ -5,6 +5,16 @@
 
 #include <iostream>
 
+uint64_t ZKey(const TTEntry& tt_entry) {
+  const uint64_t& data = reinterpret_cast<const uint64_t&>(tt_entry.data);
+  return tt_entry.zkey ^ data;
+}
+
+void SetZKey(int64_t zkey, TTEntry* tt_entry) {
+  const uint64_t data = reinterpret_cast<const uint64_t&>(tt_entry->data);
+  tt_entry->zkey = (zkey ^ data);
+}
+
 TranspositionTable::TranspositionTable(int size) : size_(size) {
   std::cout << "# Transposition table memory usage: "
             << (size_ * sizeof(TTBucket)) / (1U << 20) << " MB" << std::endl;
@@ -13,18 +23,22 @@ TranspositionTable::TranspositionTable(int size) : size_(size) {
 
 TranspositionTable::~TranspositionTable() { delete tt_buckets_; }
 
-TTEntry* TranspositionTable::Get(U64 zkey) {
+TTData TranspositionTable::Get(U64 zkey, bool* found) {
+  *found = false;
   TTBucket& bucket = tt_buckets_[hash(zkey)];
   for (int i = 0; i < 4; ++i) {
-    TTEntry& tt_entry = bucket.tt_entries[i];
-    if (tt_entry.is_valid() && tt_entry.zkey == zkey) {
-      tt_entry.epoch = epoch_;
+    TTEntry tt_entry = bucket.tt_entries[i];
+    if (tt_entry.data.is_valid() && ZKey(tt_entry) == zkey) {
+      tt_entry.data.epoch = epoch_;
+      SetZKey(zkey, &tt_entry);
       ++hits_;
-      return &tt_entry;
+      *found = true;
+      bucket.tt_entries[i] = tt_entry;
+      return tt_entry.data;
     }
   }
   ++misses_;
-  return nullptr;
+  return TTData();
 }
 
 void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
@@ -32,7 +46,7 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
   TTBucket& bucket = tt_buckets_[hash(zkey)];
   for (int i = 0; i < 4; ++i) {
     TTEntry& tt_entry = bucket.tt_entries[i];
-    if (!tt_entry.is_valid() || tt_entry.zkey == zkey) {
+    if (!tt_entry.data.is_valid() || ZKey(tt_entry) == zkey) {
       ++new_puts_;
       Set(score, node_type, depth, zkey, best_move, &tt_entry);
       return;
@@ -40,7 +54,7 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
   }
   for (int i = 0; i < 4; ++i) {
     TTEntry& tt_entry = bucket.tt_entries[i];
-    if (tt_entry.epoch < epoch_) {
+    if (tt_entry.data.epoch < epoch_) {
       ++old_replace_;
       Set(score, node_type, depth, zkey, best_move, &tt_entry);
       return;
@@ -49,7 +63,7 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
   TTEntry* shallow_entry = &bucket.tt_entries[0];
   for (int i = 1; i < 4; ++i) {
     TTEntry& tt_entry = bucket.tt_entries[i];
-    if (tt_entry.depth < shallow_entry->depth) {
+    if (tt_entry.data.depth < shallow_entry->data.depth) {
       shallow_entry = &tt_entry;
     }
   }
@@ -59,19 +73,19 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
 
 void TranspositionTable::Set(int score, NodeType node_type, int depth, U64 zkey,
                              Move best_move, TTEntry* tt_entry) {
-  tt_entry->zkey = zkey;
-  tt_entry->best_move = best_move;
-  tt_entry->score = score;
-  tt_entry->depth = depth;
-  tt_entry->epoch = epoch_;
-  tt_entry->flags = (uint16_t(node_type) << 1) | (0x1);
+  tt_entry->data.best_move = best_move;
+  tt_entry->data.score = score;
+  tt_entry->data.depth = depth;
+  tt_entry->data.epoch = epoch_;
+  tt_entry->data.flags = (uint16_t(node_type) << 1) | (0x1);
+  SetZKey(zkey, tt_entry);
 }
 
 double TranspositionTable::UtilizationFactor() const {
   unsigned int num_filled_entries = 0;
   for (int i = 0; i < size_; ++i) {
     for (int j = 0; j < 4; ++j) {
-      if (tt_buckets_[i].tt_entries[j].is_valid()) {
+      if (tt_buckets_[i].tt_entries[j].data.is_valid()) {
         ++num_filled_entries;
       }
     }

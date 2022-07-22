@@ -9,11 +9,13 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 
-int64_t Perft(MoveGenerator* movegen, Board* board, unsigned int depth) {
+template <Variant variant>
+int64_t Perft(Board* board, unsigned int depth) {
   MoveArray move_array;
-  movegen->GenerateMoves(&move_array);
+  GenerateMoves<variant>(board, &move_array);
 
   // Bulk counting at depth 1.
   if (depth == 1) {
@@ -23,7 +25,7 @@ int64_t Perft(MoveGenerator* movegen, Board* board, unsigned int depth) {
   int64_t nodes = 0;
   for (unsigned i = 0; i < move_array.size(); ++i) {
     board->MakeMove(move_array.get(i));
-    nodes += Perft(movegen, board, depth - 1);
+    nodes += Perft<variant>(board, depth - 1);
     board->UnmakeLastMove();
   }
   return nodes;
@@ -33,23 +35,22 @@ int main(int argc, char** argv) {
   assert(argc == 3);
 
   unsigned int depth = 0;
-  Board* board = NULL;
-  MoveGenerator* movegen = NULL;
+  Variant variant;
+  std::function<int64_t(Board * board, int depth)> perft_fn;
   if (argv[1][0] == 's' || argv[1][0] == 'S') {
-    board = new Board(Variant::ANTICHESS);
-    movegen = new MoveGeneratorAntichess(*board);
+    variant = Variant::ANTICHESS;
+    perft_fn = Perft<Variant::ANTICHESS>;
   } else {
-    board = new Board(Variant::STANDARD);
-    movegen = new MoveGeneratorStandard(board);
+    variant = Variant::STANDARD;
+    perft_fn = Perft<Variant::STANDARD>;
   }
+  Board board(variant);
   depth = atoi(argv[2]);
 
   StopWatch stop_watch;
   stop_watch.Start();
-  int64_t nodes = Perft(movegen, board, depth);
+  int64_t nodes = perft_fn(&board, depth);
   stop_watch.Stop();
-  delete movegen;
-  delete board;
   const double elapsed_secs = stop_watch.ElapsedTime() / 100.0;
 
   printf(

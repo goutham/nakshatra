@@ -1,16 +1,13 @@
 #ifndef MOVE_ORDER_H
 #define MOVE_ORDER_H
 
+#include "board.h"
 #include "common.h"
 #include "move.h"
 #include "move_array.h"
 
 #include <algorithm>
 #include <vector>
-
-class Board;
-class MoveGenerator;
-class Evaluator;
 
 enum class MoveType {
   TT,
@@ -47,55 +44,13 @@ struct PrefMoves {
   Move killer2 = Move();
 };
 
-class MoveOrderer {
-public:
-  virtual ~MoveOrderer() {}
+template <Variant variant>
+void OrderMoves(Board* board, const MoveArray& move_array,
+                const PrefMoves* pref_moves, MoveInfoArray* move_info_array);
 
-  virtual void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-                     MoveInfoArray* move_info_array) = 0;
-
-protected:
-  MoveOrderer() {}
-};
-
-class AntichessMoveOrderer : public MoveOrderer {
-public:
-  AntichessMoveOrderer(Board* board, MoveGenerator* movegen)
-      : board_(board), movegen_(movegen) {}
-  ~AntichessMoveOrderer() override {}
-
-  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-             MoveInfoArray* move_info_array) override;
-
-private:
-  Board* board_;
-  MoveGenerator* movegen_;
-};
-
-class StandardMoveOrderer : public MoveOrderer {
-public:
-  StandardMoveOrderer(Board* board) : board_(board) {}
-  ~StandardMoveOrderer() override {}
-
-  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-             MoveInfoArray* move_info_array) override;
-
-private:
-  Board* board_;
-};
-
-class EvalScoreOrderer : public MoveOrderer {
-public:
-  EvalScoreOrderer(Board* board, Evaluator* eval)
-      : board_(board), eval_(eval) {}
-  ~EvalScoreOrderer() override {}
-
-  void Order(const MoveArray& move_array, const PrefMoves* pref_moves,
-             MoveInfoArray* move_info_array) override;
-
-private:
-  Board* board_;
-  Evaluator* eval_;
-};
+template <Variant variant>
+void OrderMovesByEvalScore(Board* board, const MoveArray& move_array,
+                           const PrefMoves* pref_moves,
+                           MoveInfoArray* move_info_array);
 
 #endif

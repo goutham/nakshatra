@@ -1,8 +1,5 @@
 #include "board.h"
 #include "common.h"
-#include "egtb.h"
-#include "eval.h"
-#include "eval_antichess.h"
 #include "move.h"
 #include "movegen.h"
 #include "pn_search.h"
@@ -24,11 +21,11 @@ PNSParams::PNSearchType GetPNSType(const char* arg) {
 }
 
 std::string GetPosition(const char* arg) {
-  Board board(Variant::ANTICHESS);
-  MoveGeneratorAntichess movegen(board);
+  constexpr Variant variant = Variant::ANTICHESS;
+  Board board(variant);
   const auto move_str_vec = SplitString(arg, ' ');
   for (const auto& move_str : move_str_vec) {
-    const Move move = SANToMove(move_str, board, &movegen);
+    const Move move = SANToMove<variant>(move_str, &board);
     if (!move.is_valid()) {
       throw std::invalid_argument("Invalid move " + move_str);
     }
@@ -48,20 +45,13 @@ int main(int argc, char* argv[]) {
   const std::string position = GetPosition(argv[3]);
 
   Board board(Variant::ANTICHESS, position);
-  MoveGeneratorAntichess movegen(board);
-
-  std::vector<std::string> egtb_filenames;
-  assert(GlobFiles("egtb/*.egtb", &egtb_filenames));
-  EGTB egtb(egtb_filenames, board);
-  egtb.Initialize();
-  EvalAntichess eval(&board, &movegen, &egtb);
 
   PNSParams pns_params;
   pns_params.max_nodes = max_nodes;
   pns_params.pns_type = pns_type;
   pns_params.quiet = false;
   pns_params.log_progress = 10;
-  PNSearch pn_search(&board, &movegen, &eval, &egtb, nullptr, nullptr);
+  PNSearch pn_search(&board, nullptr, nullptr);
   PNSResult pns_result;
   pn_search.Search(pns_params, &pns_result);
   std::cout << "tree_size: " << pns_result.pns_tree->tree_size << "\n"

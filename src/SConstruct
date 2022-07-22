@@ -42,9 +42,9 @@ player = env.Library(
     target = 'player',
     source = ['player.cpp',
               'pn_search.cpp',
-              'iterative_deepener.cpp',
+              'id_search.cpp',
               'move_order.cpp',
-              'search_algorithm.cpp',
+              'pv_search.cpp',
               'transpos.cpp'])
 
 executor = env.Library(
@@ -68,8 +68,7 @@ nakshatra = env.Program(
             movegen,
             board,
             common,
-            'pthread',
-            'rt'],
+            'pthread'],
     LIBPATH = '.')
 
 pns_analyze = env.Program(
@@ -116,6 +115,5 @@ unit_tests = test_env.Program(
             movegen,
             board,
             common,
-            'pthread',
-            'rt'],
+            'pthread'],
     LIBPATH = '.')

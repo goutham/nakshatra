@@ -1,9 +1,8 @@
-#include "search_algorithm.h"
+#include "pv_search.h"
 #include "attacks.h"
 #include "board.h"
 #include "common.h"
 #include "eval.h"
-#include "extensions.h"
 #include "move.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -17,17 +16,18 @@ namespace {
 // at given max_depth.
 bool Probe(int max_depth, int alpha, int beta, U64 zkey,
            TranspositionTable* transpos, int* tt_score, Move* tt_move) {
-  TTEntry* tentry = transpos->Get(zkey);
-  if (tentry == nullptr) {
+  bool found = false;
+  const TTData tdata = transpos->Get(zkey, &found);
+  if (!found) {
     return false;
   }
-  *tt_score = tentry->score;
-  *tt_move = tentry->best_move;
-  const NodeType node_type = tentry->node_type();
+  *tt_score = tdata.score;
+  *tt_move = tdata.best_move;
+  const NodeType node_type = tdata.node_type();
   if (node_type == EXACT_NODE && (*tt_score == WIN || *tt_score == -WIN)) {
     return true;
   }
-  if (tentry->depth >= max_depth &&
+  if (tdata.depth >= max_depth &&
       (node_type == EXACT_NODE ||
        (node_type == FAIL_HIGH_NODE && *tt_score >= beta) ||
        (node_type == FAIL_LOW_NODE && *tt_score <= alpha))) {
@@ -37,14 +37,15 @@ bool Probe(int max_depth, int alpha, int beta, U64 zkey,
 }
 } // namespace
 
-int SearchAlgorithm::Search(int max_depth, int alpha, int beta,
-                            SearchStats* search_stats) {
-  return NegaScout(max_depth, alpha, beta, 0, true, search_stats);
+template <Variant variant>
+int PVSearch<variant>::Search(int max_depth, int alpha, int beta,
+                              SearchStats* search_stats) {
+  return PVS(max_depth, alpha, beta, 0, true, search_stats);
 }
 
-int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
-                               bool allow_null_move,
-                               SearchStats* search_stats) {
+template <Variant variant>
+int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
+                           bool allow_null_move, SearchStats* search_stats) {
   ++search_stats->nodes_searched;
   const U64 zkey = board_->ZobristKey();
 
@@ -56,7 +57,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   }
 
   if (max_depth <= 0 || (timer_ && timer_->Lapsed())) {
-    return evaluator_->Evaluate(alpha, beta);
+    return Evaluate<variant>(board_, alpha, beta);
   }
 
   Move tt_move = Move();
@@ -67,18 +68,18 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   // Search to a reduced depth to get a good first move to try (internal
   // iterative deepening).
   if (!tt_move.is_valid() && max_depth > 3) {
-    NegaScout(max_depth - 3, alpha, beta, ply, allow_null_move, search_stats);
+    PVS(max_depth - 3, alpha, beta, ply, allow_null_move, search_stats);
     if (Probe(max_depth, alpha, beta, zkey, transpos_, &tt_score, &tt_move)) {
       return tt_score;
     }
   }
 
   MoveArray move_array;
-  movegen_->GenerateMoves(&move_array);
+  GenerateMoves<variant>(board_, &move_array);
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
-    return evaluator_->Evaluate(alpha, beta);
+    return Evaluate<variant>(board_, alpha, beta);
   }
 
   MoveInfoArray move_info_array;
@@ -86,18 +87,18 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
   pref_moves.tt_move = tt_move;
   pref_moves.killer1 = killers_[ply][0];
   pref_moves.killer2 = killers_[ply][1];
-  move_orderer_->Order(move_array, &pref_moves, &move_info_array);
+  OrderMoves<variant>(board_, move_array, &pref_moves, &move_info_array);
 
   // Decide whether to use null move pruning. Disabled for ANTICHESS where
   // zugzwangs are common.
-  allow_null_move = variant_ != Variant::ANTICHESS && allow_null_move &&
+  allow_null_move = variant != Variant::ANTICHESS && allow_null_move &&
                     max_depth >= 2 && beta < INF &&
                     PopCount(board_->BitBoard()) > 10 &&
                     !attacks::InCheck(*board_, board_->SideToMove());
   if (allow_null_move) {
     board_->MakeNullMove();
-    int value = -NegaScout(max_depth - 2, -beta, -beta + 1, ply + 1,
-                           !allow_null_move, search_stats);
+    int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1, !allow_null_move,
+                     search_stats);
     board_->UnmakeNullMove();
     if (value >= beta) {
       return beta;
@@ -118,22 +119,20 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;
     if (index >= 4 && max_depth >= 2) {
-      value = -NegaScout(max_depth - 2, -alpha - 1, -alpha, ply + 1, true,
-                         search_stats);
+      value =
+          -PVS(max_depth - 2, -alpha - 1, -alpha, ply + 1, true, search_stats);
       lmr_triggered = true;
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal
     // search.
     if (!lmr_triggered || value > alpha) {
-      value =
-          -NegaScout(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
+      value = -PVS(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
-      value =
-          -NegaScout(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
+      value = -PVS(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
     }
 
     board_->UnmakeLastMove();
@@ -147,7 +146,7 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
         if (alpha >= beta) {
           node_type = FAIL_HIGH_NODE;
           if (move != tt_move && move != killers_[ply][0] &&
-              (variant_ == Variant::ANTICHESS ||
+              (variant == Variant::ANTICHESS ||
                board_->PieceAt(move.to_index()) == NULLPIECE)) {
             killers_[ply][1] = killers_[ply][0];
             killers_[ply][0] = move;
@@ -159,8 +158,11 @@ int SearchAlgorithm::NegaScout(int max_depth, int alpha, int beta, int ply,
     b = alpha + 1;
   }
 
-  if (!timer_ || !timer_->Lapsed()) {
+  if (!(timer_ && timer_->Lapsed())) {
     transpos_->Put(score, node_type, max_depth, zkey, best_move);
   }
   return score;
 }
+
+template class PVSearch<Variant::STANDARD>;
+template class PVSearch<Variant::ANTICHESS>;

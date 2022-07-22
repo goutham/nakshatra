@@ -1,9 +1,12 @@
 #include "egtb.h"
 #include "board.h"
 #include "common.h"
+#include "config.h"
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 
 constexpr int piece_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
@@ -50,9 +53,9 @@ int EGTBResult(const EGTBIndexEntry& entry) {
   }
 }
 
-EGTB::EGTB(const std::vector<std::string>& egtb_files, const Board& board)
-    : egtb_files_(egtb_files), board_(board), initialized_(false),
-      egtb_hits_(0ULL), egtb_misses_(0ULL) {}
+EGTB::EGTB(const std::vector<std::string>& egtb_files)
+    : egtb_files_(egtb_files), initialized_(false), egtb_hits_(0ULL),
+      egtb_misses_(0ULL) {}
 
 void EGTB::Initialize() {
   for (const std::string& egtb_file : egtb_files_) {
@@ -79,14 +82,14 @@ void EGTB::Initialize() {
   initialized_ = true;
 }
 
-const EGTBIndexEntry* EGTB::Lookup() {
+const EGTBIndexEntry* EGTB::Lookup(const Board& board) {
   assert(initialized_);
-  int board_desc_id = ComputeBoardDescriptionId(board_);
+  int board_desc_id = ComputeBoardDescriptionId(board);
   auto v = egtb_index_.find(board_desc_id);
   if (v == egtb_index_.end()) {
     return nullptr;
   }
-  U64 index = ComputeEGTBIndex(board_);
+  U64 index = ComputeEGTBIndex(board);
   if (index >= v->second.size()) {
     return nullptr;
   }
@@ -121,4 +124,18 @@ void PrintEGTBIndexEntry(const EGTBIndexEntry& entry) {
     result = "Draw";
   }
   std::cout << "# Result for side to move: " << result << std::endl;
+}
+
+EGTB* GetEGTB(const Variant variant) {
+  if (variant == Variant::ANTICHESS) {
+    static EGTB* antichess_egtb = [] {
+      std::vector<std::string> egtb_filenames;
+      assert(GlobFiles(ANTICHESS_EGTB_PATH_GLOB, &egtb_filenames));
+      auto egtb = new EGTB(egtb_filenames);
+      egtb->Initialize();
+      return egtb;
+    }();
+    return antichess_egtb;
+  }
+  return nullptr;
 }

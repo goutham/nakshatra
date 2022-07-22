@@ -62,6 +62,10 @@ public:
     return (encoded_move_ & 0xFFF7) != (move.encoded_move() & 0xFFF7);
   }
 
+  bool operator<(const Move& move) const {
+    return encoded_move_ < move.encoded_move();
+  }
+
   bool is_promotion() const { return encoded_move_ & 0x7; }
 
   bool is_valid() const { return encoded_move_ != 0; }

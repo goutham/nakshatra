@@ -6,6 +6,7 @@
 #include "piece.h"
 
 #include <string>
+#include <type_traits>
 
 // A Chess board that supports multiple variants.
 class Board {
@@ -165,5 +166,8 @@ private:
 
   MoveStack move_stack_;
 };
+
+static_assert(std::is_trivially_copy_constructible_v<Board> &&
+              std::is_trivially_copy_assignable_v<Board>);
 
 #endif
