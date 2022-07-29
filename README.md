@@ -1,25 +1,28 @@
 Nakshatra
 =========
 
-A chess engine that I originally developed to play [antichess](https://en.wikipedia.org/wiki/Losing_Chess) (a.k.a. suicide chess) variant on [Free Internet Chess Server (FICS)](http://www.freechess.org). Back around 2009/2010, many strong antichess playing humans and bots hung out on [FICS](http://www.freechess.org) and it was fun to develop and pitch my own engine against them. For a while, I even (sparingly) [blogged](http://nakshatrachess.blogspot.com) its progress. Although I don't work on the codebase regularly anymore, every now and then I do try something new to scratch an itch or two.
+An XBoard protocol compatible Chess and [Antichess](https://en.wikipedia.org/wiki/Losing_Chess) variant engine.
 
-To play a game of chess or antichess against Nakshatra, check out these sites where it *may* be online:
+# Play Online
+
+To play a game of Chess or Antichess with Nakshatra, check out these sites where it *may* be online:
 
 * [Nakshatra3](https://lichess.org/@/Nakshatra3) @ [lichess.org](https://lichess.org/)
 * [nakshatra](http://ficsgames.org/cgi-bin/search.cgi?player=nakshatra&action=Finger) @ [FICS](https://www.freechess.org/)
 
-You can also clone the repository, build and run it locally:
+# Build and Run from Source (GNU/Linux)
 
-Pre-requisites:
+## Pre-requisites
 
 ```
+# Example for Ubuntu and other Debian based GNU/Linux systems.
+sudo apt-get install zip
 sudo apt-get install git
+sudo apt-get install g++  # or clang++, need C++17+ support
 sudo apt-get install scons
-sudo apt-get install g++  # need C++17+
-sudo apt-get install unzip
 ```
 
-Clone the repo, build and run tests:
+## Build from Source
 
 ```
 git clone https://github.com/goutham/nakshatra.git
@@ -27,5 +30,12 @@ cd nakshatra/src
 ./build.sh
 ```
 
-If all tests succeed, you've probably built it successfully. Now you can invoke the engine directly (`./nakshatra`) and communicate with it using [XBoard communication protocol](https://www.gnu.org/software/xboard/engine-intf.html) (which can be a bit awkward), or install
-[XBoard](https://www.gnu.org/software/xboard/) GUI and use the helper script `play.sh` to invoke the engine with XBoard (be sure to set the correct variant). The engine is currently not [UCI protocol](https://www.chessprogramming.org/UCI) compatible so UCI-only interfaces won't work.
+See comments in `build.sh` for additional build options. The engine executable file, named `nakshatra`, will be generated under `src/` directory upon successful execution of the script.
+
+## Play Locally
+
+Install one of the XBoard protocol compatible interfaces such as [Cutechess](https://github.com/cutechess/cutechess), and configure it to run the engine executable file `nakshatra` as the computer player. The executable may be moved to a different directory but it depends on `src/egtb/*` and (may be) other files in your local git repo where `build.sh` was run, so do not delete the repo.
+
+# History
+
+Originally developed in 2009 / 2010 as an Antichess-only engine expressly for playing on [FICS](http://www.freechess.org), where a vibrant community of Antichess (known on FICS as [suicide chess](https://www.freechess.org/Help/HelpFiles/suicide_chess.html)) enthusiasts (and engines) hung out (sadly no longer the case). Nakshatra continues, as of this writing, to play under the handle [nakshatra](http://ficsgames.org/cgi-bin/search.cgi?player=nakshatra&action=Finger) on FICS. For the over-curious, [this](http://nakshatrachess.blogspot.com) old, long abandoned, [blog](http://nakshatrachess.blogspot.com) also records some historical context.
