@@ -1,5 +1,5 @@
-#include "common.h"
 #include "board.h"
+#include "common.h"
 
 namespace pawns {
 
