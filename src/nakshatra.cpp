@@ -3,11 +3,8 @@
 #include "executor.h"
 #include "movegen.h"
 
-#include <cstdlib>
-#include <ctime>
 #include <iostream>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 int main(int argc, char** argv) {
@@ -25,8 +22,6 @@ int main(int argc, char** argv) {
   cout << "feature sigint=0" << endl;
   cout << "feature sigterm=0" << endl;
   cout << "feature done=1" << endl;
-
-  srand(time(NULL) ^ getpid());
 
   Executor executor(ENGINE_NAME);
 

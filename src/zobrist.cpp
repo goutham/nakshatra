@@ -3,8 +3,8 @@
 #include "piece.h"
 
 #include <array>
-#include <cstdlib>
 #include <iostream>
+#include <random>
 
 namespace {
 
@@ -13,10 +13,11 @@ constexpr int COLOR_MAX = 3;
 constexpr int SQUARE_MAX = 64;
 
 U64 RandU64() {
-  U64 r = rand();
-  r <<= 32;
-  r |= rand();
-  return r;
+  static std::default_random_engine generator(832429);
+  static std::uniform_int_distribution<uint64_t> distribution(
+      std::numeric_limits<uint64_t>::min(),
+      std::numeric_limits<uint64_t>::max());
+  return distribution(generator);
 }
 
 template <typename T, int A, int B, int C>
