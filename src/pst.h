@@ -150,7 +150,6 @@ constexpr const int* PST_EGAME[7] = {
     nullptr,          PST_KING_EGAME,   PST_QUEEN_EGAME, PST_ROOK_EGAME,
     PST_BISHOP_EGAME, PST_KNIGHT_EGAME, PST_PAWN_EGAME};
 
-
 constexpr int PSTVal(Side side, Piece piece, int sq) {
   return PST_MGAME[PieceType(piece)][(side == Side::WHITE) ? (sq ^ 56) : sq];
 }
