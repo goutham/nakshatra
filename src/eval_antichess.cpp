@@ -3,7 +3,7 @@
 #include "egtb.h"
 #include "eval.h"
 #include "movegen.h"
-#include "piece.h"
+#include "piece_values.h"
 #include "stopwatch.h"
 
 #include <cstdlib>
@@ -14,8 +14,6 @@ constexpr int MOBILITY_FACTOR = 25;
 constexpr int PIECE_COUNT_FACTOR = -50;
 constexpr int TEMPO = 250;
 constexpr int EVAL_MAX_DEPTH = 5;
-
-namespace pv = antichess::piece_value;
 
 bool RivalBishopsOnOppositeColoredSquares(Board* board) {
   static const U64 WHITE_SQUARES = 0xAA55AA55AA55AA55ULL;
@@ -111,8 +109,8 @@ int EvaluateInternal(Board* board, int alpha, int beta,
 
   int score = 0;
   for (Piece p = KING; p <= PAWN; ++p) {
-    score += PopCount(board->BitBoard(p)) * pv::value[p] -
-             PopCount(board->BitBoard(-p)) * pv::value[p];
+    score += PopCount(board->BitBoard(p)) * antichess::PIECE_VALUES[p] -
+             PopCount(board->BitBoard(-p)) * antichess::PIECE_VALUES[p];
   }
   if (board->SideToMove() == Side::BLACK) {
     score = -score;

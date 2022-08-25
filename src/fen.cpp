@@ -2,7 +2,6 @@
 #include "board.h"
 #include "common.h"
 #include "move.h"
-#include "piece.h"
 
 #include <cctype>
 #include <cstdio>

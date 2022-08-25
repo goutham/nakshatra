@@ -2,7 +2,6 @@
 #include "common.h"
 #include "fen.h"
 #include "move.h"
-#include "piece.h"
 #include "zobrist.h"
 
 #include <cstdlib>

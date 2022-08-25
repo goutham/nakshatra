@@ -4,7 +4,6 @@
 #include "egtb.h"
 #include "id_search.h"
 #include "movegen.h"
-#include "piece.h"
 #include "pn_search.h"
 #include "stopwatch.h"
 #include "timer.h"

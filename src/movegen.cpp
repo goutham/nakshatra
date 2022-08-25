@@ -3,7 +3,6 @@
 #include "board.h"
 #include "common.h"
 #include "move_array.h"
-#include "piece.h"
 #include "side_relative.h"
 
 #include <array>

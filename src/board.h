@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "move.h"
-#include "piece.h"
 
 #include <string>
 #include <type_traits>

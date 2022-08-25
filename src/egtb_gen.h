@@ -4,7 +4,6 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
-#include "piece.h"
 
 #include <cstdint>
 #include <list>

@@ -1,7 +1,7 @@
 #ifndef MOVE_H
 #define MOVE_H
 
-#include "piece.h"
+#include "common.h"
 
 #include <cassert>
 #include <string>

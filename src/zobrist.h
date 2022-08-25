@@ -2,7 +2,6 @@
 #define ZOBRIST_H
 
 #include "common.h"
-#include "piece.h"
 
 namespace zobrist {
 

@@ -1,7 +1,7 @@
 #ifndef FEN_H
 #define FEN_H
 
-#include "piece.h"
+#include "common.h"
 
 #include <string>
 #include <vector>

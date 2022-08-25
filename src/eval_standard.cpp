@@ -5,13 +5,32 @@
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
-#include "piece.h"
+#include "piece_values.h"
+#include "pst.h"
 #include "stopwatch.h"
 
 namespace {
 
-namespace sc = standard_chess;
-namespace pv = standard_chess::piece_value;
+constexpr int GAME_PHASE_INC[7] = {0, 0, 4, 2, 1, 1, 0};
+
+template <Piece piece>
+void AddPSTScores(U64 bb, int& game_phase, int& mgame_score, int& egame_score) {
+  constexpr Piece piece_type = PieceType(piece);
+  constexpr Side side = PieceSide(piece);
+  constexpr const auto& pst_mgame = standard::PST_MGAME[piece_type];
+  constexpr const auto& pst_egame = standard::PST_EGAME[piece_type];
+  while (bb) {
+    const int sq = Lsb1(bb);
+    int index = sq;
+    if constexpr (side == Side::WHITE) {
+      index = index ^ 56;
+    }
+    mgame_score += pst_mgame[index] + standard::PIECE_VALUES_MGAME[piece_type];
+    egame_score += pst_egame[index] + standard::PIECE_VALUES_EGAME[piece_type];
+    game_phase += GAME_PHASE_INC[piece_type];
+    bb ^= (1ULL << sq);
+  }
+}
 
 int StaticEval(Board* board) {
   const U64 w_king = board->BitBoard(KING);
@@ -21,6 +40,16 @@ int StaticEval(Board* board) {
   const U64 w_knight = board->BitBoard(KNIGHT);
   const U64 w_pawn = board->BitBoard(PAWN);
 
+  int game_phase = 0;
+  int w_mgame_score = 0, w_egame_score = 0;
+
+  AddPSTScores<KING>(w_king, game_phase, w_mgame_score, w_egame_score);
+  AddPSTScores<QUEEN>(w_queen, game_phase, w_mgame_score, w_egame_score);
+  AddPSTScores<ROOK>(w_rook, game_phase, w_mgame_score, w_egame_score);
+  AddPSTScores<BISHOP>(w_bishop, game_phase, w_mgame_score, w_egame_score);
+  AddPSTScores<KNIGHT>(w_knight, game_phase, w_mgame_score, w_egame_score);
+  AddPSTScores<PAWN>(w_pawn, game_phase, w_mgame_score, w_egame_score);
+
   const U64 b_king = board->BitBoard(-KING);
   const U64 b_queen = board->BitBoard(-QUEEN);
   const U64 b_rook = board->BitBoard(-ROOK);
@@ -28,22 +57,21 @@ int StaticEval(Board* board) {
   const U64 b_knight = board->BitBoard(-KNIGHT);
   const U64 b_pawn = board->BitBoard(-PAWN);
 
-  int score = 0;
+  int b_mgame_score = 0, b_egame_score = 0;
 
-  score += PopCount(w_king) * pv::KING + sc::PSTScore<KING>(w_king);
-  score += PopCount(w_queen) * pv::QUEEN + sc::PSTScore<QUEEN>(w_queen);
-  score += PopCount(w_rook) * pv::ROOK + sc::PSTScore<ROOK>(w_rook);
-  score += PopCount(w_bishop) * pv::BISHOP + sc::PSTScore<BISHOP>(w_bishop);
-  score += PopCount(w_knight) * pv::KNIGHT + sc::PSTScore<KNIGHT>(w_knight);
-  score += PopCount(w_pawn) * pv::PAWN + sc::PSTScore<PAWN>(w_pawn);
+  AddPSTScores<-KING>(b_king, game_phase, b_mgame_score, b_egame_score);
+  AddPSTScores<-QUEEN>(b_queen, game_phase, b_mgame_score, b_egame_score);
+  AddPSTScores<-ROOK>(b_rook, game_phase, b_mgame_score, b_egame_score);
+  AddPSTScores<-BISHOP>(b_bishop, game_phase, b_mgame_score, b_egame_score);
+  AddPSTScores<-KNIGHT>(b_knight, game_phase, b_mgame_score, b_egame_score);
+  AddPSTScores<-PAWN>(b_pawn, game_phase, b_mgame_score, b_egame_score);
 
-  score -= PopCount(b_king) * pv::KING + sc::PSTScore<-KING>(b_king);
-  score -= PopCount(b_queen) * pv::QUEEN + sc::PSTScore<-QUEEN>(b_queen);
-  score -= PopCount(b_rook) * pv::ROOK + sc::PSTScore<-ROOK>(b_rook);
-  score -= PopCount(b_bishop) * pv::BISHOP + sc::PSTScore<-BISHOP>(b_bishop);
-  score -= PopCount(b_knight) * pv::KNIGHT + sc::PSTScore<-KNIGHT>(b_knight);
-  score -= PopCount(b_pawn) * pv::PAWN + sc::PSTScore<-PAWN>(b_pawn);
+  const int mgame_phase = std::min(24, game_phase);
+  const int egame_phase = 24 - mgame_phase;
+  const int mgame_score = w_mgame_score - b_mgame_score;
+  const int egame_score = w_egame_score - b_egame_score;
 
+  int score = (mgame_score * mgame_phase + egame_score * egame_phase) / 24;
   if (board->SideToMove() == Side::BLACK) {
     score = -score;
   }

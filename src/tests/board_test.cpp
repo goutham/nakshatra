@@ -2,7 +2,6 @@
 #include "common.h"
 #include "move.h"
 #include "movegen.h"
-#include "piece.h"
 #include "san.h"
 
 #include <gtest/gtest.h>

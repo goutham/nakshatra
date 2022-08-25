@@ -1,3 +1,4 @@
+#include "common.h"
 #include "move.h"
 #include <gtest/gtest.h>
 

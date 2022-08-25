@@ -5,7 +5,6 @@
 #include "common.h"
 #include "move.h"
 #include "move_array.h"
-#include "piece.h"
 
 template <Variant variant>
 void GenerateMoves(Board* board, MoveArray* move_array);

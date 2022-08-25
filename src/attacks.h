@@ -3,7 +3,6 @@
 
 #include "board.h"
 #include "common.h"
-#include "piece.h"
 
 namespace attacks {
 

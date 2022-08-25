@@ -5,6 +5,7 @@
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
+#include "pst.h"
 #include "see.h"
 
 template <>
@@ -31,10 +32,9 @@ void OrderMoves<Variant::STANDARD>(Board* board, const MoveArray& move_array,
       const int to_sq = move.to_index();
       const Side side = board->SideToMove();
       const Piece piece = board->PieceAt(from_sq);
-      move_info_array->moves[i] = {
-          move, MoveType::QUIET,
-          standard_chess::PSTVal(side, piece, to_sq) -
-              standard_chess::PSTVal(side, piece, from_sq)};
+      move_info_array->moves[i] = {move, MoveType::QUIET,
+                                   standard::PSTVal(side, piece, to_sq) -
+                                       standard::PSTVal(side, piece, from_sq)};
     }
   }
   move_info_array->Sort();

@@ -6,7 +6,6 @@
 #include "move.h"
 #include "move_array.h"
 #include "movegen.h"
-#include "piece.h"
 
 #include <cstdint>
 #include <cstdio>

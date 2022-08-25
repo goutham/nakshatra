@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <cctype>
 #include <climits>
 #include <cstdint>
 #include <ostream>
@@ -23,6 +24,18 @@ extern std::ostream nullstream;
 enum class Variant { STANDARD, ANTICHESS };
 
 enum class Side { NONE, WHITE, BLACK };
+
+typedef int Piece;
+
+constexpr Piece NULLPIECE = 0;
+constexpr Piece KING = 1;
+constexpr Piece QUEEN = 2;
+constexpr Piece ROOK = 3;
+constexpr Piece BISHOP = 4;
+constexpr Piece KNIGHT = 5;
+constexpr Piece PAWN = 6;
+
+extern std::ostream nullstream;
 
 // Column numbers of files.
 constexpr int FILE_A = 0;
@@ -86,6 +99,76 @@ constexpr U64 SetBit(int row, int col) {
 
 constexpr U64 SetBit(const char* sq) {
   return SetBit(CharToDigit(sq[1]) - 1, sq[0] - 'a');
+}
+
+constexpr bool IsValidPiece(Piece piece) {
+  return piece != NULLPIECE && -7 < piece && piece < 7;
+}
+
+constexpr Side PieceSide(Piece piece) {
+  return piece == NULLPIECE ? Side::NONE
+                            : (piece < 0 ? Side::BLACK : Side::WHITE);
+}
+
+constexpr Piece PieceType(Piece piece) { return piece < 0 ? -piece : piece; }
+
+constexpr Piece PieceOfSide(Piece piece, Side side) {
+  return side == Side::WHITE ? PieceType(piece) : -PieceType(piece);
+}
+
+// Maps a piece to an index between 0 and 11 (inclusive).
+constexpr int PieceIndex(const Piece piece) {
+  return piece < 0 ? (5 - piece) : (piece - 1);
+}
+
+inline Piece CharToPiece(char c) {
+  Piece piece = NULLPIECE;
+  switch (toupper(c)) {
+  case 'K':
+    piece = KING;
+    break;
+  case 'Q':
+    piece = QUEEN;
+    break;
+  case 'B':
+    piece = BISHOP;
+    break;
+  case 'R':
+    piece = ROOK;
+    break;
+  case 'N':
+    piece = KNIGHT;
+    break;
+  case 'P':
+    piece = PAWN;
+    break;
+  }
+  return (piece == NULLPIECE) ? piece : (isupper(c) ? piece : -piece);
+}
+
+inline char PieceToChar(Piece piece) {
+  char c = ' ';
+  switch (PieceType(piece)) {
+  case KING:
+    c = 'K';
+    break;
+  case QUEEN:
+    c = 'Q';
+    break;
+  case BISHOP:
+    c = 'B';
+    break;
+  case ROOK:
+    c = 'R';
+    break;
+  case KNIGHT:
+    c = 'N';
+    break;
+  case PAWN:
+    c = 'P';
+    break;
+  }
+  return isalpha(c) ? (piece < NULLPIECE ? tolower(c) : c) : c;
 }
 
 std::vector<std::string> SplitString(const std::string& s, char delim);

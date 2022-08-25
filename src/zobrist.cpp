@@ -1,6 +1,5 @@
 #include "zobrist.h"
 #include "common.h"
-#include "piece.h"
 
 #include <array>
 #include <iostream>
