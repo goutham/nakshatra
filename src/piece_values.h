@@ -2,8 +2,8 @@
 #define PIECE_VALUES_H
 
 namespace standard {
-constexpr int PIECE_VALUES_MGAME[] = {0, 20000, 931, 469, 327, 306, 73};
-constexpr int PIECE_VALUES_EGAME[] = {0, 20000, 931, 500, 312, 292, 115};
+constexpr int PIECE_VALUES_MGAME[] = {0, 20000, 1182, 546, 422, 405,  96, };
+constexpr int PIECE_VALUES_EGAME[] = {0, 20000, 998, 553, 316, 304, 130, };
 } // namespace standard
 
 namespace antichess {
