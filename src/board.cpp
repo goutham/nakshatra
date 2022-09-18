@@ -13,7 +13,8 @@ namespace {
 
 const std::map<const Variant, const std::string> variant_fen_map = {
     {Variant::STANDARD, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"},
-    {Variant::ANTICHESS, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}};
+    {Variant::ANTICHESS, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"},
+    {Variant::SUICIDE, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -"}};
 
 // clang-format off
 constexpr uint8_t CASTLING_MASKS[64] = {
@@ -37,7 +38,7 @@ Board::Board(const Variant variant, const std::string& fen) {
   castling_allowed_ = true;
   MoveStackEntry* top = move_stack_.Top();
   top->castle = 0xF;
-  if (variant == Variant::ANTICHESS) {
+  if (IsAntichessLike(variant)) {
     castling_allowed_ = false;
     top->castle = 0;
   }

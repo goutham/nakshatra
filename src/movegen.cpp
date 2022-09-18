@@ -49,7 +49,7 @@ void AddPawnPromotions(const int from_index, const int to_index,
   add_move(QUEEN);
   add_move(ROOK);
 
-  if constexpr (variant == Variant::ANTICHESS) {
+  if constexpr (IsAntichessLike(variant)) {
     add_move(KING);
   }
 }
@@ -75,11 +75,10 @@ void AddPawnMoves(U64 pawn_bitboard, MoveArray* move_array) {
 template <Variant variant, Side side, PawnMoveType>
 void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
   constexpr int promotion_count =
-      variant == Variant::STANDARD
-          ? 4
-          : (variant == Variant::ANTICHESS
-                 ? 5
-                 : throw std::logic_error("Unknown variant"));
+      IsStandard(variant) ? 4
+                          : (IsAntichessLike(variant)
+                                 ? 5
+                                 : throw std::logic_error("Unknown variant"));
   const U64 mask_7th_row = side_relative::MaskRow<side>(7);
   *move_count += PopCount(pawn_bitboard & mask_7th_row) * promotion_count +
                  PopCount(pawn_bitboard & ~mask_7th_row);
@@ -251,13 +250,14 @@ bool Captures(const Board& board) {
                               opp_bitboard | EnpassantBitBoard<side>(board));
 }
 
-template <Side side, typename MoveAccumulatorType>
-void GenerateMoves_Antichess(const Board& board, MoveAccumulatorType move_acc) {
+template <Variant variant, Side side, typename MoveAccumulatorType>
+  requires(IsAntichessLike(variant))
+void GenerateMoves(const Board& board, MoveAccumulatorType move_acc) {
   const bool generate_captures_only = Captures<side>(board);
 
   auto generate = [&](const Piece piece_type) {
-    GeneratePieceMoves<Variant::ANTICHESS, side>(
-        board, PieceOfSide(piece_type, side), generate_captures_only, move_acc);
+    GeneratePieceMoves<variant, side>(board, PieceOfSide(piece_type, side),
+                                      generate_captures_only, move_acc);
   };
 
   generate(BISHOP);
@@ -268,13 +268,14 @@ void GenerateMoves_Antichess(const Board& board, MoveAccumulatorType move_acc) {
   generate(ROOK);
 }
 
-template <Side side>
-void GenerateMoves_Standard(Board* board, MoveArray* move_array) {
+template <Variant variant, Side side>
+  requires(IsStandard(variant))
+void GenerateMoves(Board* board, MoveArray* move_array) {
   MoveArray pseudo_legal_move_array;
 
   auto generate = [&](const Piece piece_type) {
-    GeneratePieceMoves<Variant::STANDARD, side>(
-        *board, PieceOfSide(piece_type, side), false, &pseudo_legal_move_array);
+    GeneratePieceMoves<variant, side>(*board, PieceOfSide(piece_type, side),
+                                      false, &pseudo_legal_move_array);
   };
 
   generate(BISHOP);
@@ -348,55 +349,70 @@ void GenerateMoves_Standard(Board* board, MoveArray* move_array) {
 
 } // namespace
 
-template <>
-void GenerateMoves<Variant::STANDARD>(Board* board, MoveArray* move_array) {
+template <Variant variant>
+  requires(IsStandard(variant))
+void GenerateMoves(Board* board, MoveArray* move_array) {
   const Side side = board->SideToMove();
   if (side == Side::BLACK) {
-    GenerateMoves_Standard<Side::BLACK>(board, move_array);
+    GenerateMoves<variant, Side::BLACK>(board, move_array);
   } else {
     assert(side == Side::WHITE);
-    GenerateMoves_Standard<Side::WHITE>(board, move_array);
+    GenerateMoves<variant, Side::WHITE>(board, move_array);
   }
 }
 
-template <>
-void GenerateMoves<Variant::ANTICHESS>(Board* board, MoveArray* move_array) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void GenerateMoves(Board* board, MoveArray* move_array) {
   const Side side = board->SideToMove();
   if (side == Side::BLACK) {
-    GenerateMoves_Antichess<Side::BLACK>(*board, move_array);
+    GenerateMoves<variant, Side::BLACK>(*board, move_array);
   } else {
     assert(side == Side::WHITE);
-    GenerateMoves_Antichess<Side::WHITE>(*board, move_array);
+    GenerateMoves<variant, Side::WHITE>(*board, move_array);
   }
 }
 
-template <>
-int CountMoves<Variant::STANDARD>(Board* board) {
+template void GenerateMoves<Variant::STANDARD>(Board*, MoveArray*);
+template void GenerateMoves<Variant::ANTICHESS>(Board*, MoveArray*);
+template void GenerateMoves<Variant::SUICIDE>(Board*, MoveArray*);
+
+template <Variant variant>
+  requires(IsStandard(variant))
+int CountMoves(Board* board) {
   MoveArray move_array;
   GenerateMoves<Variant::STANDARD>(board, &move_array);
   return move_array.size();
 }
 
-template <>
-int CountMoves<Variant::ANTICHESS>(Board* board) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+int CountMoves(Board* board) {
   const Side side = board->SideToMove();
   int move_count = 0;
   if (side == Side::BLACK) {
-    GenerateMoves_Antichess<Side::BLACK>(*board, &move_count);
+    GenerateMoves<variant, Side::BLACK>(*board, &move_count);
   } else {
     assert(side == Side::WHITE);
-    GenerateMoves_Antichess<Side::WHITE>(*board, &move_count);
+    GenerateMoves<variant, Side::WHITE>(*board, &move_count);
   }
   return move_count;
 }
+
+template int CountMoves<Variant::STANDARD>(Board*);
+template int CountMoves<Variant::ANTICHESS>(Board*);
+template int CountMoves<Variant::SUICIDE>(Board*);
 
 bool IsValidMove(const Variant variant, Board* board, const Move& move) {
   MoveArray move_array;
   if (variant == Variant::STANDARD) {
     GenerateMoves<Variant::STANDARD>(board, &move_array);
-  } else {
-    assert(variant == Variant::ANTICHESS);
+  } else if (variant == Variant::ANTICHESS) {
     GenerateMoves<Variant::ANTICHESS>(board, &move_array);
+  } else if (variant == Variant::SUICIDE) {
+    GenerateMoves<Variant::SUICIDE>(board, &move_array);
+  } else {
+    assert(false); // unreachable
   }
   return move_array.Contains(move);
 }

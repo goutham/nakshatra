@@ -64,6 +64,8 @@ struct PNSParams {
   int log_progress = -1;
 };
 
+template <Variant variant>
+  requires(IsAntichessLike(variant))
 class PNSearch {
 public:
   // timer_ and egtb may be null.

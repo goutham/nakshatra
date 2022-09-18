@@ -282,8 +282,8 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
         // the best known move before current iteration, which means any other
         // move found to be better at this depth is at least better than that.
         if (istat.root_moves_covered > 0) {
-          transpos->Put(istat.score, EXACT_NODE, max_depth, board.ZobristKey(),
-                        istat.best_move);
+          transpos->Put(istat.score, NodeType::EXACT_NODE, max_depth,
+                        board.ZobristKey(), istat.best_move);
         }
         *ret_istat = istat;
       };
@@ -331,7 +331,7 @@ std::string IterativeDeepener<variant>::PV(const Move& root_move) {
     bool found = false;
     const TTData tdata = transpos_->Get(zkey, &found);
     if (!found || !tdata.best_move.is_valid() ||
-        tdata.node_type() != EXACT_NODE) {
+        tdata.node_type() != NodeType::EXACT_NODE) {
       break;
     }
     pv.append(SAN(*board_, tdata.best_move) + " ");
@@ -368,3 +368,9 @@ template void IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
                                            Move* best_move,
                                            int* best_move_score,
                                            SearchStats* id_search_stats);
+
+template void IDSearch<Variant::SUICIDE>(const IDSParams& ids_params,
+                                         Board* board, Timer* timer,
+                                         TranspositionTable* transpos,
+                                         Move* best_move, int* best_move_score,
+                                         SearchStats* id_search_stats);
