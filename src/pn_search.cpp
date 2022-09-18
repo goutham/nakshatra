@@ -22,7 +22,10 @@
 
 #define PNS_MAX_DEPTH 600
 
-void PNSearch::Search(const PNSParams& pns_params, PNSResult* pns_result) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void PNSearch<variant>::Search(const PNSParams& pns_params,
+                               PNSResult* pns_result) {
   if (pns_tree_) {
     Delete(pns_tree_);
     pns_tree_ = nullptr;
@@ -71,7 +74,9 @@ void PNSearch::Search(const PNSParams& pns_params, PNSResult* pns_result) {
   }
 }
 
-void PNSearch::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void PNSearch<variant>::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
   PNSNode* cur_node = pns_root;
 
   StopWatch stop_watch;
@@ -103,7 +108,9 @@ void PNSearch::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
   assert(depth == 0);
 }
 
-bool PNSearch::RedundantMoves(PNSNode* pns_node) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+bool PNSearch<variant>::RedundantMoves(PNSNode* pns_node) {
   if (pns_node && pns_node->parent && pns_node->parent->parent &&
       pns_node->parent->parent->parent) {
     const Move& m1 = pns_node->move;
@@ -118,7 +125,9 @@ bool PNSearch::RedundantMoves(PNSNode* pns_node) {
   return false;
 }
 
-PNSNode* PNSearch::FindMpn(PNSNode* root, int* depth) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+PNSNode* PNSearch<variant>::FindMpn(PNSNode* root, int* depth) {
   PNSNode* mpn = root;
   while (!mpn->children.empty()) {
     // If proof number of parent node is INF_NODES, all it's children will have
@@ -148,8 +157,11 @@ PNSNode* PNSearch::FindMpn(PNSNode* root, int* depth) {
   return mpn;
 }
 
-PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params, PNSNode* mpn,
-                                   PNSNode* pns_root, int* depth) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+PNSNode* PNSearch<variant>::UpdateAncestors(const PNSParams& pns_params,
+                                            PNSNode* mpn, PNSNode* pns_root,
+                                            int* depth) {
   PNSNode* pns_node = mpn;
   while (true) {
     if (!pns_node->children.empty()) {
@@ -177,9 +189,11 @@ PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params, PNSNode* mpn,
         return pns_node;
       }
       if (proof == 0 && transpos_) {
-        transpos_->Put(WIN, EXACT_NODE, 0, board_->ZobristKey(), Move());
+        transpos_->Put(WIN, NodeType::EXACT_NODE, 0, board_->ZobristKey(),
+                       Move());
       } else if (proof == INF_NODES && disproof == 0 && transpos_) {
-        transpos_->Put(-WIN, EXACT_NODE, 0, board_->ZobristKey(), Move());
+        transpos_->Put(-WIN, NodeType::EXACT_NODE, 0, board_->ZobristKey(),
+                       Move());
       }
       pns_node->proof = proof;
       pns_node->disproof = disproof;
@@ -194,7 +208,9 @@ PNSNode* PNSearch::UpdateAncestors(const PNSParams& pns_params, PNSNode* mpn,
   assert(false);
 }
 
-void PNSearch::UpdateTreeSize(PNSNode* pns_node) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void PNSearch<variant>::UpdateTreeSize(PNSNode* pns_node) {
   if (!pns_node->children.empty()) {
     pns_node->tree_size = 1;
     for (PNSNode* child : pns_node->children) {
@@ -203,8 +219,10 @@ void PNSearch::UpdateTreeSize(PNSNode* pns_node) {
   }
 }
 
-void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
-                      const int pns_node_depth, PNSNode* pns_node) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void PNSearch<variant>::Expand(const PNSParams& pns_params, const int num_nodes,
+                               const int pns_node_depth, PNSNode* pns_node) {
   if (RedundantMoves(pns_node) || pns_node_depth >= PNS_MAX_DEPTH) {
     pns_node->proof = INF_NODES;
     pns_node->disproof = INF_NODES;
@@ -229,14 +247,14 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
     }
   } else {
     MoveArray move_array;
-    GenerateMoves<Variant::ANTICHESS>(board_, &move_array);
+    GenerateMoves<variant>(board_, &move_array);
     for (size_t i = 0; i < move_array.size(); ++i) {
       PNSNode* child = new PNSNode;
       pns_node->children.push_back(child);
       child->move = move_array.get(i);
       child->parent = pns_node;
       board_->MakeMove(child->move);
-      int result = EvalResult<Variant::ANTICHESS>(board_);
+      int result = EvalResult<variant>(board_);
       if (result == UNKNOWN && egtb_ &&
           OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
           OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
@@ -256,10 +274,11 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
         child->disproof = INF_NODES;
       } else {
         child->proof = 1;
-        child->disproof = CountMoves<Variant::ANTICHESS>(board_);
+        child->disproof = CountMoves<variant>(board_);
       }
       if ((result == WIN || result == -WIN) && transpos_) {
-        transpos_->Put(result, EXACT_NODE, 0, board_->ZobristKey(), Move());
+        transpos_->Put(result, NodeType::EXACT_NODE, 0, board_->ZobristKey(),
+                       Move());
       }
       board_->UnmakeLastMove();
     }
@@ -267,7 +286,10 @@ void PNSearch::Expand(const PNSParams& pns_params, const int num_nodes,
   }
 }
 
-int PNSearch::PnNodes(const PNSParams& pns_params, const int num_nodes) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+int PNSearch<variant>::PnNodes(const PNSParams& pns_params,
+                               const int num_nodes) {
   const double a = pns_params.pn2_max_nodes_fraction_a * pns_params.max_nodes;
   const double b = pns_params.pn2_max_nodes_fraction_b * pns_params.max_nodes;
   const double f_x = 1.0 / (1.0 + exp((a - num_nodes) / b));
@@ -276,14 +298,21 @@ int PNSearch::PnNodes(const PNSParams& pns_params, const int num_nodes) {
                static_cast<double>(pns_params.max_nodes - num_nodes)));
 }
 
-void PNSearch::Delete(PNSNode* pns_node) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void PNSearch<variant>::Delete(PNSNode* pns_node) {
   Delete(pns_node->children);
   delete pns_node;
 }
 
-void PNSearch::Delete(std::vector<PNSNode*>& pns_nodes) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void PNSearch<variant>::Delete(std::vector<PNSNode*>& pns_nodes) {
   for (PNSNode* pns_node : pns_nodes) {
     Delete(pns_node);
   }
   pns_nodes.clear();
 }
+
+template class PNSearch<Variant::ANTICHESS>;
+template class PNSearch<Variant::SUICIDE>;

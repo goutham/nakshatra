@@ -10,21 +10,23 @@
 #include <vector>
 
 #define BOARD_SIZE 64
-
 #define MAX_DEPTH 100
-
 #define INF SHRT_MAX
 #define WIN (SHRT_MAX - 1)
 #define DRAW 0
 #define UNKNOWN -1
 
-typedef uint64_t U64;
-extern std::ostream nullstream;
-
-enum class Variant { STANDARD, ANTICHESS };
+enum class Variant {
+  STANDARD,
+  ANTICHESS,
+  SUICIDE // FICS rules
+};
 
 enum class Side { NONE, WHITE, BLACK };
 
+enum class NodeType { FAIL_HIGH_NODE, FAIL_LOW_NODE, EXACT_NODE };
+
+typedef uint64_t U64;
 typedef int Piece;
 
 constexpr Piece NULLPIECE = 0;
@@ -46,8 +48,6 @@ constexpr int FILE_E = 4;
 constexpr int FILE_F = 5;
 constexpr int FILE_G = 6;
 constexpr int FILE_H = 7;
-
-enum NodeType { FAIL_HIGH_NODE, FAIL_LOW_NODE, EXACT_NODE };
 
 inline int Lsb1(const U64 v) { return __builtin_ctzll(v); }
 
@@ -72,14 +72,6 @@ constexpr unsigned ROW(const unsigned index) { return index / 8; }
 
 constexpr unsigned COL(const unsigned index) { return index % 8; }
 
-constexpr Side OppositeSide(Side side) {
-  return side == Side::BLACK ? Side::WHITE
-                             : (side == Side::WHITE ? Side::BLACK : Side::NONE);
-}
-
-// Maps a side to an index; 0 for white and 1 for black.
-constexpr int SideIndex(const Side side) { return side == Side::WHITE ? 0 : 1; }
-
 // Returns true if only one bit is set in given U64. This is much faster
 // than using PopCount function.
 constexpr bool OnlyOneBitSet(U64 v) { return v && !(v & (v - 1)); }
@@ -101,6 +93,22 @@ constexpr U64 SetBit(const char* sq) {
   return SetBit(CharToDigit(sq[1]) - 1, sq[0] - 'a');
 }
 
+constexpr bool IsStandard(Variant variant) {
+  return variant == Variant::STANDARD;
+}
+
+constexpr bool IsAntichess(Variant variant) {
+  return variant == Variant::ANTICHESS;
+}
+
+constexpr bool IsSuicide(Variant variant) {
+  return variant == Variant::SUICIDE;
+}
+
+constexpr bool IsAntichessLike(Variant variant) {
+  return IsAntichess(variant) || IsSuicide(variant);
+}
+
 constexpr bool IsValidPiece(Piece piece) {
   return piece != NULLPIECE && -7 < piece && piece < 7;
 }
@@ -120,6 +128,14 @@ constexpr Piece PieceOfSide(Piece piece, Side side) {
 constexpr int PieceIndex(const Piece piece) {
   return piece < 0 ? (5 - piece) : (piece - 1);
 }
+
+constexpr Side OppositeSide(Side side) {
+  return side == Side::BLACK ? Side::WHITE
+                             : (side == Side::WHITE ? Side::BLACK : Side::NONE);
+}
+
+// Maps a side to an index; 0 for white and 1 for black.
+constexpr int SideIndex(const Side side) { return static_cast<int>(side) - 1; }
 
 inline Piece CharToPiece(char c) {
   Piece piece = NULLPIECE;

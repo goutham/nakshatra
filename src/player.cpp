@@ -47,54 +47,58 @@ Move Player::SearchInternal(const SearchParams& search_params,
   ids_params.thinking_output = search_params.thinking_output;
   ids_params.search_depth = search_params.search_depth;
 
-  if (variant == Variant::ANTICHESS && search_params.antichess_pns) {
-    Timer pns_timer;
-    pns_timer.Run(time_for_move_centis * (kPNSTimeForMovePercent / 100.0));
+  if constexpr (IsAntichessLike(variant)) {
+    if (search_params.antichess_pns) {
+      Timer pns_timer;
+      pns_timer.Run(time_for_move_centis * (kPNSTimeForMovePercent / 100.0));
 
-    StopWatch pn_stop_watch;
-    pn_stop_watch.Start();
+      StopWatch pn_stop_watch;
+      pn_stop_watch.Start();
 
-    PNSearch pn_search(board_, transpos_, &pns_timer);
-    PNSParams pns_params;
-    pns_params.quiet = !search_params.thinking_output;
-    pns_params.max_nodes = 10000000;
-    PNSResult pns_result;
-    pn_search.Search(pns_params, &pns_result);
-    pn_stop_watch.Stop();
-    out << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
-        << std::endl;
+      PNSearch<variant> pn_search(board_, transpos_, &pns_timer);
+      PNSParams pns_params;
+      pns_params.quiet = !search_params.thinking_output;
+      pns_params.max_nodes = 10000000;
+      PNSResult pns_result;
+      pn_search.Search(pns_params, &pns_result);
+      pn_stop_watch.Stop();
+      out << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
+          << std::endl;
 
-    if (pns_result.ordered_moves.size()) {
-      out << "# PNS Stats: tree_size: " << pns_result.tree_size << std::endl;
-      PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);
-      out << "# PNS best move: " << best_pns_move_stat.move.str() << std::endl;
-      // If 100% time is used for PNS, return best move.
-      if (kPNSTimeForMovePercent >= 100) {
-        return best_pns_move_stat.move;
-      }
-      // If the best move is WON, return.
-      if (best_pns_move_stat.result == WIN) {
-        out << "# PNS WIN!" << std::endl;
-        return best_pns_move_stat.move;
-      }
-      // If the best move is lost, let Negascout search find the best move.
-      if (best_pns_move_stat.result == -WIN) {
-        out << "# PNS LOSS!" << std::endl;
-      } else {
-        // Include all non-LOSS moves.
-        for (const PNSResult::MoveStat& move_stat : pns_result.ordered_moves) {
-          if (move_stat.result == -WIN)
-            break;
-          ids_params.pruned_ordered_moves.Add(move_stat.move);
+      if (pns_result.ordered_moves.size()) {
+        out << "# PNS Stats: tree_size: " << pns_result.tree_size << std::endl;
+        PNSResult::MoveStat best_pns_move_stat = pns_result.ordered_moves.at(0);
+        out << "# PNS best move: " << best_pns_move_stat.move.str()
+            << std::endl;
+        // If 100% time is used for PNS, return best move.
+        if (kPNSTimeForMovePercent >= 100) {
+          return best_pns_move_stat.move;
         }
+        // If the best move is WON, return.
+        if (best_pns_move_stat.result == WIN) {
+          out << "# PNS WIN!" << std::endl;
+          return best_pns_move_stat.move;
+        }
+        // If the best move is lost, let Negascout search find the best move.
+        if (best_pns_move_stat.result == -WIN) {
+          out << "# PNS LOSS!" << std::endl;
+        } else {
+          // Include all non-LOSS moves.
+          for (const PNSResult::MoveStat& move_stat :
+               pns_result.ordered_moves) {
+            if (move_stat.result == -WIN)
+              break;
+            ids_params.pruned_ordered_moves.Add(move_stat.move);
+          }
+        }
+      } else {
+        out << "# No PNS moves.";
       }
-    } else {
-      out << "# No PNS moves.";
-    }
 
-    // Subtract time taken by PNSearch.
-    time_for_move_centis -= static_cast<long>(pn_stop_watch.ElapsedTime());
-    out << "# Time left: " << time_for_move_centis << " centis" << std::endl;
+      // Subtract time taken by PNSearch.
+      time_for_move_centis -= static_cast<long>(pn_stop_watch.ElapsedTime());
+      out << "# Time left: " << time_for_move_centis << " centis" << std::endl;
+    }
   }
 
   timer_->Run(time_for_move_centis);
@@ -112,9 +116,12 @@ Move Player::Search(const SearchParams& search_params,
   if (variant_ == Variant::STANDARD) {
     return SearchInternal<Variant::STANDARD>(search_params,
                                              time_for_move_centis);
-  } else {
-    assert(variant_ == Variant::ANTICHESS);
+  } else if (variant_ == Variant::ANTICHESS) {
     return SearchInternal<Variant::ANTICHESS>(search_params,
                                               time_for_move_centis);
+  } else if (variant_ == Variant::SUICIDE) {
+    return SearchInternal<Variant::SUICIDE>(search_params,
+                                            time_for_move_centis);
   }
+  throw std::logic_error("unexpected variant");
 }

@@ -10,14 +10,12 @@ namespace side_relative {
 // Shifts left relative to the side (so, for Side::BLACK, relative left shift is
 // actual right shift).
 template <Side side>
-constexpr U64 LeftShift(U64 bitboard, int shift) {
-  if constexpr (side == Side::WHITE) {
-    return bitboard << shift;
-  } else {
-    static_assert(side == Side::BLACK);
-    return bitboard >> shift;
-  }
-}
+  requires(side == Side::BLACK)
+constexpr U64 LeftShift(U64 bitboard, int shift) { return bitboard >> shift; }
+
+template <Side side>
+  requires(side == Side::WHITE)
+constexpr U64 LeftShift(U64 bitboard, int shift) { return bitboard << shift; }
 
 template <Side side>
 constexpr U64 RightShift(U64 bitboard, int shift) {
@@ -25,19 +23,31 @@ constexpr U64 RightShift(U64 bitboard, int shift) {
 }
 
 template <Side side>
+  requires(side == Side::BLACK)
 constexpr U64 MaskRow(int row) {
-  return row >= 0 && row <= 7
-             ? (side == Side::WHITE ? (0xFFULL << (row * 8))
-                                    : (0xFF00000000000000ULL >> (row * 8)))
-             : throw std::logic_error("invalid row");
+  assert(row >= 0 && row <= 7);
+  return 0xFF00000000000000ULL >> (row * 8);
 }
 
 template <Side side>
+  requires(side == Side::WHITE)
+constexpr U64 MaskRow(int row) {
+  assert(row >= 0 && row <= 7);
+  return 0xFFULL << (row * 8);
+}
+
+template <Side side>
+  requires(side == Side::BLACK)
 constexpr U64 MaskColumn(int col) {
-  return col >= 0 && col <= 7
-             ? (side == Side::WHITE ? (0x8080808080808080ULL >> col)
-                                    : (0x0101010101010101ULL << col))
-             : throw std::logic_error("invalid col");
+  assert(col >= 0 && col <= 7);
+  return 0x0101010101010101ULL << col;
+}
+
+template <Side side>
+  requires(side == Side::WHITE)
+constexpr U64 MaskColumn(int col) {
+  assert(col >= 0 && col <= 7);
+  return 0x8080808080808080ULL >> col;
 }
 
 // Pushes bits one row to the front corresponding to the side.

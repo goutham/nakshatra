@@ -127,7 +127,7 @@ void PrintEGTBIndexEntry(const EGTBIndexEntry& entry) {
 }
 
 EGTB* GetEGTB(const Variant variant) {
-  if (variant == Variant::ANTICHESS) {
+  if (IsAntichessLike(variant)) {
     static EGTB* antichess_egtb = [] {
       std::vector<std::string> egtb_filenames;
       assert(GlobFiles(ANTICHESS_EGTB_PATH_GLOB, &egtb_filenames));

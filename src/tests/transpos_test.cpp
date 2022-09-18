@@ -15,9 +15,9 @@ TEST(TransposTest, VerifyEntries) {
   EXPECT_FALSE(found);
 
   Move m("e2e3");
-  t.Put(1000, FAIL_HIGH_NODE, 10, zkey, m);
+  t.Put(1000, NodeType::FAIL_HIGH_NODE, 10, zkey, m);
   EXPECT_EQ(1000, t.Get(zkey, &found).score);
-  EXPECT_EQ(FAIL_HIGH_NODE, t.Get(zkey, &found).node_type());
+  EXPECT_EQ(NodeType::FAIL_HIGH_NODE, t.Get(zkey, &found).node_type());
   EXPECT_EQ(10, t.Get(zkey, &found).depth);
   EXPECT_EQ(m.encoded_move(), t.Get(zkey, &found).best_move.encoded_move());
 }

@@ -23,10 +23,10 @@ using std::vector;
 namespace {
 
 int TransposSize(const Variant variant) {
-  if (variant == Variant::STANDARD) {
+  if (IsStandard(variant)) {
     return STANDARD_TRANSPOS_SIZE;
   }
-  assert(variant == Variant::ANTICHESS);
+  assert(IsAntichessLike(variant));
   return ANTICHESS_TRANSPOS_SIZE;
 }
 
@@ -59,9 +59,16 @@ ExecutionContext::~ExecutionContext() {
 }
 
 bool Executor::MatchResult(vector<string>* response) {
-  int result = variant_ == Variant::STANDARD
-                   ? EvalResult<Variant::STANDARD>(main_context_->board.get())
-                   : EvalResult<Variant::ANTICHESS>(main_context_->board.get());
+  int result;
+  if (variant_ == Variant::STANDARD) {
+    result = EvalResult<Variant::STANDARD>(main_context_->board.get());
+  } else if (variant_ == Variant::ANTICHESS) {
+    result = EvalResult<Variant::ANTICHESS>(main_context_->board.get());
+  } else if (variant_ == Variant::SUICIDE) {
+    result = EvalResult<Variant::SUICIDE>(main_context_->board.get());
+  } else {
+    assert(false); // unreachable
+  }
   if (!(result == WIN || result == -WIN || result == DRAW)) {
     return false;
   }
@@ -146,9 +153,13 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
     StopPondering();
     force_mode_ = false;
     variant_ = Variant::STANDARD;
-    if (cmd_parts.at(1) == "suicide" || cmd_parts.at(1) == "giveaway" ||
-        cmd_parts.at(1) == "S") {
+    if (cmd_parts.at(1) == "giveaway") {
       variant_ = Variant::ANTICHESS;
+    } else if (cmd_parts.at(1) == "suicide") {
+      variant_ = Variant::SUICIDE;
+    } else {
+      std::cout << "# Ignoring unrecognized variant: " << cmd_parts.at(1)
+                << std::endl;
     }
     RebuildMainContext();
   } else if (cmd == "sd") {
@@ -261,19 +272,20 @@ long Executor::AllocateTime() const {
     return 1l;
   }
   double a, b, c, d, e;
-  if (variant_ == Variant::STANDARD) {
+  if (IsStandard(variant_)) {
     a = -1.50140990e-08;
     b = 7.61654331e-06;
     c = 1.86255488e-04;
     d = -5.43305966e-01;
     e = 9.66625927e+01;
-  } else {
-    assert(variant_ == Variant::ANTICHESS);
+  } else if (IsAntichessLike(variant_)) {
     a = 1.04978830e-06;
     b = -3.17302622e-04;
     c = 3.41067191e-02;
     d = -1.57304241e+00;
     e = 4.83298816e+01;
+  } else {
+    assert(false); // unreachable
   }
   const int movenum = main_context_->board->HalfMoveClock();
   const double est_self_moves_remaining =

@@ -80,8 +80,9 @@ int StaticEval(Board* board) {
 
 } // namespace
 
-template <>
-int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta) {
+template <Variant variant>
+  requires(IsStandard(variant))
+int Evaluate(Board* board, int alpha, int beta) {
   bool in_check = attacks::InCheck(*board, board->SideToMove());
   if (!in_check) {
     int standing_pat = StaticEval(board);
@@ -117,8 +118,9 @@ int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta) {
   return alpha;
 }
 
-template <>
-int EvalResult<Variant::STANDARD>(Board* board) {
+template <Variant variant>
+  requires(IsStandard(variant))
+int EvalResult(Board* board) {
   const Side side = board->SideToMove();
   MoveArray move_array;
   GenerateMoves<Variant::STANDARD>(board, &move_array);
@@ -139,3 +141,6 @@ int EvalResult<Variant::STANDARD>(Board* board) {
   }
   return UNKNOWN;
 }
+
+template int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta);
+template int EvalResult<Variant::STANDARD>(Board* board);

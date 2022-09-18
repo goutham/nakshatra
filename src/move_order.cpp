@@ -8,10 +8,10 @@
 #include "pst.h"
 #include "see.h"
 
-template <>
-void OrderMoves<Variant::STANDARD>(Board* board, const MoveArray& move_array,
-                                   const PrefMoves* pref_moves,
-                                   MoveInfoArray* move_info_array) {
+template <Variant variant>
+  requires(IsStandard(variant))
+void OrderMoves(Board* board, const MoveArray& move_array,
+                const PrefMoves* pref_moves, MoveInfoArray* move_info_array) {
   const size_t num_moves = move_array.size();
   move_info_array->size = num_moves;
   for (size_t i = 0; i < num_moves; ++i) {
@@ -40,10 +40,10 @@ void OrderMoves<Variant::STANDARD>(Board* board, const MoveArray& move_array,
   move_info_array->Sort();
 }
 
-template <>
-void OrderMoves<Variant::ANTICHESS>(Board* board, const MoveArray& move_array,
-                                    const PrefMoves* pref_moves,
-                                    MoveInfoArray* move_info_array) {
+template <Variant variant>
+  requires(IsAntichessLike(variant))
+void OrderMoves(Board* board, const MoveArray& move_array,
+                const PrefMoves* pref_moves, MoveInfoArray* move_info_array) {
   const size_t num_moves = move_array.size();
   move_info_array->size = num_moves;
   for (size_t i = 0; i < num_moves; ++i) {
@@ -63,6 +63,13 @@ void OrderMoves<Variant::ANTICHESS>(Board* board, const MoveArray& move_array,
   }
   move_info_array->Sort();
 }
+
+template void OrderMoves<Variant::STANDARD>(Board*, const MoveArray&,
+                                            const PrefMoves*, MoveInfoArray*);
+template void OrderMoves<Variant::ANTICHESS>(Board*, const MoveArray&,
+                                             const PrefMoves*, MoveInfoArray*);
+template void OrderMoves<Variant::SUICIDE>(Board*, const MoveArray&,
+                                           const PrefMoves*, MoveInfoArray*);
 
 template <Variant variant>
 void OrderMovesByEvalScore(Board* board, const MoveArray& move_array,
@@ -85,5 +92,8 @@ template void OrderMovesByEvalScore<Variant::STANDARD>(
     Board* board, const MoveArray& move_array, const PrefMoves* pref_moves,
     MoveInfoArray* move_info_array);
 template void OrderMovesByEvalScore<Variant::ANTICHESS>(
+    Board* board, const MoveArray& move_array, const PrefMoves* pref_moves,
+    MoveInfoArray* move_info_array);
+template void OrderMovesByEvalScore<Variant::SUICIDE>(
     Board* board, const MoveArray& move_array, const PrefMoves* pref_moves,
     MoveInfoArray* move_info_array);
