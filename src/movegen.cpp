@@ -320,7 +320,7 @@ void GenerateMoves(Board* board, MoveArray* move_array) {
     // pins but always a superset.
     const U64 potential_pins =
         attacks::Attacks(board->BitBoard(king_piece), king_index, QUEEN) &
-        opp_attack_map & board->BitBoard(side);
+        board->BitBoard(side);
 
     for (size_t i = 0; i < pseudo_legal_move_array.size(); ++i) {
       const Move& move = pseudo_legal_move_array.get(i);
