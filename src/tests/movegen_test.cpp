@@ -329,6 +329,30 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
   }
 }
 
+TEST_F(MoveGeneratorTest, ProblemPosition1) {
+  Board board(Variant::STANDARD, "8/8/2p2p2/6r1/2k1pP1R/4P3/8/7K b - f3");
+  MoveArray move_array;
+  GenerateMoves<Variant::STANDARD>(&board, &move_array);
+  static const std::vector<std::string> valid_moves = {
+      "c4b3", "c4c3", "c4d3", "c4b4", "c4b5", "c4c5", "c4d5", "c6c5",
+      "f6f5", "g5g1", "g5g2", "g5g3", "g5g4", "g5a5", "g5b5", "g5c5",
+      "g5d5", "g5e5", "g5f5", "g5h5", "g5g6", "g5g7", "g5g8",
+
+  };
+  EXPECT_EQ(valid_moves.size(), move_array.size());
+  for (int i = 0; i < valid_moves.size(); ++i) {
+    const Move move(valid_moves[i]);
+    bool found = false;
+    for (int j = 0; j < move_array.size(); ++j) {
+      if (move_array.get(j) == move) {
+        found = true;
+        break;
+      }
+    }
+    EXPECT_TRUE(found);
+  }
+}
+
 TEST_F(MoveGeneratorTest, VerifySlidingAttackMaps) {
   Board board(Variant::ANTICHESS,
               "R7/1P1PPP1P/N2B3R/2P1P3/PP4P1/3p1pp1/1p1ppp2/1n1qkb2 w - -");
