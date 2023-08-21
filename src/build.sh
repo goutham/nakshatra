@@ -55,7 +55,7 @@ cat >> config.h << __EOF__
 #define NUM_THREADS 1
 __EOF__
 
-scons
+cmake -GNinja . && ninja
 
 if test ! -e egtb; then
   mkdir egtb

@@ -15,10 +15,7 @@ To play a game of chess or antichess with Nakshatra, check out these sites where
 
 ```
 # Example for Ubuntu and other Debian based GNU/Linux systems.
-sudo apt-get install zip
-sudo apt-get install git
-sudo apt-get install g++  # or clang++, need C++20+ support
-sudo apt-get install scons
+sudo apt install zip git cmake ninja-build g++  # or clang++, need C++20+ support
 ```
 
 ### Build from Source
