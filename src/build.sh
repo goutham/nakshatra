@@ -16,14 +16,6 @@ if test ! -e magic-bits; then
   git clone https://github.com/goutham/magic-bits.git
 fi
 
-if test ! -e gtest; then
-  echo "Fetching googletest..."
-  curl -L -O https://github.com/google/googletest/archive/release-1.7.0.zip
-  unzip -q release-1.7.0.zip
-  rm release-1.7.0.zip
-  mv googletest-release-1.7.0 gtest
-fi
-
 cat > config.h << __EOF__
 #define ENGINE_NAME "Nakshatra"
 __EOF__

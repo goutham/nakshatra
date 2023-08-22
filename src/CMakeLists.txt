@@ -86,15 +86,21 @@ target_link_libraries(egtb_gen_main
 # Tests
 #
 
+include(FetchContent)
+
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.12.1
+)
+FetchContent_MakeAvailable(googletest)
+
 set(CMAKE_CXX_FLAGS_TEST "-std=c++20")
-include_directories("gtest/include" "gtest")
 file(GLOB TEST_SOURCES "tests/*_test.cpp")
 
 add_executable(unit_tests
     ${TEST_SOURCES}
-    gtest/src/gtest-all.cc
-    gtest/src/gtest_main.cc
 )
 target_link_libraries(unit_tests
-    egtb_gen executor player evaluator movegen board common pthread
+    gtest gtest_main egtb_gen executor player evaluator movegen board common pthread
 )
