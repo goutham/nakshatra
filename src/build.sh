@@ -11,11 +11,6 @@ __EOF__
 exit 1
 fi
 
-if test ! -e magic-bits; then
-  echo "Fetching magic-bits library..."
-  git clone https://github.com/goutham/magic-bits.git
-fi
-
 cat > config.h << __EOF__
 #define ENGINE_NAME "Nakshatra"
 __EOF__

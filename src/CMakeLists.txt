@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 3.15)
 project(nakshatra CXX)
 
+include(FetchContent)
+
+FetchContent_Declare(
+    magic_bits
+    GIT_REPOSITORY https://github.com/goutham/magic-bits.git
+    GIT_TAG master
+    SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/magic-bits"
+)
+FetchContent_GetProperties(magic_bits)
+if(NOT magic_bits_POPULATED)
+  FetchContent_Populate(magic_bits)
+  include_directories(${FETCHCONTENT_BASE_DIR})
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-flto -O3 -Wall -march=native")
 include_directories(".")
@@ -85,8 +99,6 @@ target_link_libraries(egtb_gen_main
 #
 # Tests
 #
-
-include(FetchContent)
 
 FetchContent_Declare(
     googletest
