@@ -244,10 +244,10 @@ TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
                                        "h2h4", "b1a3", "b1c3", "g1f3", "g1h3"};
   static const unsigned num_valid_moves = 20;
   EXPECT_EQ(num_valid_moves, move_array.size());
-  for (int i = 0; i < num_valid_moves; ++i) {
+  for (unsigned i = 0; i < num_valid_moves; ++i) {
     const Move move(valid_moves[i]);
     bool found = false;
-    for (int i = 0; i < move_array.size(); ++i) {
+    for (size_t i = 0; i < move_array.size(); ++i) {
       if (move_array.get(i) == move) {
         found = true;
         break;
@@ -267,10 +267,10 @@ TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
   };
   static const unsigned num_valid_moves = 8;
   EXPECT_EQ(num_valid_moves, move_array.size());
-  for (int i = 0; i < num_valid_moves; ++i) {
+  for (unsigned i = 0; i < num_valid_moves; ++i) {
     const Move move(valid_moves[i]);
     bool found = false;
-    for (int j = 0; j < move_array.size(); ++j) {
+    for (size_t j = 0; j < move_array.size(); ++j) {
       if (move_array.get(j) == move) {
         found = true;
         break;
@@ -291,10 +291,10 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
   static const string valid_moves[] = {"d2e2", "d2d3", "d2e3", "c2c3", "b1c3"};
   static const unsigned num_valid_moves = 5;
   EXPECT_EQ(num_valid_moves, move_array.size());
-  for (int i = 0; i < num_valid_moves; ++i) {
+  for (unsigned i = 0; i < num_valid_moves; ++i) {
     const Move move(valid_moves[i]);
     bool found = false;
-    for (int j = 0; j < move_array.size(); ++j) {
+    for (size_t j = 0; j < move_array.size(); ++j) {
       if (move_array.get(j) == move) {
         found = true;
         break;
@@ -316,10 +316,10 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
                                        "g1f3", "g1h3", "d2c2", "d2d3"};
   static const unsigned num_valid_moves = 19;
   EXPECT_EQ(num_valid_moves, move_array.size());
-  for (int i = 0; i < num_valid_moves; ++i) {
+  for (unsigned i = 0; i < num_valid_moves; ++i) {
     const Move move(valid_moves[i]);
     bool found = false;
-    for (int j = 0; j < move_array.size(); ++j) {
+    for (size_t j = 0; j < move_array.size(); ++j) {
       if (move_array.get(j) == move) {
         found = true;
         break;
@@ -340,10 +340,10 @@ TEST_F(MoveGeneratorTest, ProblemPosition1) {
 
   };
   EXPECT_EQ(valid_moves.size(), move_array.size());
-  for (int i = 0; i < valid_moves.size(); ++i) {
+  for (size_t i = 0; i < valid_moves.size(); ++i) {
     const Move move(valid_moves[i]);
     bool found = false;
-    for (int j = 0; j < move_array.size(); ++j) {
+    for (size_t j = 0; j < move_array.size(); ++j) {
       if (move_array.get(j) == move) {
         found = true;
         break;
@@ -392,7 +392,7 @@ int CountLeafMoves(Board* board, unsigned int depth) {
   }
 
   U64 nodes = 0ULL;
-  for (int i = 0; i < move_array.size(); ++i) {
+  for (size_t i = 0; i < move_array.size(); ++i) {
     board->MakeMove(move_array.get(i));
     nodes += CountLeafMoves<variant>(board, depth - 1);
     board->UnmakeLastMove();

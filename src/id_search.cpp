@@ -177,7 +177,7 @@ void IterativeDeepener<variant>::Search(Move* best_move, int* best_move_score,
     // XBoard style thinking output.
     if (ids_params_.thinking_output) {
       char output[256];
-      snprintf(output, 256, "%2d\t%5d\t%5d\t%10llu\t%s", depth,
+      snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth,
                last_istat.score, int(elapsed_time),
                id_search_stats->nodes_searched, PV(*best_move).c_str());
       std::cout << output << std::endl;

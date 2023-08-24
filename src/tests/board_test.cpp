@@ -189,7 +189,6 @@ TEST(BoardTest, Castling1) {
 
   // Black - king side castling.
   board.MakeMove(Move("e8g8"));
-  U64 z_after_black_castling = board.ZobristKey();
   string fen_after_black_castling = board.ParseIntoFEN();
   EXPECT_EQ("rnbq1rk1/pppp1ppp/5n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 w - -",
             fen_after_black_castling);
