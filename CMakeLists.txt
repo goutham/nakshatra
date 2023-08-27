@@ -1,6 +1,31 @@
 cmake_minimum_required(VERSION 3.15)
 project(nakshatra CXX)
 
+# Add engine name to src/config.h.
+set(CONFIG_H_DIR "${CMAKE_BINARY_DIR}/src")
+set(CONFIG_H "${CONFIG_H_DIR}/config.h")
+file(WRITE "${CONFIG_H}" "#define ENGINE_NAME \"Nakshatra\"\n")
+
+# Handle command-line options.
+if(LOWMEM)
+  file(APPEND "${CONFIG_H}" "#define LOWMEM\n")
+  set(TRANSPOS_SIZE "(1 << 21)")
+else()
+  set(TRANSPOS_SIZE "(1 << 24)")
+endif()
+
+if(SAVETIME)
+  file(APPEND "${CONFIG_H}" "#define SAVETIME\n")
+endif()
+
+# Define EGTB path and other settings.
+file(APPEND "${CONFIG_H}" "#define ANTICHESS_EGTB_PATH_GLOB \"${CMAKE_BINARY_DIR}/egtb/*.egtb\"\n")
+file(APPEND "${CONFIG_H}" "#define STANDARD_TRANSPOS_SIZE ${TRANSPOS_SIZE}\n")
+file(APPEND "${CONFIG_H}" "#define ANTICHESS_TRANSPOS_SIZE ${TRANSPOS_SIZE}\n")
+file(APPEND "${CONFIG_H}" "#define NUM_THREADS 1\n")
+
+include_directories(${CONFIG_H_DIR})
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -17,51 +42,51 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-flto -O3 -Wall -march=native")
-include_directories(".")
+include_directories("src")
 
 #
 # Libraries
 #
 
 add_library(common 
-    common.cpp
-    fen.cpp
+    src/common.cpp
+    src/fen.cpp
 )
 
 add_library(board
-    board.cpp
-    zobrist.cpp
+    src/board.cpp
+    src/zobrist.cpp
 )
 
 add_library(movegen
-    movegen.cpp
-    see.cpp
-    attacks.cpp
-    san.cpp
+    src/movegen.cpp
+    src/see.cpp
+    src/attacks.cpp
+    src/san.cpp
 )
 
 add_library(evaluator
-    eval_antichess.cpp
-    eval_standard.cpp
-    egtb.cpp
-    pawns.cpp
+    src/eval_antichess.cpp
+    src/eval_standard.cpp
+    src/egtb.cpp
+    src/pawns.cpp
 )
 
 add_library(player
-    player.cpp
-    pn_search.cpp
-    id_search.cpp
-    move_order.cpp
-    pv_search.cpp
-    transpos.cpp
+    src/player.cpp
+    src/pn_search.cpp
+    src/id_search.cpp
+    src/move_order.cpp
+    src/pv_search.cpp
+    src/transpos.cpp
 )
 
 add_library(executor
-    executor.cpp
+    src/executor.cpp
 )
 
 add_library(egtb_gen
-    egtb_gen.cpp
+    src/egtb_gen.cpp
 )
 
 #
@@ -69,28 +94,28 @@ add_library(egtb_gen
 #
 
 add_executable(nakshatra
-    nakshatra.cpp
+    src/nakshatra.cpp
 )
 target_link_libraries(nakshatra 
     executor player evaluator movegen board common pthread
 )
 
 add_executable(pns_analyze
-    pns_analyze.cpp
+    src/pns_analyze.cpp
 )
 target_link_libraries(pns_analyze
     player evaluator movegen board common
 )
 
 add_executable(movegen_perf
-    movegen_perf.cpp
+    src/movegen_perf.cpp
 )
 target_link_libraries(movegen_perf
     movegen board common
 )
 
 add_executable(egtb_gen_main
-    egtb_gen_main.cpp
+    src/egtb_gen_main.cpp
 )
 target_link_libraries(egtb_gen_main
     egtb_gen evaluator movegen board common
@@ -108,7 +133,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 set(CMAKE_CXX_FLAGS_TEST "-std=c++20")
-file(GLOB TEST_SOURCES "tests/*_test.cpp")
+file(GLOB TEST_SOURCES "src/tests/*_test.cpp")
 
 add_executable(unit_tests
     ${TEST_SOURCES}

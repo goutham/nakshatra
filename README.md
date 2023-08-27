@@ -13,8 +13,9 @@ To play a game of chess or antichess with Nakshatra, check out these sites where
 
 ### Pre-requisites
 
+Example for Ubuntu and other Debian based distros:
+
 ```
-# Example for Ubuntu and other Debian based GNU/Linux systems.
 sudo apt install zip git cmake ninja-build g++  # or clang++, need C++20+ support
 ```
 
@@ -22,15 +23,16 @@ sudo apt install zip git cmake ninja-build g++  # or clang++, need C++20+ suppor
 
 ```
 git clone https://github.com/goutham/nakshatra.git
-cd nakshatra/src
-./build.sh
+cd nakshatra
+./install.sh
 ```
 
-See comments in `build.sh` for additional build options. The engine executable file, named `nakshatra`, will be generated under `src/` directory upon successful execution of the script.
+The engine executable file `nakshatra` will be generated under the `build/` directory
+if installation succeeds.
 
 ### Play Locally
 
-Install one of the XBoard protocol compatible interfaces such as [cutechess](https://github.com/cutechess/cutechess), and configure it to run the engine executable file `nakshatra` as the computer player. The executable may be moved to a different directory but it depends on `src/egtb/*` and (may be) other files in your local git repo where `build.sh` was run, so do not delete the repo. Using an opening book (not included) is recommended for variations in gameplay.
+Install one of the XBoard protocol compatible interfaces such as [cutechess](https://github.com/cutechess/cutechess), and configure it to run the engine executable file `nakshatra` as the computer player. The executable may be moved to a different directory but it depends on `build/egtb/*` and (may be) other files in your local git repo where `install.sh` was run, so do not delete the directory. Using an opening book (not included) is recommended for variations in gameplay.
 
 ## History
 
