@@ -1,5 +1,4 @@
 #include "common.h"
-#include "config.h"
 #include "executor.h"
 #include "movegen.h"
 
@@ -11,6 +10,15 @@ int main(int argc, char** argv) {
   using std::cout;
   using std::endl;
   using std::string;
+
+  cout << "# ENGINE_NAME=" << ENGINE_NAME << endl;
+  cout << "# STANDARD_TRANSPOS_SIZE=" << STANDARD_TRANSPOS_SIZE << endl;
+  cout << "# ANTICHESS_TRANSPOS_SIZE=" << ANTICHESS_TRANSPOS_SIZE << endl;
+  cout << "# NUM_THREADS=" << NUM_THREADS << endl;
+  cout << "# ANTICHESS_EGTB_PATH_GLOB=" << ANTICHESS_EGTB_PATH_GLOB << endl;
+#ifdef SAVETIME
+  cout << "# SAVETIME=1" << endl;
+#endif
 
   cout << "feature usermove=1" << endl;
   cout << "feature variants=\"normal,suicide,giveaway\"" << endl;

@@ -1,7 +1,6 @@
 #include "id_search.h"
 #include "board.h"
 #include "common.h"
-#include "config.h"
 #include "egtb.h"
 #include "move_array.h"
 #include "move_order.h"

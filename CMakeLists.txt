@@ -1,30 +1,23 @@
 cmake_minimum_required(VERSION 3.15)
 project(nakshatra CXX)
 
-# Add engine name to src/config.h.
-set(CONFIG_H_DIR "${CMAKE_BINARY_DIR}/src")
-set(CONFIG_H "${CONFIG_H_DIR}/config.h")
-file(WRITE "${CONFIG_H}" "#define ENGINE_NAME \"Nakshatra\"\n")
-
-# Handle command-line options.
 if(LOWMEM)
-  file(APPEND "${CONFIG_H}" "#define LOWMEM\n")
   set(TRANSPOS_SIZE "(1 << 21)")
 else()
   set(TRANSPOS_SIZE "(1 << 24)")
 endif()
 
+add_definitions(
+    -DENGINE_NAME="Nakshatra"
+    -DANTICHESS_EGTB_PATH_GLOB="${CMAKE_BINARY_DIR}/egtb/*.egtb"
+    -DSTANDARD_TRANSPOS_SIZE=${TRANSPOS_SIZE}
+    -DANTICHESS_TRANSPOS_SIZE=${TRANSPOS_SIZE}
+    -DNUM_THREADS=1
+)
+
 if(SAVETIME)
-  file(APPEND "${CONFIG_H}" "#define SAVETIME\n")
+  add_definitions(-DSAVETIME=1)
 endif()
-
-# Define EGTB path and other settings.
-file(APPEND "${CONFIG_H}" "#define ANTICHESS_EGTB_PATH_GLOB \"${CMAKE_BINARY_DIR}/egtb/*.egtb\"\n")
-file(APPEND "${CONFIG_H}" "#define STANDARD_TRANSPOS_SIZE ${TRANSPOS_SIZE}\n")
-file(APPEND "${CONFIG_H}" "#define ANTICHESS_TRANSPOS_SIZE ${TRANSPOS_SIZE}\n")
-file(APPEND "${CONFIG_H}" "#define NUM_THREADS 1\n")
-
-include_directories(${CONFIG_H_DIR})
 
 include(FetchContent)
 

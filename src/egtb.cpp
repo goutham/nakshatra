@@ -1,7 +1,6 @@
 #include "egtb.h"
 #include "board.h"
 #include "common.h"
-#include "config.h"
 
 #include <cassert>
 #include <fstream>

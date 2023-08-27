@@ -1,7 +1,6 @@
 #include "executor.h"
 #include "board.h"
 #include "common.h"
-#include "config.h"
 #include "eval.h"
 #include "move.h"
 #include "move_array.h"
