@@ -11,7 +11,7 @@ fi
 
 mkdir -p build
 cd build
-cmake .. -GNinja -DLOWMEM=OFF -DSAVETIME=OFF -DDEBUG=OFF -DBUILD_ALL_EXECUTABLES=ON
+cmake .. -GNinja -DLOWMEM=OFF -DDEBUG=OFF -DBUILD_ALL_EXECUTABLES=ON
 ninja
 
 mkdir -p egtb

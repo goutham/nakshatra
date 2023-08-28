@@ -15,10 +15,6 @@ add_definitions(
     -DNUM_THREADS=1
 )
 
-if(SAVETIME)
-  add_definitions(-DSAVETIME=1)
-endif()
-
 include(FetchContent)
 
 FetchContent_Declare(

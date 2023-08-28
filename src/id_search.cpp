@@ -186,26 +186,6 @@ void IterativeDeepener<variant>::Search(Move* best_move, int* best_move_score,
     if (last_istat.score == WIN || timer_->Lapsed()) {
       break;
     }
-
-// Lower accuracy but saves time on "easy" moves.
-#ifdef SAVETIME
-    if (variant == Variant::STANDARD) {
-      if (depth >= 8) {
-        int iters = 0;
-        for (auto it = iteration_stats_.rbegin(); it != iteration_stats_.rend();
-             ++it) {
-          if (it->best_move == *best_move) {
-            ++iters;
-          } else {
-            break;
-          }
-        }
-        if ((depth >= 8 && iters >= 5) || (depth >= 10 && iters >= 3)) {
-          break;
-        }
-      }
-    }
-#endif
   }
   stop_watch.Stop();
   out << "# Time taken for ID search: " << stop_watch.ElapsedTime() << " centis"

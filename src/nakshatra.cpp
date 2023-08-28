@@ -16,9 +16,6 @@ int main(int argc, char** argv) {
   cout << "# ANTICHESS_TRANSPOS_SIZE=" << ANTICHESS_TRANSPOS_SIZE << endl;
   cout << "# NUM_THREADS=" << NUM_THREADS << endl;
   cout << "# ANTICHESS_EGTB_PATH_GLOB=" << ANTICHESS_EGTB_PATH_GLOB << endl;
-#ifdef SAVETIME
-  cout << "# SAVETIME=1" << endl;
-#endif
 
   cout << "feature usermove=1" << endl;
   cout << "feature variants=\"normal,suicide,giveaway\"" << endl;
