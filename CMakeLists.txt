@@ -6,13 +6,14 @@ if(LOWMEM)
 else()
   set(TRANSPOS_SIZE "(1 << 24)")
 endif()
+set(NUM_THREADS "1" CACHE STRING "Number of threads")
 
 add_definitions(
     -DENGINE_NAME="Nakshatra"
     -DANTICHESS_EGTB_PATH_GLOB="${CMAKE_BINARY_DIR}/egtb/*.egtb"
     -DSTANDARD_TRANSPOS_SIZE=${TRANSPOS_SIZE}
     -DANTICHESS_TRANSPOS_SIZE=${TRANSPOS_SIZE}
-    -DNUM_THREADS=1
+    -DNUM_THREADS=${NUM_THREADS}
 )
 
 include(FetchContent)
@@ -66,8 +67,6 @@ foreach(CORE_LIB ${CORE_LIBS})
     add_library(${CORE_LIB} OBJECT "src/${CORE_LIB}.cpp")
 endforeach()
 
-add_library(egtb_gen OBJECT src/egtb_gen.cpp)
-
 #
 # Executables
 #
@@ -82,6 +81,7 @@ if(BUILD_ALL_EXECUTABLES)
     add_executable(movegen_perf src/movegen_perf.cpp)
     target_link_libraries(movegen_perf ${CORE_LIBS})
 
+    add_library(egtb_gen OBJECT src/egtb_gen.cpp)
     add_executable(egtb_gen_main src/egtb_gen_main.cpp)
     target_link_libraries(egtb_gen_main ${CORE_LIBS} egtb_gen)
 endif()
