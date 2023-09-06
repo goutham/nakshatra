@@ -42,48 +42,46 @@ include_directories("src")
 # Libraries
 #
 
-set(CORE_LIBS
-    attacks
-    board
-    common
-    egtb
-    eval_antichess
-    eval_standard
-    executor
-    fen
-    id_search
-    move_order
-    movegen
-    pawns
-    player
-    pn_search
-    pv_search
-    san
-    see
-    transpos
-    zobrist
+set(SOURCES
+    src/attacks.cpp
+    src/board.cpp
+    src/common.cpp
+    src/egtb.cpp
+    src/eval_antichess.cpp
+    src/eval_standard.cpp
+    src/executor.cpp
+    src/fen.cpp
+    src/id_search.cpp
+    src/move_order.cpp
+    src/movegen.cpp
+    src/pawns.cpp
+    src/player.cpp
+    src/pn_search.cpp
+    src/pv_search.cpp
+    src/san.cpp
+    src/see.cpp
+    src/transpos.cpp
+    src/zobrist.cpp
 )
-foreach(CORE_LIB ${CORE_LIBS})
-    add_library(${CORE_LIB} OBJECT "src/${CORE_LIB}.cpp")
-endforeach()
+add_library(nakshatra_core STATIC ${SOURCES})
 
 #
 # Executables
 #
 
 add_executable(nakshatra src/nakshatra.cpp)
-target_link_libraries(nakshatra ${CORE_LIBS} pthread)
+target_link_libraries(nakshatra nakshatra_core pthread)
 
 if(BUILD_ALL_EXECUTABLES)
     add_executable(pns_analyze src/pns_analyze.cpp)
-    target_link_libraries(pns_analyze ${CORE_LIBS})
+    target_link_libraries(pns_analyze nakshatra_core)
 
     add_executable(movegen_perf src/movegen_perf.cpp)
-    target_link_libraries(movegen_perf ${CORE_LIBS})
+    target_link_libraries(movegen_perf nakshatra_core)
 
     add_library(egtb_gen OBJECT src/egtb_gen.cpp)
     add_executable(egtb_gen_main src/egtb_gen_main.cpp)
-    target_link_libraries(egtb_gen_main ${CORE_LIBS} egtb_gen)
+    target_link_libraries(egtb_gen_main nakshatra_core egtb_gen)
 endif()
 
 #
@@ -104,5 +102,5 @@ add_executable(unit_tests
     ${TEST_SOURCES}
 )
 target_link_libraries(unit_tests
-    gtest gtest_main ${CORE_LIBS} pthread
+    gtest gtest_main nakshatra_core pthread
 )
