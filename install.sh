@@ -21,7 +21,7 @@ ninja
 
 mkdir -p egtb
 echo "Generating Antichess EGTB..."
-./egtb_gen_main
+./generate_antichess_egtb
 
 echo "Running unit tests..."
 ./unit_tests
