@@ -17,11 +17,6 @@
 #include <unordered_map>
 #include <vector>
 
-#define MAX 10000
-
-using std::list;
-using std::string;
-
 class EGTBStore {
 public:
   EGTBIndexEntry* Get(const Board& board) {
@@ -71,7 +66,7 @@ public:
     for (const auto& elem : store_) {
       std::stringstream ss;
       ss << elem.first;
-      const string& filename = "egtb/" + ss.str() + ".egtb";
+      const std::string& filename = "egtb/" + ss.str() + ".egtb";
       std::ofstream ofs(filename, std::ofstream::binary);
       for (const auto& elem2 : store_[elem.first]) {
         U64 index = elem2.first;
@@ -87,7 +82,7 @@ private:
   std::unordered_map<int, std::unordered_map<uint64_t, EGTBIndexEntry>> store_;
 };
 
-void EGTBGenerate(list<string> all_pos_list, EGTBStore* store) {
+void EGTBGenerate(std::list<std::string> all_pos_list, EGTBStore* store) {
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::ANTICHESS, *iter);
     int result = EvalResult<Variant::ANTICHESS>(&board);
