@@ -79,7 +79,7 @@ if(BUILD_ALL_EXECUTABLES)
     add_executable(movegen_perf src/movegen_perf.cpp)
     target_link_libraries(movegen_perf nakshatra_core)
 
-    add_executable(egtb_gen_main src/egtb_gen_main.cpp src/egtb_gen.cpp)
+    add_executable(egtb_gen_main src/egtb_gen_main.cpp)
     target_link_libraries(egtb_gen_main nakshatra_core)
 endif()
 
