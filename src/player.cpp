@@ -55,7 +55,7 @@ Move Player::SearchInternal(const SearchParams& search_params,
       StopWatch pn_stop_watch;
       pn_stop_watch.Start();
 
-      PNSearch<variant> pn_search(board_, transpos_, &pns_timer);
+      PNSearch<variant> pn_search(board_, transpos_, egtb_, &pns_timer);
       PNSParams pns_params;
       pns_params.quiet = !search_params.thinking_output;
       pns_params.max_nodes = 10000000;
@@ -106,7 +106,7 @@ Move Player::SearchInternal(const SearchParams& search_params,
   SearchStats id_search_stats;
   int move_score;
   Move best_move;
-  IDSearch<variant>(ids_params, board_, timer_, transpos_, &best_move,
+  IDSearch<variant>(ids_params, board_, timer_, transpos_, egtb_, &best_move,
                     &move_score, &id_search_stats);
   return best_move;
 }

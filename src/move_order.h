@@ -3,6 +3,7 @@
 
 #include "board.h"
 #include "common.h"
+#include "egtb.h"
 #include "move.h"
 #include "move_array.h"
 
@@ -55,7 +56,8 @@ void OrderMoves(Board* board, const MoveArray& move_array,
                 const PrefMoves* pref_moves, MoveInfoArray* move_info_array);
 
 template <Variant variant>
-void OrderMovesByEvalScore(Board* board, const MoveArray& move_array,
+void OrderMovesByEvalScore(Board* board, EGTB* egtb,
+                           const MoveArray& move_array,
                            const PrefMoves* pref_moves,
                            MoveInfoArray* move_info_array);
 

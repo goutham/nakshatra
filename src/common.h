@@ -49,6 +49,8 @@ constexpr int FILE_F = 5;
 constexpr int FILE_G = 6;
 constexpr int FILE_H = 7;
 
+constexpr int NO_EP = 0;
+
 inline int Lsb1(const U64 v) { return __builtin_ctzll(v); }
 
 // Number of set bits in a U64 integer.

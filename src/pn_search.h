@@ -70,9 +70,8 @@ class PNSearch {
 public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
-  PNSearch(Board* board, TranspositionTable* transpos, Timer* timer)
-      : board_(board), egtb_(GetEGTB(Variant::ANTICHESS)), transpos_(transpos),
-        timer_(timer) {}
+  PNSearch(Board* board, TranspositionTable* transpos, EGTB* egtb, Timer* timer)
+      : board_(board), egtb_(egtb), transpos_(transpos), timer_(timer) {}
 
   ~PNSearch() {
     if (pns_tree_) {

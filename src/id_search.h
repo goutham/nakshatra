@@ -3,6 +3,7 @@
 
 #include "board.h"
 #include "common.h"
+#include "egtb.h"
 #include "move.h"
 #include "move_array.h"
 #include "stats.h"
@@ -18,7 +19,7 @@ struct IDSParams {
 
 template <Variant variant>
 void IDSearch(const IDSParams& ids_params, Board* board, Timer* timer,
-              TranspositionTable* transpos, Move* best_move,
+              TranspositionTable* transpos, EGTB* egtb, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats);
 
 #endif

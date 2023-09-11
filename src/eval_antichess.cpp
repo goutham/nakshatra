@@ -28,14 +28,13 @@ bool RivalBishopsOnOppositeColoredSquares(Board* board) {
 }
 
 template <Variant variant>
-int EvaluateInternal(Board* board, int alpha, int beta,
+int EvaluateInternal(Board* board, EGTB* egtb, int alpha, int beta,
                      int max_depth = EVAL_MAX_DEPTH) {
   const Side side = board->SideToMove();
   const int self_pieces = board->NumPieces(side);
   const int opp_pieces = board->NumPieces(OppositeSide(side));
 
   if (self_pieces == 1 && opp_pieces == 1) {
-    auto egtb = GetEGTB(variant);
     if (egtb) {
       const EGTBIndexEntry* egtb_entry = egtb->Lookup(*board);
       if (egtb_entry) {
@@ -65,7 +64,7 @@ int EvaluateInternal(Board* board, int alpha, int beta,
     GenerateMoves<variant>(board, &move_array);
     board->MakeMove(move_array.get(0));
     const int eval =
-        -EvaluateInternal<variant>(board, -beta, -alpha, max_depth);
+        -EvaluateInternal<variant>(board, egtb, -beta, -alpha, max_depth);
     board->UnmakeLastMove();
     return eval;
   }
@@ -75,7 +74,7 @@ int EvaluateInternal(Board* board, int alpha, int beta,
     int score = -INF;
     for (size_t i = 0; i < move_array.size(); ++i) {
       board->MakeMove(move_array.get(i));
-      const int eval = -EvaluateInternal<variant>(board, -beta, -alpha,
+      const int eval = -EvaluateInternal<variant>(board, egtb, -beta, -alpha,
                                                   max_depth - (self_moves - 1));
       board->UnmakeLastMove();
       if (eval > score) {
@@ -101,7 +100,7 @@ int EvaluateInternal(Board* board, int alpha, int beta,
     for (size_t i = 0; i < move_array.size(); ++i) {
       const Move& move = move_array.get(i);
       board->MakeMove(move);
-      const int eval = -EvaluateInternal<variant>(board, -beta, -alpha);
+      const int eval = -EvaluateInternal<variant>(board, egtb, -beta, -alpha);
       board->UnmakeLastMove();
       if (eval > score) {
         score = eval;
@@ -132,8 +131,8 @@ int EvaluateInternal(Board* board, int alpha, int beta,
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-int Evaluate(Board* board, int alpha, int beta) {
-  return EvaluateInternal<variant>(board, alpha, beta);
+int Evaluate(Board* board, EGTB* egtb, int alpha, int beta) {
+  return EvaluateInternal<variant>(board, egtb, alpha, beta);
 }
 
 template <Variant variant>
@@ -164,7 +163,7 @@ int EvalResult(Board* board) {
   return UNKNOWN;
 }
 
-template int Evaluate<Variant::ANTICHESS>(Board*, int, int);
-template int Evaluate<Variant::SUICIDE>(Board*, int, int);
+template int Evaluate<Variant::ANTICHESS>(Board*, EGTB*, int, int);
+template int Evaluate<Variant::SUICIDE>(Board*, EGTB*, int, int);
 template int EvalResult<Variant::ANTICHESS>(Board*);
 template int EvalResult<Variant::SUICIDE>(Board*);

@@ -1,6 +1,7 @@
 #include "attacks.h"
 #include "board.h"
 #include "common.h"
+#include "egtb.h"
 #include "eval.h"
 #include "move_array.h"
 #include "move_order.h"
@@ -82,7 +83,8 @@ int StaticEval(Board* board) {
 
 template <Variant variant>
   requires(IsStandard(variant))
-int Evaluate(Board* board, int alpha, int beta) {
+int Evaluate(Board* board, EGTB* egtb, int alpha, int beta) {
+  assert(egtb == nullptr);
   bool in_check = attacks::InCheck(*board, board->SideToMove());
   if (!in_check) {
     int standing_pat = StaticEval(board);
@@ -105,7 +107,7 @@ int Evaluate(Board* board, int alpha, int beta) {
     const Move move = move_info.move;
     if (in_check || move_info.type == MoveType::SEE_GOOD_CAPTURE) {
       board->MakeMove(move);
-      int score = -Evaluate<Variant::STANDARD>(board, -beta, -alpha);
+      int score = -Evaluate<Variant::STANDARD>(board, egtb, -beta, -alpha);
       board->UnmakeLastMove();
       if (score >= beta) {
         return score;
@@ -142,5 +144,5 @@ int EvalResult(Board* board) {
   return UNKNOWN;
 }
 
-template int Evaluate<Variant::STANDARD>(Board* board, int alpha, int beta);
+template int Evaluate<Variant::STANDARD>(Board* board, EGTB* egtb, int alpha, int beta);
 template int EvalResult<Variant::STANDARD>(Board* board);

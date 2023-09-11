@@ -20,7 +20,7 @@
 class EGTBStore {
 public:
   EGTBIndexEntry* Get(const Board& board) {
-    if (board.EnpassantTarget() != -1)
+    if (board.EnpassantTarget() != NO_EP)
       return nullptr;
     int board_desc_id = ComputeBoardDescriptionId(board);
     if (store_.find(board_desc_id) == store_.end()) {

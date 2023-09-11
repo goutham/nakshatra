@@ -101,8 +101,8 @@ private:
     uint8_t castle;
 
     // Enpassant target position, only updated if last move was a pawn advanced
-    // by two squares from its starting position. Else, set to 0.
-    int ep_index = 0;
+    // by two squares from its starting position. Else, set to NO_EP.
+    int ep_index = NO_EP;
 
     // Zobrist key of the board position after this move is played.
     U64 zobrist_key;

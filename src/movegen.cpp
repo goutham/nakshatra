@@ -87,8 +87,8 @@ void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
 template <Side side>
 U64 EnpassantBitBoard(const Board& board) {
   const int index = board.EnpassantTarget();
-  return index == -1 ? 0ULL
-                     : ((1ULL << index) & side_relative::MaskRow<side>(5));
+  return index == NO_EP ? 0ULL
+                        : ((1ULL << index) & side_relative::MaskRow<side>(5));
 }
 
 template <Variant variant, Side side, typename MoveAccumulatorType>

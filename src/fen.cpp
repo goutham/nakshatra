@@ -106,7 +106,7 @@ int EnpassantIndex(const string& fen) {
     ++index;
   }
   if (fen[index] == '-') {
-    return 0;
+    return NO_EP;
   }
   return Move::index(fen.substr(index, 2));
 }
@@ -165,7 +165,7 @@ string MakeFEN(const Piece board_array[], Side player_side,
   }
 
   fen += ' ';
-  fen += (ep_index > 0) ? Move::file_rank(ep_index) : "-";
+  fen += (ep_index > NO_EP) ? Move::file_rank(ep_index) : "-";
 
   return fen;
 }

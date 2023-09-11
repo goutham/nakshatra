@@ -59,9 +59,9 @@ template <Variant variant>
 class IterativeDeepener {
 public:
   IterativeDeepener(const IDSParams& ids_params, Board* board, Timer* timer,
-                    TranspositionTable* transpos)
+                    TranspositionTable* transpos, EGTB* egtb)
       : ids_params_(ids_params), board_(board), timer_(timer),
-        transpos_(transpos), egtb_(GetEGTB(variant)) {}
+        transpos_(transpos), egtb_(egtb) {}
 
   void Search(Move* best_move, int* best_move_score,
               SearchStats* id_search_stats);
@@ -107,7 +107,7 @@ void IterativeDeepener<variant>::Search(Move* best_move, int* best_move_score,
     root_move_array_ = ids_params_.pruned_ordered_moves;
   } else {
     MoveInfoArray move_info_array;
-    OrderMovesByEvalScore<variant>(board_, root_move_array_, nullptr,
+    OrderMovesByEvalScore<variant>(board_, egtb_, root_move_array_, nullptr,
                                    &move_info_array);
     root_move_array_.clear();
     for (size_t i = 0; i < move_info_array.size; ++i) {
@@ -176,9 +176,9 @@ void IterativeDeepener<variant>::Search(Move* best_move, int* best_move_score,
     // XBoard style thinking output.
     if (ids_params_.thinking_output) {
       char output[256];
-      snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth,
-               last_istat.score, int(elapsed_time),
-               id_search_stats->nodes_searched, PV(*best_move).c_str());
+      snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth, last_istat.score,
+               int(elapsed_time), id_search_stats->nodes_searched,
+               PV(*best_move).c_str());
       std::cout << output << std::endl;
     }
 
@@ -198,74 +198,75 @@ void IterativeDeepener<variant>::Search(Move* best_move, int* best_move_score,
 template <Variant variant>
 IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
 
-  auto search =
-      [max_depth, root_move_array = root_move_array_, transpos = transpos_](
-          int thread_num, Board board /* copy of board for each thread */,
-          Timer* timer, IterationStat* ret_istat) mutable {
-        if (thread_num % 2 == 1) {
-          ++max_depth;
+  auto search = [max_depth, root_move_array = root_move_array_,
+                 transpos = transpos_,
+                 egtb = egtb_](int thread_num,
+                               Board board /* copy of board for each thread */,
+                               Timer* timer, IterationStat* ret_istat) mutable {
+    if (thread_num % 2 == 1) {
+      ++max_depth;
+    }
+    PVSearch<variant> pv_search(&board, timer, transpos, egtb);
+    IterationStat istat;
+    istat.depth = max_depth;
+    istat.best_move = root_move_array.get(0);
+    istat.score = -INF;
+    istat.root_moves_covered = 0;
+    for (unsigned int i = 0; i < root_move_array.size(); ++i) {
+      const Move& move = root_move_array.get(i);
+      board.MakeMove(move);
+      SearchStats search_stats;
+      int score = -INF;
+      if (i == 0 || max_depth < 5) {
+        score =
+            -pv_search.Search(max_depth - 1, -INF, -istat.score, &search_stats);
+      } else {
+        bool lmr_triggered = false;
+        if (i >= 4 && max_depth >= 2) {
+          score = -pv_search.Search(max_depth - 2, -istat.score - 1,
+                                    -istat.score, &search_stats);
+          lmr_triggered = true;
         }
-        PVSearch<variant> pv_search(&board, timer, transpos);
-        IterationStat istat;
-        istat.depth = max_depth;
-        istat.best_move = root_move_array.get(0);
-        istat.score = -INF;
-        istat.root_moves_covered = 0;
-        for (unsigned int i = 0; i < root_move_array.size(); ++i) {
-          const Move& move = root_move_array.get(i);
-          board.MakeMove(move);
-          SearchStats search_stats;
-          int score = -INF;
-          if (i == 0 || max_depth < 5) {
-            score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
-                                      &search_stats);
-          } else {
-            bool lmr_triggered = false;
-            if (i >= 4 && max_depth >= 2) {
-              score = -pv_search.Search(max_depth - 2, -istat.score - 1,
-                                        -istat.score, &search_stats);
-              lmr_triggered = true;
-            }
-            if (!lmr_triggered || score > istat.score) {
-              score = -pv_search.Search(max_depth - 1, -istat.score - 1,
-                                        -istat.score, &search_stats);
-            }
-            if (score > istat.score) {
-              score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
-                                        &search_stats);
-            }
-          }
-          board.UnmakeLastMove();
-          istat.move_stats.push_back(std::make_pair(move, search_stats));
+        if (!lmr_triggered || score > istat.score) {
+          score = -pv_search.Search(max_depth - 1, -istat.score - 1,
+                                    -istat.score, &search_stats);
+        }
+        if (score > istat.score) {
+          score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
+                                    &search_stats);
+        }
+      }
+      board.UnmakeLastMove();
+      istat.move_stats.push_back(std::make_pair(move, search_stats));
 
-          // Return on timer expiry only if we are not searching at depth 1. If
-          // searching at depth 1, we should at least quickly find a meaningful
-          // move even if timer expires before all the root moves are evaluated.
-          // Without this, there is a possibility of iterative deepener not
-          // reporting any moves at all in some extremely time constrained
-          // situations. Searching all root moves at depth 1 is very quick
-          // (sub-millisecond latency).
-          if (timer->Lapsed() && max_depth > 1) {
-            break;
-          }
-          if (score > istat.score) {
-            istat.best_move = move;
-            istat.score = score;
-          }
-          ++istat.root_moves_covered;
-        }
-        // Add move to transposition table if at least the first root move was
-        // completely searched to current depth before timer lapsed. Otherwise,
-        // we don't really have any valid move to update. Due to move ordering
-        // guarantees, the first move in root_move_array_ is guaranteed to be
-        // the best known move before current iteration, which means any other
-        // move found to be better at this depth is at least better than that.
-        if (istat.root_moves_covered > 0) {
-          transpos->Put(istat.score, NodeType::EXACT_NODE, max_depth,
-                        board.ZobristKey(), istat.best_move);
-        }
-        *ret_istat = istat;
-      };
+      // Return on timer expiry only if we are not searching at depth 1. If
+      // searching at depth 1, we should at least quickly find a meaningful
+      // move even if timer expires before all the root moves are evaluated.
+      // Without this, there is a possibility of iterative deepener not
+      // reporting any moves at all in some extremely time constrained
+      // situations. Searching all root moves at depth 1 is very quick
+      // (sub-millisecond latency).
+      if (timer->Lapsed() && max_depth > 1) {
+        break;
+      }
+      if (score > istat.score) {
+        istat.best_move = move;
+        istat.score = score;
+      }
+      ++istat.root_moves_covered;
+    }
+    // Add move to transposition table if at least the first root move was
+    // completely searched to current depth before timer lapsed. Otherwise,
+    // we don't really have any valid move to update. Due to move ordering
+    // guarantees, the first move in root_move_array_ is guaranteed to be
+    // the best known move before current iteration, which means any other
+    // move found to be better at this depth is at least better than that.
+    if (istat.root_moves_covered > 0) {
+      transpos->Put(istat.score, NodeType::EXACT_NODE, max_depth,
+                    board.ZobristKey(), istat.best_move);
+    }
+    *ret_istat = istat;
+  };
 
   const int num_threads = (max_depth < 3 ? 1 : NUM_THREADS);
   std::vector<std::thread> threads;
@@ -329,27 +330,29 @@ std::string IterativeDeepener<variant>::PV(const Move& root_move) {
 
 template <Variant variant>
 void IDSearch(const IDSParams& ids_params, Board* board, Timer* timer,
-              TranspositionTable* transpos, Move* best_move,
+              TranspositionTable* transpos, EGTB* egtb, Move* best_move,
               int* best_move_score, SearchStats* id_search_stats) {
-  return IterativeDeepener<variant>(ids_params, board, timer, transpos)
+  return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb)
       .Search(best_move, best_move_score, id_search_stats);
 }
 
 template void IDSearch<Variant::STANDARD>(const IDSParams& ids_params,
                                           Board* board, Timer* timer,
                                           TranspositionTable* transpos,
-                                          Move* best_move, int* best_move_score,
+                                          EGTB* egtb, Move* best_move,
+                                          int* best_move_score,
                                           SearchStats* id_search_stats);
 
 template void IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
                                            Board* board, Timer* timer,
                                            TranspositionTable* transpos,
-                                           Move* best_move,
+                                           EGTB* egtb, Move* best_move,
                                            int* best_move_score,
                                            SearchStats* id_search_stats);
 
 template void IDSearch<Variant::SUICIDE>(const IDSParams& ids_params,
                                          Board* board, Timer* timer,
                                          TranspositionTable* transpos,
-                                         Move* best_move, int* best_move_score,
+                                         EGTB* egtb, Move* best_move,
+                                         int* best_move_score,
                                          SearchStats* id_search_stats);

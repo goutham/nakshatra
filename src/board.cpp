@@ -96,7 +96,7 @@ void Board::MakeMove(const Move& move) {
   // Handle pawn move.
   if (PieceType(src_piece) == PAWN) {
     top->half_move_clock = 0; // pawn moves reset half-move clock
-    top->ep_index = 0;
+    top->ep_index = NO_EP;
 
     if (abs(to_row - from_row) == 2) {
       // Two space pawn move.
@@ -115,7 +115,7 @@ void Board::MakeMove(const Move& move) {
     FlipSideToMove();
     return;
   } else {
-    top->ep_index = 0;
+    top->ep_index = NO_EP;
     top->zobrist_key ^= zobrist::EP(prev->ep_index);
     top->zobrist_key ^= zobrist::EP(top->ep_index);
   }

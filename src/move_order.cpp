@@ -72,7 +72,8 @@ template void OrderMoves<Variant::SUICIDE>(Board*, const MoveArray&,
                                            const PrefMoves*, MoveInfoArray*);
 
 template <Variant variant>
-void OrderMovesByEvalScore(Board* board, const MoveArray& move_array,
+void OrderMovesByEvalScore(Board* board, EGTB* egtb,
+                           const MoveArray& move_array,
                            const PrefMoves* pref_moves,
                            MoveInfoArray* move_info_array) {
   assert(pref_moves == nullptr);
@@ -82,18 +83,18 @@ void OrderMovesByEvalScore(Board* board, const MoveArray& move_array,
     const Move move = move_array.get(i);
     board->MakeMove(move);
     move_info_array->moves[i] = {move, MoveType::UNCATEGORIZED,
-                                 -Evaluate<variant>(board, -INF, +INF)};
+                                 -Evaluate<variant>(board, egtb, -INF, +INF)};
     board->UnmakeLastMove();
   }
   move_info_array->Sort();
 }
 
 template void OrderMovesByEvalScore<Variant::STANDARD>(
-    Board* board, const MoveArray& move_array, const PrefMoves* pref_moves,
-    MoveInfoArray* move_info_array);
+    Board* board, EGTB* egtb, const MoveArray& move_array,
+    const PrefMoves* pref_moves, MoveInfoArray* move_info_array);
 template void OrderMovesByEvalScore<Variant::ANTICHESS>(
-    Board* board, const MoveArray& move_array, const PrefMoves* pref_moves,
-    MoveInfoArray* move_info_array);
+    Board* board, EGTB* egtb, const MoveArray& move_array,
+    const PrefMoves* pref_moves, MoveInfoArray* move_info_array);
 template void OrderMovesByEvalScore<Variant::SUICIDE>(
-    Board* board, const MoveArray& move_array, const PrefMoves* pref_moves,
-    MoveInfoArray* move_info_array);
+    Board* board, EGTB* egtb, const MoveArray& move_array,
+    const PrefMoves* pref_moves, MoveInfoArray* move_info_array);

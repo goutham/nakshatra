@@ -2,6 +2,7 @@
 #include "attacks.h"
 #include "board.h"
 #include "common.h"
+#include "egtb.h"
 #include "eval.h"
 #include "move.h"
 #include "move_order.h"
@@ -58,7 +59,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   }
 
   if (max_depth <= 0 || (timer_ && timer_->Lapsed())) {
-    return Evaluate<variant>(board_, alpha, beta);
+    return Evaluate<variant>(board_, egtb_, alpha, beta);
   }
 
   Move tt_move = Move();
@@ -80,7 +81,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
-    return Evaluate<variant>(board_, alpha, beta);
+    return Evaluate<variant>(board_, egtb_, alpha, beta);
   }
 
   MoveInfoArray move_info_array;
