@@ -1,5 +1,6 @@
 #include "board.h"
 #include "common.h"
+#include "compact.h"
 #include "egtb.h"
 #include "eval.h"
 #include "move.h"
@@ -82,7 +83,7 @@ private:
   std::unordered_map<int, std::unordered_map<uint64_t, EGTBIndexEntry>> store_;
 };
 
-void EGTBGenerate(std::list<std::string> all_pos_list, EGTBStore* store) {
+void EGTBGenerate(std::list<BoardDesc> all_pos_list, EGTBStore* store) {
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::ANTICHESS, *iter);
     int result = EvalResult<Variant::ANTICHESS>(&board);
@@ -193,11 +194,11 @@ void EGTBGenerate(std::list<std::string> all_pos_list, EGTBStore* store) {
 void GeneratePermutations(const std::vector<Piece>& pieces,
                           const std::vector<Side>& next_player_sides,
                           size_t start_index, Board* board,
-                          std::set<std::string>* permutations) {
+                          std::set<BoardDesc>* permutations) {
   if (start_index == pieces.size()) {
     for (const Side side : next_player_sides) {
       board->SetPlayerColor(side);
-      permutations->insert(board->ParseIntoFEN());
+      permutations->insert(board->ToCompactBoardDesc());
     }
     return;
   }
@@ -217,7 +218,7 @@ void GeneratePermutations(const std::vector<Piece>& pieces,
   }
 }
 
-void All1p(std::set<std::string>* positions) {
+void All1p(std::set<BoardDesc>* positions) {
   Board board(Variant::ANTICHESS, "8/8/8/8/8/8/8/8 w - -");
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     GeneratePermutations({piece}, {Side::BLACK}, 0, &board, positions);
@@ -225,7 +226,7 @@ void All1p(std::set<std::string>* positions) {
   }
 }
 
-void All2p(std::set<std::string>* positions) {
+void All2p(std::set<BoardDesc>* positions) {
   Board board(Variant::ANTICHESS, "8/8/8/8/8/8/8/8 w - -");
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     for (Piece piece2 = KING; piece2 <= PAWN; ++piece2) {
@@ -239,7 +240,7 @@ void All2p(std::set<std::string>* positions) {
   }
 }
 
-void All3p(std::set<std::string>* positions) {
+void All3p(std::set<BoardDesc>* positions) {
   Board board(Variant::ANTICHESS, "8/8/8/8/8/8/8/8 w - -");
   for (Piece piece = KING; piece <= PAWN; ++piece) {
     for (Piece piece2 = KING; piece2 <= PAWN; ++piece2) {
@@ -258,13 +259,13 @@ void All3p(std::set<std::string>* positions) {
 }
 
 int main() {
-  std::set<std::string> positions;
+  std::set<BoardDesc> positions;
   All1p(&positions);
   All2p(&positions);
   // All3p(&positions);
   std::cout << "Number of positions: " << positions.size() << std::endl;
   auto positions_list =
-      std::list<std::string>(positions.begin(), positions.end());
+      std::list<BoardDesc>(positions.begin(), positions.end());
   positions.clear();
   std::cout << "Generating EGTB..." << std::endl;
   EGTBStore store;

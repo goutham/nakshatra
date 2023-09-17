@@ -1,5 +1,6 @@
 #include "board.h"
 #include "common.h"
+#include "compact.h"
 #include "fen.h"
 #include "move.h"
 #include "zobrist.h"
@@ -61,6 +62,39 @@ Board::Board(const Variant variant, const std::string& fen) {
     const U64 b = (1ULL << i);
     bitboard_sides_[SideIndex(PieceSide(piece))] |= b;
     bitboard_pieces_[PieceIndex(piece)] |= b;
+  }
+
+  top->zobrist_key = GenerateZobristKey();
+}
+
+Board::Board(const Variant variant, const BoardDesc& board_desc) {
+  castling_allowed_ = true;
+  MoveStackEntry* top = move_stack_.Top();
+  top->castle = 0xF;
+  if (IsAntichessLike(variant)) {
+    castling_allowed_ = false;
+    top->castle = 0;
+  }
+  std::memcpy(bitboard_pieces_, board_desc.bitboard_pieces,
+              sizeof(bitboard_pieces_));
+  side_to_move_ = board_desc.side_to_move;
+  top->ep_index = board_desc.ep_index;
+  top->castle = board_desc.castle;
+
+  std::fill(std::begin(bitboard_sides_), std::end(bitboard_sides_), 0ULL);
+  std::fill(std::begin(board_array_), std::end(board_array_), NULLPIECE);
+
+  for (Piece p = -PAWN; p <= PAWN; ++p) {
+    if (p == NULLPIECE) {
+      continue;
+    }
+    U64 pbb = bitboard_pieces_[PieceIndex(p)];
+    bitboard_sides_[SideIndex(PieceSide(p))] |= pbb;
+    while (pbb) {
+      const int sq = Lsb1(pbb);
+      board_array_[sq] = p;
+      pbb ^= (1ULL << sq);
+    }
   }
 
   top->zobrist_key = GenerateZobristKey();
@@ -227,6 +261,12 @@ bool Board::CanCastle(Piece piece_type) const {
 std::string Board::ParseIntoFEN() const {
   const MoveStackEntry* top = move_stack_.Top();
   return FEN::MakeFEN(board_array_, side_to_move_, top->castle, top->ep_index);
+}
+
+BoardDesc Board::ToCompactBoardDesc() const {
+  const MoveStackEntry* top = move_stack_.Top();
+  return MakeCompactBoardDesc(bitboard_pieces_, side_to_move_, top->castle,
+                              top->ep_index);
 }
 
 void Board::DebugPrintBoard() const {

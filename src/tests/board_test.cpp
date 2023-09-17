@@ -585,3 +585,20 @@ TEST(BoardTest, PrevZobristKeys) {
   EXPECT_EQ(z1, board.ZobristKey(3));
   EXPECT_EQ(z0, board.ZobristKey(4));
 }
+
+TEST(BoardTest, ToCompactBoardDesc) {
+  const std::string fen = "2k5/8/3r2n1/2P5/8/6Q1/2B5/1K6 w - -";
+  Board board(Variant::STANDARD, fen);
+  BoardDesc board_desc = board.ToCompactBoardDesc();
+  Board board2(Variant::STANDARD, board_desc);
+  EXPECT_EQ(fen, board2.ParseIntoFEN());
+  for (Piece p = -PAWN; p <= PAWN; ++p) {
+    if (p == NULLPIECE) {
+      continue;
+    }
+    EXPECT_EQ(board.BitBoard(p), board2.BitBoard(p));
+  }
+  EXPECT_EQ(board.BitBoard(Side::BLACK), board2.BitBoard(Side::BLACK));
+  EXPECT_EQ(board.BitBoard(Side::WHITE), board2.BitBoard(Side::WHITE));
+  EXPECT_EQ(board.ZobristKey(), board2.ZobristKey());
+}

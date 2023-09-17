@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include "common.h"
+#include "compact.h"
 #include "move.h"
 
 #include <string>
@@ -15,6 +16,8 @@ public:
 
   // Construct with given FEN for the variant.
   Board(const Variant variant, const std::string& fen);
+
+  Board(const Variant variant, const BoardDesc& board_desc);
 
   // Moves piece on the board. Does not check for validity of move.
   void MakeMove(const Move& move);
@@ -68,6 +71,9 @@ public:
   // Returns the board as an FEN (Forsyth-Edwards Notation) string.
   std::string ParseIntoFEN() const;
 
+  // Returns a compact board description.
+  BoardDesc ToCompactBoardDesc() const;
+
   // Returns number of half-moves played on the board so far.
   int HalfMoves() const { return move_stack_.Size(); }
 
@@ -82,6 +88,16 @@ public:
 
   void SetPiece(const int index, const Piece piece) {
     board_array_[index] = piece;
+    if (piece == NULLPIECE) {
+      bitboard_sides_[0] &= ~(1ULL << index);
+      bitboard_sides_[1] &= ~(1ULL << index);
+      for (size_t i = 0; i < 12; ++i) {
+        bitboard_pieces_[i] &= ~(1ULL << index);
+      }
+    } else {
+      bitboard_sides_[SideIndex(PieceSide(piece))] |= (1ULL << index);
+      bitboard_pieces_[PieceIndex(piece)] |= (1ULL << index);
+    }
   }
 
   void SetPlayerColor(const Side side) { side_to_move_ = side; }
