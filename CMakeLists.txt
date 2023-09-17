@@ -6,24 +6,21 @@ if(LOWMEM)
 else()
   set(TRANSPOS_SIZE "(1 << 24)")
 endif()
-set(NUM_THREADS "1" CACHE STRING "Number of threads")
+set(NUM_THREADS
+    "1"
+    CACHE STRING "Number of threads")
 
 add_definitions(
-    -DENGINE_NAME="Nakshatra"
-    -DANTICHESS_EGTB_PATH_GLOB="${CMAKE_BINARY_DIR}/egtb/*.egtb"
-    -DSTANDARD_TRANSPOS_SIZE=${TRANSPOS_SIZE}
-    -DANTICHESS_TRANSPOS_SIZE=${TRANSPOS_SIZE}
-    -DNUM_THREADS=${NUM_THREADS}
-)
+  -DENGINE_NAME="Nakshatra" -DSTANDARD_TRANSPOS_SIZE=${TRANSPOS_SIZE}
+  -DANTICHESS_TRANSPOS_SIZE=${TRANSPOS_SIZE} -DNUM_THREADS=${NUM_THREADS})
 
 include(FetchContent)
 
 FetchContent_Declare(
-    magic_bits
-    GIT_REPOSITORY https://github.com/goutham/magic-bits.git
-    GIT_TAG master
-    SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/magic-bits"
-)
+  magic_bits
+  GIT_REPOSITORY https://github.com/goutham/magic-bits.git
+  GIT_TAG master
+  SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/magic-bits")
 FetchContent_GetProperties(magic_bits)
 if(NOT magic_bits_POPULATED)
   FetchContent_Populate(magic_bits)
@@ -61,8 +58,7 @@ set(SOURCES
     src/san.cpp
     src/see.cpp
     src/transpos.cpp
-    src/zobrist.cpp
-)
+    src/zobrist.cpp)
 add_library(nakshatra_core OBJECT ${SOURCES})
 
 #
@@ -73,14 +69,11 @@ add_executable(nakshatra src/nakshatra.cpp)
 target_link_libraries(nakshatra nakshatra_core pthread)
 
 if(BUILD_ALL_EXECUTABLES)
-    add_executable(pns_analyze src/pns_analyze.cpp)
-    target_link_libraries(pns_analyze nakshatra_core)
+  add_executable(pns_analyze src/pns_analyze.cpp)
+  target_link_libraries(pns_analyze nakshatra_core)
 
-    add_executable(movegen_perf src/movegen_perf.cpp)
-    target_link_libraries(movegen_perf nakshatra_core)
-
-    add_executable(generate_antichess_egtb src/generate_antichess_egtb.cpp)
-    target_link_libraries(generate_antichess_egtb nakshatra_core)
+  add_executable(movegen_perf src/movegen_perf.cpp)
+  target_link_libraries(movegen_perf nakshatra_core)
 endif()
 
 #
@@ -88,18 +81,13 @@ endif()
 #
 
 FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1
-)
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(googletest)
 
 set(CMAKE_CXX_FLAGS_TEST "-std=c++20")
 file(GLOB TEST_SOURCES "src/tests/*_test.cpp")
 
-add_executable(unit_tests
-    ${TEST_SOURCES}
-)
-target_link_libraries(unit_tests
-    gtest gtest_main nakshatra_core pthread
-)
+add_executable(unit_tests ${TEST_SOURCES})
+target_link_libraries(unit_tests gtest gtest_main nakshatra_core pthread)

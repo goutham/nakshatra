@@ -19,10 +19,6 @@ cmake .. \
     -DBUILD_ALL_EXECUTABLES=ON
 ninja
 
-mkdir -p egtb
-echo "Generating Antichess EGTB..."
-./generate_antichess_egtb
-
 echo "Running unit tests..."
 ./unit_tests
 

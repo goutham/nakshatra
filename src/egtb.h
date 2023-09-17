@@ -17,10 +17,8 @@ struct EGTBIndexEntry {
   int8_t result;
 };
 
-class EGTB {
+class EGTB final {
 public:
-  EGTB(const std::vector<std::string>& egtb_files);
-  virtual ~EGTB() {}
   void Initialize();
 
   const EGTBIndexEntry* Lookup(const Board& board);
@@ -28,11 +26,10 @@ public:
   void LogStats();
 
 private:
-  const std::vector<std::string> egtb_files_;
-  bool initialized_;
+  bool initialized_ = false;
   std::unordered_map<int, std::vector<EGTBIndexEntry>> egtb_index_;
-  uint64_t egtb_hits_;
-  uint64_t egtb_misses_;
+  uint64_t egtb_hits_ = 0ULL;
+  uint64_t egtb_misses_ = 0ULL;
 };
 
 void PrintEGTBIndexEntry(const EGTBIndexEntry& entry);

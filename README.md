@@ -32,7 +32,7 @@ if installation succeeds.
 
 ### Play Locally
 
-Install one of the XBoard protocol compatible interfaces such as [cutechess](https://github.com/cutechess/cutechess), and configure it to run the engine executable file `nakshatra` as the computer player. The executable may be moved to a different directory but it depends on `build/egtb/*` and (may be) other files in your local git repo where `install.sh` was run, so do not delete the directory. Using an opening book (not included) is recommended for variations in gameplay.
+Install one of the XBoard protocol compatible interfaces such as [cutechess](https://github.com/cutechess/cutechess), and configure it to run the engine executable file `nakshatra` as the computer player. Using an opening book (not included) is recommended for variations in gameplay.
 
 ## History
 
