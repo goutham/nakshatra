@@ -10,12 +10,10 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
-#include <fstream>
 #include <iostream>
 #include <list>
 #include <memory>
 #include <set>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -107,22 +105,6 @@ public:
   const std::unordered_map<int, std::unordered_map<uint64_t, EGTBIndexEntry>>&
   GetMap() {
     return store_;
-  }
-
-  void Write() {
-    for (const auto& elem : store_) {
-      std::stringstream ss;
-      ss << elem.first;
-      const std::string& filename = "egtb/" + ss.str() + ".egtb";
-      std::ofstream ofs(filename, std::ofstream::binary);
-      for (const auto& elem2 : store_[elem.first]) {
-        U64 index = elem2.first;
-        ofs.seekp(index * sizeof(EGTBIndexEntry), std::ios_base::beg);
-        ofs.write(reinterpret_cast<const char*>(&elem2.second),
-                  sizeof(EGTBIndexEntry));
-      }
-      ofs.close();
-    }
   }
 
 private:
