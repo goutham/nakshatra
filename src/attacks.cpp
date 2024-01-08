@@ -1,8 +1,8 @@
 #include "attacks.h"
+#include "bitmanip.h"
 #include "board.h"
 #include "common.h"
 #include "magic-bits/include/magic_bits.hpp"
-#include "side_relative.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -83,8 +83,8 @@ bool InCheckInternal(const Board& board) {
          ((rook | bishop) & board.BitBoard(PieceOfSide(QUEEN, opp_side))) ||
          (knight_attacks[king_sq] &
           board.BitBoard(PieceOfSide(KNIGHT, opp_side))) ||
-         ((side_relative::PushNorthEast<side>(king_bb) |
-           side_relative::PushNorthWest<side>(king_bb)) &
+         ((bitmanip::siderel::PushNorthEast<side>(king_bb) |
+           bitmanip::siderel::PushNorthWest<side>(king_bb)) &
           board.BitBoard(PieceOfSide(PAWN, opp_side)));
 }
 
@@ -104,12 +104,12 @@ U64 SquareAttackers(const int square, const Piece attacking_piece,
   if (PieceType(attacking_piece) == PAWN) {
     switch (attacking_side) {
     case Side::WHITE:
-      attack_bb = side_relative::PushNorthEast<Side::BLACK>(bb) |
-                  side_relative::PushNorthWest<Side::BLACK>(bb);
+      attack_bb = bitmanip::siderel::PushNorthEast<Side::BLACK>(bb) |
+                  bitmanip::siderel::PushNorthWest<Side::BLACK>(bb);
       break;
     case Side::BLACK:
-      attack_bb = side_relative::PushNorthEast<Side::WHITE>(bb) |
-                  side_relative::PushNorthWest<Side::WHITE>(bb);
+      attack_bb = bitmanip::siderel::PushNorthEast<Side::WHITE>(bb) |
+                  bitmanip::siderel::PushNorthWest<Side::WHITE>(bb);
       break;
     default:
       throw std::logic_error("cannot process side");

@@ -144,5 +144,6 @@ int EvalResult(Board* board) {
   return UNKNOWN;
 }
 
-template int Evaluate<Variant::STANDARD>(Board* board, EGTB* egtb, int alpha, int beta);
+template int Evaluate<Variant::STANDARD>(Board* board, EGTB* egtb, int alpha,
+                                         int beta);
 template int EvalResult<Variant::STANDARD>(Board* board);

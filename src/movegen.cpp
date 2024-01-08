@@ -1,9 +1,9 @@
 #include "movegen.h"
 #include "attacks.h"
+#include "bitmanip.h"
 #include "board.h"
 #include "common.h"
 #include "move_array.h"
-#include "side_relative.h"
 
 #include <array>
 #include <cassert>
@@ -30,8 +30,8 @@ U64 AllAttacks(const Piece piece, const Board& board) {
 }
 
 enum PawnMoveType {
-  NW_CAPTURE = 9,
-  NE_CAPTURE = 7,
+  NW_CAPTURE = 7,
+  NE_CAPTURE = 9,
   ONE_STEP = 8,
   TWO_STEP = 16
 };
@@ -79,7 +79,7 @@ void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
                           : (IsAntichessLike(variant)
                                  ? 5
                                  : throw std::logic_error("Unknown variant"));
-  const U64 mask_7th_row = side_relative::MaskRow<side>(7);
+  const U64 mask_7th_row = bitmanip::siderel::MaskRow<side>(7);
   *move_count += PopCount(pawn_bitboard & mask_7th_row) * promotion_count +
                  PopCount(pawn_bitboard & ~mask_7th_row);
 }
@@ -87,8 +87,9 @@ void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
 template <Side side>
 U64 EnpassantBitBoard(const Board& board) {
   const int index = board.EnpassantTarget();
-  return index == NO_EP ? 0ULL
-                        : ((1ULL << index) & side_relative::MaskRow<side>(5));
+  return index == NO_EP
+             ? 0ULL
+             : ((1ULL << index) & bitmanip::siderel::MaskRow<side>(5));
 }
 
 template <Variant variant, Side side, typename MoveAccumulatorType>
@@ -98,16 +99,18 @@ void GeneratePawnMoves(const Board& board, const bool generate_captures_only,
   const U64 pawn_capturable = opp_bitboard | EnpassantBitBoard<side>(board);
 
   const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, side));
-  if (const U64 nw_captured =
-          side_relative::PushNorthWest<side>(pawn_bitboard) & pawn_capturable;
-      nw_captured) {
-    AddPawnMoves<variant, side, NW_CAPTURE>(nw_captured, move_acc);
-  }
-
   if (const U64 ne_captured =
-          side_relative::PushNorthEast<side>(pawn_bitboard) & pawn_capturable;
+          bitmanip::siderel::PushNorthEast<side>(pawn_bitboard) &
+          pawn_capturable;
       ne_captured) {
     AddPawnMoves<variant, side, NE_CAPTURE>(ne_captured, move_acc);
+  }
+
+  if (const U64 nw_captured =
+          bitmanip::siderel::PushNorthWest<side>(pawn_bitboard) &
+          pawn_capturable;
+      nw_captured) {
+    AddPawnMoves<variant, side, NW_CAPTURE>(nw_captured, move_acc);
   }
 
   if (generate_captures_only) {
@@ -117,9 +120,9 @@ void GeneratePawnMoves(const Board& board, const bool generate_captures_only,
   const U64 empty_bitboard = ~board.BitBoard();
 
   const U64 one_step =
-      side_relative::PushFront<side>(pawn_bitboard) & empty_bitboard;
-  const U64 two_step = side_relative::PushFront<side>(one_step) &
-                       empty_bitboard & side_relative::MaskRow<side>(3);
+      bitmanip::siderel::PushNorth<side>(pawn_bitboard) & empty_bitboard;
+  const U64 two_step = bitmanip::siderel::PushNorth<side>(one_step) &
+                       empty_bitboard & bitmanip::siderel::MaskRow<side>(3);
   AddPawnMoves<variant, side, ONE_STEP>(one_step, move_acc);
   AddPawnMoves<variant, side, TWO_STEP>(two_step, move_acc);
 }
@@ -127,8 +130,8 @@ void GeneratePawnMoves(const Board& board, const bool generate_captures_only,
 template <Side side>
 U64 PawnCaptures(const U64 pawn_bitboard, const U64 pawn_capturable_bitboard) {
   return pawn_capturable_bitboard &
-         (side_relative::PushNorthWest<side>(pawn_bitboard) |
-          side_relative::PushNorthEast<side>(pawn_bitboard));
+         (bitmanip::siderel::PushNorthWest<side>(pawn_bitboard) |
+          bitmanip::siderel::PushNorthEast<side>(pawn_bitboard));
 }
 
 // Castling is ignored.
@@ -144,9 +147,10 @@ U64 GenerateAttackBitBoard(const Board& board) {
       PawnCaptures<side>(board.BitBoard(PieceOfSide(PAWN, side)),
                          opp_bitboard | EnpassantBitBoard<side>(board));
   const U64 pawn_one_step =
-      side_relative::PushFront<side>(pawn_bitboard) & empty_bitboard;
-  const U64 pawn_two_step = side_relative::PushFront<side>(pawn_one_step) &
-                            empty_bitboard & side_relative::MaskRow<side>(3);
+      bitmanip::siderel::PushNorth<side>(pawn_bitboard) & empty_bitboard;
+  const U64 pawn_two_step = bitmanip::siderel::PushNorth<side>(pawn_one_step) &
+                            empty_bitboard &
+                            bitmanip::siderel::MaskRow<side>(3);
 
   auto attacks = [&board](const Piece piece_type) -> U64 {
     return AllAttacks(PieceOfSide(piece_type, side), board);
@@ -181,8 +185,8 @@ void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
 
   const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, opp_side));
   const U64 pawn_capturable_empty_squares =
-      (side_relative::PushNorthWest<opp_side>(pawn_bitboard) |
-       side_relative::PushNorthEast<opp_side>(pawn_bitboard)) &
+      (bitmanip::siderel::PushNorthWest<opp_side>(pawn_bitboard) |
+       bitmanip::siderel::PushNorthEast<opp_side>(pawn_bitboard)) &
       ~board.BitBoard();
 
   const U64 restricted_squares = opp_attack_map | pawn_capturable_empty_squares;
