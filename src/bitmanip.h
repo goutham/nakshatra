@@ -45,6 +45,24 @@ constexpr U64 PushSouthWest(U64 bitboard) {
   return (bitboard & NOT_A_FILE) >> 9;
 }
 
+constexpr U64 FrontFill(U64 bitboard) {
+  bitboard |= (bitboard << 8);
+  bitboard |= (bitboard << 16);
+  bitboard |= (bitboard << 32);
+  return bitboard;
+}
+
+constexpr U64 RearFill(U64 bitboard) {
+  bitboard |= (bitboard >> 8);
+  bitboard |= (bitboard >> 16);
+  bitboard |= (bitboard >> 32);
+  return bitboard;
+}
+
+constexpr U64 FrontSpan(U64 bitboard) { return PushNorth(FrontFill(bitboard)); }
+
+constexpr U64 RearSpan(U64 bitboard) { return PushSouth(RearFill(bitboard)); }
+
 inline U64 FromLayout(const char* layout_str) {
   // Layout indices:
   //     8| 56, 57, 58, 59, 60, 61, 62, 63,
@@ -115,19 +133,12 @@ U64 PushNorthWest(U64 bitboard) {
 }
 
 template <Side side>
+  requires(side == Side::WHITE || side == Side::BLACK)
 U64 FrontFill(U64 bitboard) {
   if constexpr (side == Side::WHITE) {
-    bitboard |= (bitboard << 8);
-    bitboard |= (bitboard << 16);
-    bitboard |= (bitboard << 32);
-    return bitboard;
-  } else {
-    static_assert(side == Side::BLACK);
-    bitboard |= (bitboard >> 8);
-    bitboard |= (bitboard >> 16);
-    bitboard |= (bitboard >> 32);
-    return bitboard;
+    return bitmanip::FrontFill(bitboard);
   }
+  return bitmanip::RearFill(bitboard);
 }
 
 template <Side side>
