@@ -38,6 +38,18 @@ void AddPSTScores(U64 bb, int& game_phase, int& mgame_score, int& egame_score) {
   }
 }
 
+template <Side side>
+void AddPawnStructureScores(const Board& board, int& mgame_score,
+                            int& egame_score) {
+  const int num_doubled_pawns = pawns::DoubledPawns<side>(board);
+  mgame_score += num_doubled_pawns * DOUBLED_PAWNS_MGAME;
+  egame_score += num_doubled_pawns * DOUBLED_PAWNS_EGAME;
+
+  const int num_passed_pawns = pawns::PassedPawns<side>(board);
+  mgame_score += num_passed_pawns * PASSED_PAWNS_MGAME;
+  egame_score += num_passed_pawns * PASSED_PAWNS_EGAME;
+}
+
 int StaticEval(Board* board) {
   const U64 w_king = board->BitBoard(KING);
   const U64 w_queen = board->BitBoard(QUEEN);
@@ -55,13 +67,7 @@ int StaticEval(Board* board) {
   AddPSTScores<BISHOP>(w_bishop, game_phase, w_mgame_score, w_egame_score);
   AddPSTScores<KNIGHT>(w_knight, game_phase, w_mgame_score, w_egame_score);
   AddPSTScores<PAWN>(w_pawn, game_phase, w_mgame_score, w_egame_score);
-
-  const int w_num_doubled_pawns = pawns::DoubledPawns<Side::WHITE>(*board);
-  const int w_num_passed_pawns = pawns::PassedPawns<Side::WHITE>(*board);
-  w_mgame_score += w_num_doubled_pawns * DOUBLED_PAWNS_MGAME;
-  w_mgame_score += w_num_passed_pawns * PASSED_PAWNS_MGAME;
-  w_egame_score += w_num_doubled_pawns * DOUBLED_PAWNS_EGAME;
-  w_egame_score += w_num_passed_pawns * PASSED_PAWNS_EGAME;
+  AddPawnStructureScores<Side::WHITE>(*board, w_mgame_score, w_egame_score);
 
   const U64 b_king = board->BitBoard(-KING);
   const U64 b_queen = board->BitBoard(-QUEEN);
@@ -78,13 +84,7 @@ int StaticEval(Board* board) {
   AddPSTScores<-BISHOP>(b_bishop, game_phase, b_mgame_score, b_egame_score);
   AddPSTScores<-KNIGHT>(b_knight, game_phase, b_mgame_score, b_egame_score);
   AddPSTScores<-PAWN>(b_pawn, game_phase, b_mgame_score, b_egame_score);
-
-  const int b_num_doubled_pawns = pawns::DoubledPawns<Side::BLACK>(*board);
-  const int b_num_passed_pawns = pawns::PassedPawns<Side::BLACK>(*board);
-  b_mgame_score += b_num_doubled_pawns * DOUBLED_PAWNS_MGAME;
-  b_mgame_score += b_num_passed_pawns * PASSED_PAWNS_MGAME;
-  b_egame_score += b_num_doubled_pawns * DOUBLED_PAWNS_EGAME;
-  b_egame_score += b_num_passed_pawns * PASSED_PAWNS_EGAME;
+  AddPawnStructureScores<Side::BLACK>(*board, b_mgame_score, b_egame_score);
 
   const int mgame_phase = std::min(24, game_phase);
   const int egame_phase = 24 - mgame_phase;
