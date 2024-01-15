@@ -51,7 +51,6 @@ set(SOURCES
     src/id_search.cpp
     src/move_order.cpp
     src/movegen.cpp
-    src/pawns.cpp
     src/player.cpp
     src/pn_search.cpp
     src/pv_search.cpp

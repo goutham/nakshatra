@@ -6,6 +6,7 @@
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
+#include "pawns.h"
 #include "piece_values.h"
 #include "pst.h"
 #include "stopwatch.h"
@@ -13,6 +14,10 @@
 namespace {
 
 constexpr int GAME_PHASE_INC[7] = {0, 0, 4, 2, 1, 1, 0};
+constexpr int DOUBLED_PAWNS_MGAME = 0;
+constexpr int DOUBLED_PAWNS_EGAME = 0;
+constexpr int PASSED_PAWNS_MGAME = 0;
+constexpr int PASSED_PAWNS_EGAME = 0;
 
 template <Piece piece>
 void AddPSTScores(U64 bb, int& game_phase, int& mgame_score, int& egame_score) {
@@ -51,6 +56,13 @@ int StaticEval(Board* board) {
   AddPSTScores<KNIGHT>(w_knight, game_phase, w_mgame_score, w_egame_score);
   AddPSTScores<PAWN>(w_pawn, game_phase, w_mgame_score, w_egame_score);
 
+  const int w_num_doubled_pawns = pawns::DoubledPawns<Side::WHITE>(*board);
+  const int w_num_passed_pawns = pawns::PassedPawns<Side::WHITE>(*board);
+  w_mgame_score += w_num_doubled_pawns * DOUBLED_PAWNS_MGAME;
+  w_mgame_score += w_num_passed_pawns * PASSED_PAWNS_MGAME;
+  w_egame_score += w_num_doubled_pawns * DOUBLED_PAWNS_EGAME;
+  w_egame_score += w_num_passed_pawns * PASSED_PAWNS_EGAME;
+
   const U64 b_king = board->BitBoard(-KING);
   const U64 b_queen = board->BitBoard(-QUEEN);
   const U64 b_rook = board->BitBoard(-ROOK);
@@ -66,6 +78,13 @@ int StaticEval(Board* board) {
   AddPSTScores<-BISHOP>(b_bishop, game_phase, b_mgame_score, b_egame_score);
   AddPSTScores<-KNIGHT>(b_knight, game_phase, b_mgame_score, b_egame_score);
   AddPSTScores<-PAWN>(b_pawn, game_phase, b_mgame_score, b_egame_score);
+
+  const int b_num_doubled_pawns = pawns::DoubledPawns<Side::BLACK>(*board);
+  const int b_num_passed_pawns = pawns::PassedPawns<Side::BLACK>(*board);
+  b_mgame_score += b_num_doubled_pawns * DOUBLED_PAWNS_MGAME;
+  b_mgame_score += b_num_passed_pawns * PASSED_PAWNS_MGAME;
+  b_egame_score += b_num_doubled_pawns * DOUBLED_PAWNS_EGAME;
+  b_egame_score += b_num_passed_pawns * PASSED_PAWNS_EGAME;
 
   const int mgame_phase = std::min(24, game_phase);
   const int egame_phase = 24 - mgame_phase;
