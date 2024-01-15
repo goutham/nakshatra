@@ -1,5 +1,5 @@
-#ifndef __COMPACT_H__
-#define __COMPACT_H__
+#ifndef COMPACT_H
+#define COMPACT_H
 
 #include <cstring>
 

@@ -1,5 +1,5 @@
-#ifndef SIDE_RELATIVE_H
-#define SIDE_RELATIVE_H
+#ifndef BITMANIP_H
+#define BITMANIP_H
 
 #include "common.h"
 

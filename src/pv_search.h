@@ -1,5 +1,5 @@
-#ifndef SEARCH_H
-#define SEARCH_H
+#ifndef PV_SEARCH_H
+#define PV_SEARCH_H
 
 #include "board.h"
 #include "egtb.h"

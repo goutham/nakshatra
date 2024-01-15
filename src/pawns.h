@@ -1,3 +1,6 @@
+#ifndef PAWNS_H
+#define PAWNS_H
+
 #include "bitmanip.h"
 #include "board.h"
 #include "common.h"
@@ -22,3 +25,5 @@ U64 PassedPawns(const Board& board) {
 }
 
 } // namespace pawns
+
+#endif
