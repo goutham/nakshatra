@@ -12,6 +12,7 @@ fi
 mkdir -p build
 cd build
 cmake .. \
+    -DCMAKE_CXX_COMPILER=g++-13 \
     -GNinja \
     -DLOWMEM=OFF \
     -DNUM_THREADS=1 \

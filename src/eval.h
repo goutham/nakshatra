@@ -21,4 +21,8 @@ template <Variant variant>
   requires(IsAntichessLike(variant))
 int EvalResult(Board* board);
 
+template <Variant variant>
+  requires(IsStandard(variant))
+void WriteOutParams();
+
 #endif

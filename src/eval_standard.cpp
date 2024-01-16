@@ -11,6 +11,8 @@
 #include "pst.h"
 #include "stopwatch.h"
 
+#include <iostream>
+
 namespace {
 
 constexpr int GAME_PHASE_INC[7] = {0, 0, 4, 2, 1, 1, 0};
@@ -163,6 +165,51 @@ int EvalResult(Board* board) {
   return UNKNOWN;
 }
 
+template <Variant variant>
+  requires(IsStandard(variant))
+void WriteOutParams() {
+  std::cout << "piece_order = [\"nullpiece\", \"king\", \"queen\", \"rook\", "
+               "\"bishop\", \"knight\", \"pawn\",]\n";
+
+  auto write_array = [](const int* array, size_t len,
+                        const std::string& table_name) {
+    std::cout << "\n" << table_name << " = [\n  ";
+    for (size_t i = 0; i < len; ++i) {
+      std::cout << array[i] << ", ";
+      if ((i + 1) % 8 == 0) {
+        std::cout << "\n  ";
+      }
+    }
+    std::cout << "\n]\n";
+  };
+
+  std::cout << "\n[standard]\n";
+  std::cout << "\n[standard.mgame]\n";
+  write_array(standard::PIECE_VALUES_MGAME, 7, "piece.values");
+  std::cout << "\ndoubled_pawns = " << DOUBLED_PAWNS_MGAME << "\n";
+  std::cout << "\npassed_pawns = " << PASSED_PAWNS_MGAME << "\n";
+  std::cout << "\n[standard.mgame.pst]\n";
+  write_array(standard::PST_KING_MGAME, 64, "king");
+  write_array(standard::PST_QUEEN_MGAME, 64, "queen");
+  write_array(standard::PST_ROOK_MGAME, 64, "rook");
+  write_array(standard::PST_BISHOP_MGAME, 64, "bishop");
+  write_array(standard::PST_KNIGHT_MGAME, 64, "knight");
+  write_array(standard::PST_PAWN_MGAME, 64, "pawn");
+
+  std::cout << "\n[standard.egame]\n";
+  write_array(standard::PIECE_VALUES_EGAME, 7, "piece.values");
+  std::cout << "\ndoubled_pawns = " << DOUBLED_PAWNS_EGAME << "\n";
+  std::cout << "\npassed_pawns = " << PASSED_PAWNS_EGAME << "\n";
+  std::cout << "\n[standard.egame.pst]\n";
+  write_array(standard::PST_KING_EGAME, 64, "king");
+  write_array(standard::PST_QUEEN_EGAME, 64, "queen");
+  write_array(standard::PST_ROOK_EGAME, 64, "rook");
+  write_array(standard::PST_BISHOP_EGAME, 64, "bishop");
+  write_array(standard::PST_KNIGHT_EGAME, 64, "knight");
+  write_array(standard::PST_PAWN_EGAME, 64, "pawn");
+}
+
 template int Evaluate<Variant::STANDARD>(Board* board, EGTB* egtb, int alpha,
                                          int beta);
 template int EvalResult<Variant::STANDARD>(Board* board);
+template void WriteOutParams<Variant::STANDARD>();
