@@ -43,11 +43,11 @@ void AddPSTScores(U64 bb, int& game_phase, int& mgame_score, int& egame_score) {
 template <Side side>
 void AddPawnStructureScores(const Board& board, int& mgame_score,
                             int& egame_score) {
-  const int num_doubled_pawns = pawns::DoubledPawns<side>(board);
+  const int num_doubled_pawns = PopCount(pawns::DoubledPawns<side>(board));
   mgame_score += num_doubled_pawns * DOUBLED_PAWNS_MGAME;
   egame_score += num_doubled_pawns * DOUBLED_PAWNS_EGAME;
 
-  const int num_passed_pawns = pawns::PassedPawns<side>(board);
+  const int num_passed_pawns = PopCount(pawns::PassedPawns<side>(board));
   mgame_score += num_passed_pawns * PASSED_PAWNS_MGAME;
   egame_score += num_passed_pawns * PASSED_PAWNS_EGAME;
 }

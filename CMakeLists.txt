@@ -76,6 +76,9 @@ if(BUILD_ALL_EXECUTABLES)
 
   add_executable(dump_params src/dump_params.cpp)
   target_link_libraries(dump_params nakshatra_core)
+
+  add_executable(update_epd src/update_epd.cpp)
+  target_link_libraries(update_epd nakshatra_core)
 endif()
 
 #
