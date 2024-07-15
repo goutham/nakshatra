@@ -16,6 +16,8 @@
 namespace {
 
 constexpr int GAME_PHASE_INC[7] = {0, 0, 4, 2, 1, 1, 0};
+
+// TODO: Discover and set these parameters.
 constexpr int DOUBLED_PAWNS_MGAME = 0;
 constexpr int DOUBLED_PAWNS_EGAME = 0;
 constexpr int PASSED_PAWNS_MGAME = 0;
