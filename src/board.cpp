@@ -100,7 +100,7 @@ Board::Board(const Variant variant, const BoardDesc& board_desc) {
   top->zobrist_key = GenerateZobristKey();
 }
 
-void Board::MakeMove(const Move& move) {
+void Board::MakeMove(const Move move) {
   move_stack_.Push();
 
   const int from_index = move.from_index();

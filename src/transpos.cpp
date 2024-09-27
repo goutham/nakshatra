@@ -4,6 +4,7 @@
 #include "zobrist.h"
 
 #include <iostream>
+#include <optional>
 
 uint64_t ZKey(const TTEntry& tt_entry) {
   const uint64_t& data = reinterpret_cast<const uint64_t&>(tt_entry.data);
@@ -23,8 +24,7 @@ TranspositionTable::TranspositionTable(int size) : size_(size) {
 
 TranspositionTable::~TranspositionTable() { delete tt_buckets_; }
 
-TTData TranspositionTable::Get(U64 zkey, bool* found) {
-  *found = false;
+std::optional<TTData> TranspositionTable::Get(U64 zkey) {
   TTBucket& bucket = tt_buckets_[hash(zkey)];
   for (int i = 0; i < 4; ++i) {
     TTEntry tt_entry = bucket.tt_entries[i];
@@ -32,13 +32,12 @@ TTData TranspositionTable::Get(U64 zkey, bool* found) {
       tt_entry.data.epoch = epoch_;
       SetZKey(zkey, &tt_entry);
       ++hits_;
-      *found = true;
       bucket.tt_entries[i] = tt_entry;
       return tt_entry.data;
     }
   }
   ++misses_;
-  return TTData();
+  return std::nullopt;
 }
 
 void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,

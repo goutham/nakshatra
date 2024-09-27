@@ -23,8 +23,7 @@ struct ExecutionContext final {
     // initialization for given variant.
     std::string init_fen;
 
-    // Use this transposition table instead of building a new one. This is
-    // useful
+    // Use this transposition table instead of building a new one.
     TranspositionTable* transpos = nullptr;
   };
 
@@ -45,8 +44,7 @@ public:
 
   // Executes command. Response may be set (depending on the command) in the
   // response string vector.
-  void Execute(const std::string& command_str,
-               std::vector<std::string>* response);
+  std::vector<std::string> Execute(const std::string& command_str);
 
   // Returns true if program has to quit.
   bool quit() { return quit_; }
@@ -55,7 +53,7 @@ private:
   // Checks if match has a result - i.e, the result code obtained from evaluator
   // is one of WIN, -WIN or DRAW. If a result is available, returns true, else
   // false.
-  bool MatchResult(std::vector<std::string>* response);
+  bool MatchResult(std::vector<std::string>& response);
 
   void RebuildMainContext();
   void RebuildPonderingContext();

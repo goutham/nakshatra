@@ -70,7 +70,7 @@ class PNSearch {
 public:
   // timer_ and egtb may be null.
   // if timer_ is null - PNSearch is not time bound.
-  PNSearch(Board* board, TranspositionTable* transpos, EGTB* egtb, Timer* timer)
+  PNSearch(Board& board, TranspositionTable* transpos, EGTB* egtb, Timer* timer)
       : board_(board), egtb_(egtb), transpos_(transpos), timer_(timer) {}
 
   ~PNSearch() {
@@ -80,7 +80,7 @@ public:
     }
   }
 
-  void Search(const PNSParams& pns_params, PNSResult* pns_result);
+  PNSResult Search(const PNSParams& pns_params);
 
 private:
   void Expand(const PNSParams& pns_params, const int num_nodes,
@@ -102,7 +102,7 @@ private:
   void Delete(PNSNode* pns_node);
   void Delete(std::vector<PNSNode*>& pns_nodes);
 
-  Board* board_;
+  Board& board_;
   EGTB* egtb_;
   TranspositionTable* transpos_;
   Timer* timer_;

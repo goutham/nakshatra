@@ -11,7 +11,7 @@
 
 using std::string;
 
-string SAN(const Board& board, const Move& move) {
+string SAN(const Board& board, const Move move) {
   const Piece piece = board.PieceAt(move.from_index());
 
   // Castling.

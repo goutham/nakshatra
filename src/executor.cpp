@@ -47,8 +47,7 @@ ExecutionContext::ExecutionContext(const Variant variant,
     transpos = std::make_unique<TranspositionTable>(TransposSize(variant));
     own_transpos = true;
   }
-  player = std::make_unique<Player>(variant, board.get(), transpos.get(),
-                                    timer.get());
+  player = std::make_unique<Player>(variant, *board, *transpos, *timer);
 }
 
 ExecutionContext::~ExecutionContext() {
@@ -57,14 +56,14 @@ ExecutionContext::~ExecutionContext() {
   }
 }
 
-bool Executor::MatchResult(vector<string>* response) {
+bool Executor::MatchResult(vector<string>& response) {
   int result;
   if (variant_ == Variant::STANDARD) {
-    result = EvalResult<Variant::STANDARD>(main_context_->board.get());
+    result = EvalResult<Variant::STANDARD>(*main_context_->board);
   } else if (variant_ == Variant::ANTICHESS) {
-    result = EvalResult<Variant::ANTICHESS>(main_context_->board.get());
+    result = EvalResult<Variant::ANTICHESS>(*main_context_->board);
   } else if (variant_ == Variant::SUICIDE) {
-    result = EvalResult<Variant::SUICIDE>(main_context_->board.get());
+    result = EvalResult<Variant::SUICIDE>(*main_context_->board);
   } else {
     assert(false); // unreachable
   }
@@ -87,7 +86,7 @@ bool Executor::MatchResult(vector<string>* response) {
   } else {
     match_result = "1/2-1/2 {Draw}";
   }
-  response->push_back(match_result);
+  response.push_back(match_result);
   return true;
 }
 
@@ -135,9 +134,10 @@ void Executor::StopPondering() {
   pondering_thread_.reset(nullptr);
 }
 
-void Executor::Execute(const string& command_str, vector<string>* response) {
+vector<string> Executor::Execute(const string& command_str) {
+  vector<string> response;
   if (command_str.empty()) {
-    return;
+    return response;
   }
   const std::vector<std::string> cmd_parts = SplitString(command_str, ' ');
   const string& cmd = cmd_parts[0];
@@ -187,7 +187,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
           main_context_->player->Search(search_params_, AllocateTime());
       main_context_->board->MakeMove(cmove);
       OutputFEN();
-      response->push_back("move " + cmove.str());
+      response.push_back("move " + cmove.str());
       StartPondering(time_centis_);
     }
   } else if (cmd == "thinktime") {
@@ -207,8 +207,8 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
                 << move.str() << std::endl;
       main_context_->board->MakeMove(move);
       OutputFEN();
-    } else if (!IsValidMove(variant_, main_context_->board.get(), move)) {
-      response->push_back("Illegal move: " + move.str());
+    } else if (!IsValidMove(variant_, *main_context_->board, move)) {
+      response.push_back("Illegal move: " + move.str());
     } else {
       main_context_->board->MakeMove(move);
       OutputFEN();
@@ -217,7 +217,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
             main_context_->player->Search(search_params_, AllocateTime());
         main_context_->board->MakeMove(cmove);
         OutputFEN();
-        response->push_back("move " + cmove.str());
+        response.push_back("move " + cmove.str());
         if (!MatchResult(response)) {
           StartPondering(time_centis_);
         }
@@ -237,7 +237,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
   } else if (cmd == "nopost") {
     search_params_.thinking_output = false;
   } else if (cmd == "ping") {
-    response->push_back("pong " + cmd_parts.at(1));
+    response.push_back("pong " + cmd_parts.at(1));
   } else if (cmd == "post") {
     search_params_.thinking_output = true;
   } else if (cmd == "quit") {
@@ -249,7 +249,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
              cmd == "st" || cmd == "result" || cmd == "draw") {
     // Ignore / TBD
   } else {
-    response->push_back("Error (Unknown command): " + command_str);
+    response.push_back("Error (Unknown command): " + command_str);
   }
 
   if (quit_ && main_context_.get()) {
@@ -260,6 +260,7 @@ void Executor::Execute(const string& command_str, vector<string>* response) {
       egtb->LogStats();
     }
   }
+  return response;
 }
 
 // Returns time (in centis) to allocate for search.

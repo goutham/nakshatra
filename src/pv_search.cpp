@@ -16,23 +16,22 @@ namespace {
 // Probes TT. Returns true if tt_score can be returned as the result of search
 // at given max_depth.
 bool Probe(int max_depth, int alpha, int beta, U64 zkey,
-           TranspositionTable* transpos, int* tt_score, Move* tt_move) {
-  bool found = false;
-  const TTData tdata = transpos->Get(zkey, &found);
-  if (!found) {
+           TranspositionTable& transpos, int& tt_score, Move& tt_move) {
+  const std::optional<TTData> tdata = transpos.Get(zkey);
+  if (!tdata) {
     return false;
   }
-  *tt_score = tdata.score;
-  *tt_move = tdata.best_move;
-  const NodeType node_type = tdata.node_type();
+  tt_score = tdata->score;
+  tt_move = tdata->best_move;
+  const NodeType node_type = tdata->node_type();
   if (node_type == NodeType::EXACT_NODE &&
-      (*tt_score == WIN || *tt_score == -WIN)) {
+      (tt_score == WIN || tt_score == -WIN)) {
     return true;
   }
-  if (tdata.depth >= max_depth &&
+  if (tdata->depth >= max_depth &&
       (node_type == NodeType::EXACT_NODE ||
-       (node_type == NodeType::FAIL_HIGH_NODE && *tt_score >= beta) ||
-       (node_type == NodeType::FAIL_LOW_NODE && *tt_score <= alpha))) {
+       (node_type == NodeType::FAIL_HIGH_NODE && tt_score >= beta) ||
+       (node_type == NodeType::FAIL_LOW_NODE && tt_score <= alpha))) {
     return true;
   }
   return false;
@@ -41,19 +40,19 @@ bool Probe(int max_depth, int alpha, int beta, U64 zkey,
 
 template <Variant variant>
 int PVSearch<variant>::Search(int max_depth, int alpha, int beta,
-                              SearchStats* search_stats) {
+                              SearchStats& search_stats) {
   return PVS(max_depth, alpha, beta, 0, true, search_stats);
 }
 
 template <Variant variant>
 int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
-                           bool allow_null_move, SearchStats* search_stats) {
-  ++search_stats->nodes_searched;
-  const U64 zkey = board_->ZobristKey();
+                           bool allow_null_move, SearchStats& search_stats) {
+  ++search_stats.nodes_searched;
+  const U64 zkey = board_.ZobristKey();
 
   // Return DRAW if the position is repeated.
-  for (int i = 4; i <= board_->HalfMoveClock(); i += 2) {
-    if (zkey == board_->ZobristKey(i)) {
+  for (int i = 4; i <= board_.HalfMoveClock(); i += 2) {
+    if (zkey == board_.ZobristKey(i)) {
       return DRAW;
     }
   }
@@ -64,44 +63,43 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
 
   Move tt_move = Move();
   int tt_score = 0;
-  if (Probe(max_depth, alpha, beta, zkey, transpos_, &tt_score, &tt_move)) {
+  if (Probe(max_depth, alpha, beta, zkey, transpos_, tt_score, tt_move)) {
     return tt_score;
   }
   // Search to a reduced depth to get a good first move to try (internal
   // iterative deepening).
   if (!tt_move.is_valid() && max_depth > 3) {
     PVS(max_depth - 3, alpha, beta, ply, allow_null_move, search_stats);
-    if (Probe(max_depth, alpha, beta, zkey, transpos_, &tt_score, &tt_move)) {
+    if (Probe(max_depth, alpha, beta, zkey, transpos_, tt_score, tt_move)) {
       return tt_score;
     }
   }
 
-  MoveArray move_array;
-  GenerateMoves<variant>(board_, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board_);
 
   // We have essentially reached the end of the game, so evaluate.
   if (move_array.size() == 0) {
     return Evaluate<variant>(board_, egtb_, alpha, beta);
   }
 
-  MoveInfoArray move_info_array;
   PrefMoves pref_moves;
   pref_moves.tt_move = tt_move;
   pref_moves.killer1 = killers_[ply][0];
   pref_moves.killer2 = killers_[ply][1];
-  OrderMoves<variant>(board_, move_array, &pref_moves, &move_info_array);
+  const MoveInfoArray move_info_array =
+      OrderMoves<variant>(board_, move_array, &pref_moves);
 
   // Decide whether to use null move pruning. Disabled for ANTICHESS where
   // zugzwangs are common.
   allow_null_move = !IsAntichessLike(variant) && allow_null_move &&
                     max_depth >= 2 && beta < INF &&
-                    PopCount(board_->BitBoard()) > 10 &&
-                    !attacks::InCheck(*board_, board_->SideToMove());
+                    PopCount(board_.BitBoard()) > 10 &&
+                    !attacks::InCheck(board_, board_.SideToMove());
   if (allow_null_move) {
-    board_->MakeNullMove();
+    board_.MakeNullMove();
     int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1, !allow_null_move,
                      search_stats);
-    board_->UnmakeNullMove();
+    board_.UnmakeNullMove();
     if (value >= beta) {
       return beta;
     }
@@ -114,7 +112,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   for (size_t index = 0; index < move_info_array.size; ++index) {
     const MoveInfo& move_info = move_info_array.moves[index];
     const Move move = move_info.move;
-    board_->MakeMove(move);
+    board_.MakeMove(move);
 
     int value = -INF;
 
@@ -137,7 +135,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
       value = -PVS(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
     }
 
-    board_->UnmakeLastMove();
+    board_.UnmakeLastMove();
 
     if (value > score) {
       score = value;
@@ -149,7 +147,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
           node_type = NodeType::FAIL_HIGH_NODE;
           if (move != tt_move && move != killers_[ply][0] &&
               (IsAntichessLike(variant) ||
-               board_->PieceAt(move.to_index()) == NULLPIECE)) {
+               board_.PieceAt(move.to_index()) == NULLPIECE)) {
             killers_[ply][1] = killers_[ply][0];
             killers_[ply][0] = move;
           }
@@ -161,7 +159,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   }
 
   if (!(timer_ && timer_->Lapsed())) {
-    transpos_->Put(score, node_type, max_depth, zkey, best_move);
+    transpos_.Put(score, node_type, max_depth, zkey, best_move);
   }
   return score;
 }

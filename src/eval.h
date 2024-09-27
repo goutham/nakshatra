@@ -7,19 +7,19 @@
 
 template <Variant variant>
   requires(IsStandard(variant))
-int Evaluate(Board* board, EGTB* egtb, int alpha, int beta);
+int Evaluate(Board& board, EGTB* egtb, int alpha, int beta);
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-int Evaluate(Board* board, EGTB* egtb, int alpha, int beta);
+int Evaluate(Board& board, EGTB* egtb, int alpha, int beta);
 
 template <Variant variant>
   requires(IsStandard(variant))
-int EvalResult(Board* board);
+int EvalResult(Board& board);
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-int EvalResult(Board* board);
+int EvalResult(Board& board);
 
 template <Variant variant>
   requires(IsStandard(variant))

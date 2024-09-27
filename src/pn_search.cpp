@@ -24,8 +24,8 @@
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-void PNSearch<variant>::Search(const PNSParams& pns_params,
-                               PNSResult* pns_result) {
+PNSResult PNSearch<variant>::Search(const PNSParams& pns_params) {
+  PNSResult pns_result;
   if (pns_tree_) {
     Delete(pns_tree_);
     pns_tree_ = nullptr;
@@ -33,8 +33,8 @@ void PNSearch<variant>::Search(const PNSParams& pns_params,
   pns_tree_ = new PNSNode;
 
   Pns(pns_params, pns_tree_);
-  pns_result->pns_tree = pns_tree_;
-  pns_result->tree_size = pns_tree_->tree_size;
+  pns_result.pns_tree = pns_tree_;
+  pns_result.tree_size = pns_tree_->tree_size;
 
   for (PNSNode* pns_node : pns_tree_->children) {
     // This is from the current playing side perspective.
@@ -54,17 +54,17 @@ void PNSearch<variant>::Search(const PNSParams& pns_params,
         result = UNKNOWN;
       }
     }
-    pns_result->ordered_moves.push_back(
+    pns_result.ordered_moves.push_back(
         {pns_node->move, score, pns_node->tree_size, result});
   }
-  sort(pns_result->ordered_moves.begin(), pns_result->ordered_moves.end(),
+  sort(pns_result.ordered_moves.begin(), pns_result.ordered_moves.end(),
        [](const PNSResult::MoveStat& a, const PNSResult::MoveStat& b) {
          return a.score < b.score;
        });
   // Print the ordered moves.
   if (!pns_params.quiet) {
     std::cout << "# Move, score, tree_size:" << std::endl;
-    for (const auto& move_stat : pns_result->ordered_moves) {
+    for (const auto& move_stat : pns_result.ordered_moves) {
       static std::map<int, std::string> result_map = {
           {WIN, "WIN"}, {-WIN, "LOSS"}, {DRAW, "DRAW"}, {UNKNOWN, "UNKNOWN"}};
       std::cout << "# " << move_stat.move.str() << ", " << move_stat.score
@@ -72,6 +72,7 @@ void PNSearch<variant>::Search(const PNSParams& pns_params,
                 << result_map.at(move_stat.result) << std::endl;
     }
   }
+  return pns_result;
 }
 
 template <Variant variant>
@@ -102,7 +103,7 @@ void PNSearch<variant>::Pns(const PNSParams& pns_params, PNSNode* pns_root) {
   while (cur_node != pns_root) {
     cur_node = cur_node->parent;
     --depth;
-    assert(board_->UnmakeLastMove());
+    assert(board_.UnmakeLastMove());
     UpdateTreeSize(cur_node);
   }
   assert(depth == 0);
@@ -151,7 +152,7 @@ PNSNode* PNSearch<variant>::FindMpn(PNSNode* root, int* depth) {
       }
     }
     ++*depth;
-    board_->MakeMove(mpn->move);
+    board_.MakeMove(mpn->move);
   }
   assert(mpn->children.empty());
   return mpn;
@@ -189,10 +190,10 @@ PNSNode* PNSearch<variant>::UpdateAncestors(const PNSParams& pns_params,
         return pns_node;
       }
       if (proof == 0 && transpos_) {
-        transpos_->Put(WIN, NodeType::EXACT_NODE, 0, board_->ZobristKey(),
+        transpos_->Put(WIN, NodeType::EXACT_NODE, 0, board_.ZobristKey(),
                        Move());
       } else if (proof == INF_NODES && disproof == 0 && transpos_) {
-        transpos_->Put(-WIN, NodeType::EXACT_NODE, 0, board_->ZobristKey(),
+        transpos_->Put(-WIN, NodeType::EXACT_NODE, 0, board_.ZobristKey(),
                        Move());
       }
       pns_node->proof = proof;
@@ -203,7 +204,7 @@ PNSNode* PNSearch<variant>::UpdateAncestors(const PNSParams& pns_params,
     }
     pns_node = pns_node->parent;
     --*depth;
-    assert(board_->UnmakeLastMove());
+    assert(board_.UnmakeLastMove());
   }
   assert(false);
 }
@@ -246,19 +247,18 @@ void PNSearch<variant>::Expand(const PNSParams& pns_params, const int num_nodes,
       pns_node->tree_size = 1 + pns_node->children.size();
     }
   } else {
-    MoveArray move_array;
-    GenerateMoves<variant>(board_, &move_array);
+    MoveArray move_array = GenerateMoves<variant>(board_);
     for (size_t i = 0; i < move_array.size(); ++i) {
       PNSNode* child = new PNSNode;
       pns_node->children.push_back(child);
       child->move = move_array.get(i);
       child->parent = pns_node;
-      board_->MakeMove(child->move);
+      board_.MakeMove(child->move);
       int result = EvalResult<variant>(board_);
       if (result == UNKNOWN && egtb_ &&
-          OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
-          OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
-        const EGTBIndexEntry* egtb_entry = egtb_->Lookup(*board_);
+          OnlyOneBitSet(board_.BitBoard(Side::WHITE)) &&
+          OnlyOneBitSet(board_.BitBoard(Side::BLACK))) {
+        const EGTBIndexEntry* egtb_entry = egtb_->Lookup(board_);
         if (egtb_entry) {
           result = EGTBResult(*egtb_entry);
         }
@@ -277,10 +277,10 @@ void PNSearch<variant>::Expand(const PNSParams& pns_params, const int num_nodes,
         child->disproof = CountMoves<variant>(board_);
       }
       if ((result == WIN || result == -WIN) && transpos_) {
-        transpos_->Put(result, NodeType::EXACT_NODE, 0, board_->ZobristKey(),
+        transpos_->Put(result, NodeType::EXACT_NODE, 0, board_.ZobristKey(),
                        Move());
       }
-      board_->UnmakeLastMove();
+      board_.UnmakeLastMove();
     }
     pns_node->tree_size = 1 + pns_node->children.size();
   }

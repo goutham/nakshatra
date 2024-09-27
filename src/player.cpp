@@ -22,13 +22,13 @@ int kPNSTimeForMovePercent = 5;
 template <Variant variant>
 Move Player::SearchInternal(const SearchParams& search_params,
                             long time_for_move_centis) {
-  transpos_->SetEpoch(board_->HalfMoves());
+  transpos_.SetEpoch(board_.HalfMoves());
 
   std::ostream& out = search_params.thinking_output ? std::cout : nullstream;
-  if (egtb_ && OnlyOneBitSet(board_->BitBoard(Side::WHITE)) &&
-      OnlyOneBitSet(board_->BitBoard(Side::BLACK))) {
+  if (egtb_ && OnlyOneBitSet(board_.BitBoard(Side::WHITE)) &&
+      OnlyOneBitSet(board_.BitBoard(Side::BLACK))) {
     out << "# Num pieces <= 2, looking up EGTB..." << std::endl;
-    const EGTBIndexEntry* egtb_entry = egtb_->Lookup(*board_);
+    const EGTBIndexEntry* egtb_entry = egtb_->Lookup(board_);
     if (egtb_entry) {
       PrintEGTBIndexEntry(*egtb_entry);
       return egtb_entry->next_move;
@@ -38,14 +38,12 @@ Move Player::SearchInternal(const SearchParams& search_params,
   }
   // If the move is forced, just move.
   if (CountMoves<variant>(board_) == 1) {
-    MoveArray move_array;
-    GenerateMoves<variant>(board_, &move_array);
+    MoveArray move_array = GenerateMoves<variant>(board_);
     return move_array.get(0);
   }
 
-  IDSParams ids_params;
-  ids_params.thinking_output = search_params.thinking_output;
-  ids_params.search_depth = search_params.search_depth;
+  IDSParams ids_params{.thinking_output = search_params.thinking_output,
+                       .search_depth = search_params.search_depth};
 
   if constexpr (IsAntichessLike(variant)) {
     if (search_params.antichess_pns) {
@@ -55,12 +53,11 @@ Move Player::SearchInternal(const SearchParams& search_params,
       StopWatch pn_stop_watch;
       pn_stop_watch.Start();
 
-      PNSearch<variant> pn_search(board_, transpos_, egtb_, &pns_timer);
-      PNSParams pns_params;
-      pns_params.quiet = !search_params.thinking_output;
-      pns_params.max_nodes = 10000000;
-      PNSResult pns_result;
-      pn_search.Search(pns_params, &pns_result);
+      const PNSResult pns_result =
+          PNSearch<variant>(board_, &transpos_, egtb_, &pns_timer)
+              .Search({.max_nodes = 10000000,
+                       .quiet = !search_params.thinking_output});
+
       pn_stop_watch.Stop();
       out << "# PNS time: " << pn_stop_watch.ElapsedTime() << " centis"
           << std::endl;
@@ -101,14 +98,10 @@ Move Player::SearchInternal(const SearchParams& search_params,
     }
   }
 
-  timer_->Run(time_for_move_centis);
+  timer_.Run(time_for_move_centis);
 
-  SearchStats id_search_stats;
-  int move_score;
-  Move best_move;
-  IDSearch<variant>(ids_params, board_, timer_, transpos_, egtb_, &best_move,
-                    &move_score, &id_search_stats);
-  return best_move;
+  return IDSearch<variant>(ids_params, board_, timer_, transpos_, egtb_)
+      .best_move;
 }
 
 Move Player::Search(const SearchParams& search_params,

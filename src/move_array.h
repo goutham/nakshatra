@@ -7,9 +7,9 @@ class MoveArray {
 public:
   MoveArray() : n_(0u) {}
 
-  void Add(const Move& move) { moves_[n_++] = move; }
+  void Add(const Move move) { moves_[n_++] = move; }
 
-  void PushToFront(const Move& move) {
+  void PushToFront(const Move move) {
     size_t index = 0;
     for (size_t i = 0; i < n_; ++i) {
       if (moves_[i] == move) {
@@ -24,7 +24,7 @@ public:
     moves_[index] = move;
   }
 
-  bool Contains(const Move& move) const {
+  bool Contains(const Move move) const {
     for (size_t i = 0; i < n_; ++i) {
       if (moves_[i] == move)
         return true;
@@ -34,7 +34,7 @@ public:
 
   size_t size() const { return n_; }
 
-  const Move& get(size_t index) const { return moves_[index]; }
+  Move get(size_t index) const { return moves_[index]; }
 
   void clear() { n_ = 0; }
 
@@ -42,5 +42,8 @@ private:
   Move moves_[256];
   size_t n_;
 };
+
+static_assert(std::is_trivially_copy_constructible_v<MoveArray> &&
+              std::is_trivially_copy_assignable_v<MoveArray>);
 
 #endif

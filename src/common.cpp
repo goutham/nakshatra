@@ -9,34 +9,31 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-
 std::ostream nullstream(0);
 
-std::vector<string> SplitString(const string& s, char delim) {
-  std::vector<string> vec;
+std::vector<std::string> SplitString(const std::string& s, char delim) {
+  std::vector<std::string> vec;
   std::istringstream ss(s);
-  for (string item; getline(ss, item, delim);) {
+  for (std::string item; getline(ss, item, delim);) {
     vec.push_back(item);
   }
   return vec;
 }
 
-int StringToInt(const string& s) {
+int StringToInt(const std::string& s) {
   std::istringstream ss(s);
   int i;
   ss >> i;
   return i;
 }
 
-string LongToString(long l) {
+std::string LongToString(long l) {
   std::stringstream ss;
   ss << l;
   return ss.str();
 }
 
-bool GlobFiles(const string& regex, vector<string>* filenames) {
+bool GlobFiles(const std::string& regex, std::vector<std::string>* filenames) {
   glob_t globbuf;
   if (int err = glob(regex.c_str(), 0, NULL, &globbuf); err != 0) {
     return false;

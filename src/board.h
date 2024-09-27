@@ -12,15 +12,15 @@
 class Board {
 public:
   // Construct with the standard initial board position for the variant.
-  Board(const Variant variant);
+  Board(Variant variant);
 
   // Construct with given FEN for the variant.
-  Board(const Variant variant, const std::string& fen);
+  Board(Variant variant, const std::string& fen);
 
-  Board(const Variant variant, const BoardDesc& board_desc);
+  Board(Variant variant, const BoardDesc& board_desc);
 
   // Moves piece on the board. Does not check for validity of move.
-  void MakeMove(const Move& move);
+  void MakeMove(Move move);
 
   // Undoes the last move (if any). Returns true if the move was undone.
   // If no move is present in move stack, returns false.
@@ -40,8 +40,8 @@ public:
   // Returns true if given side can castle on the 'piece_type' side. piece_type
   // can be KING or QUEEN. Version without 'side' argument uses current side
   // to move.
-  bool CanCastle(const Side side, const Piece piece_type) const;
-  bool CanCastle(const Piece piece_type) const;
+  bool CanCastle(Side side, Piece piece_type) const;
+  bool CanCastle(Piece piece_type) const;
 
   // Returns the piece at given row and column or given index on the board.
   Piece PieceAt(const int row, const int col) const {
@@ -156,14 +156,14 @@ private:
   // Places piece on the board. Two versions - one updates zobrist key and
   // another doesn't. It's an error to call these methods if the square given by
   // index is not empty.
-  void PlacePiece(const int index, const Piece piece);
-  void PlacePieceNoZ(const int index, const Piece piece);
+  void PlacePiece(int index, Piece piece);
+  void PlacePieceNoZ(int index, Piece piece);
 
   // Removes piece from given index on the board. Two versions - one updates
   // zobrist key and another doesn't. It's an error to call these methods if the
   // square given by index is not empty.
-  void RemovePiece(const int index);
-  void RemovePieceNoZ(const int index);
+  void RemovePiece(int index);
+  void RemovePieceNoZ(int index);
 
   // Array representation of the board. Empty squares are represented by
   // NULLPIECE.

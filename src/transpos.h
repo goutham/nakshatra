@@ -6,6 +6,7 @@
 #include "zobrist.h"
 
 #include <cstdio>
+#include <optional>
 
 struct TTData {
   Move best_move;
@@ -39,7 +40,7 @@ public:
   TranspositionTable(int size);
   ~TranspositionTable();
 
-  TTData Get(U64 zkey, bool* found);
+  std::optional<TTData> Get(U64 zkey);
 
   void Put(int score, NodeType node_type, int depth, U64 zkey, Move best_move);
 

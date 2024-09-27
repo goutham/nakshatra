@@ -24,10 +24,10 @@ TEST_F(MoveGeneratorTest, VerifyValidMove) {
   Board board(variant);
 
   Move move("e2e3");
-  EXPECT_TRUE(IsValidMove(variant, &board, move));
+  EXPECT_TRUE(IsValidMove(variant, board, move));
 
   Move move2("e2e5");
-  EXPECT_FALSE(IsValidMove(variant, &board, move2));
+  EXPECT_FALSE(IsValidMove(variant, board, move2));
 }
 
 TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
@@ -35,8 +35,7 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotion) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(5, move_array.size());
 
   string exp[] = {
@@ -65,8 +64,7 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotion) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(5, move_array.size());
 
   string exp[] = {
@@ -95,8 +93,7 @@ TEST_F(MoveGeneratorTest, VerifyWhitePawnPromotionHit) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(10, move_array.size());
 
   string exp[] = {
@@ -127,8 +124,7 @@ TEST_F(MoveGeneratorTest, VerifyBlackPawnPromotionHit) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(10, move_array.size());
 
   string exp[] = {
@@ -159,8 +155,7 @@ TEST_F(MoveGeneratorTest, VerifyPawnFirstMove) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(1, move_array.size());
   board.MakeMove(move_array.get(0));
 
@@ -172,8 +167,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(2, move_array.size());
 
   string exp1[] = {"8/8/1p6/2P5/8/8/8/8 w - -", "8/8/8/1pP5/8/8/8/8 w - b6"};
@@ -188,8 +182,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves) {
   ASSERT_TRUE(index > -1);
   board.MakeMove(move_array.get(index));
 
-  MoveArray move_array2;
-  GenerateMoves<variant>(&board, &move_array2);
+  MoveArray move_array2 = GenerateMoves<variant>(board);
   EXPECT_EQ(1, move_array2.size());
 
   board.MakeMove(move_array2.get(0));
@@ -205,8 +198,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
   constexpr Variant variant = Variant::ANTICHESS;
   Board board(variant, initial);
 
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   EXPECT_EQ(2, move_array.size());
 
   string exp1[] = {"8/8/8/8/8/2p5/1P6/8 b - -", "8/8/8/8/1Pp5/8/8/8 b - b3"};
@@ -221,8 +213,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
   ASSERT_TRUE(index > -1);
   board.MakeMove(move_array.get(index));
 
-  MoveArray move_array2;
-  GenerateMoves<variant>(&board, &move_array2);
+  MoveArray move_array2 = GenerateMoves<variant>(board);
   EXPECT_EQ(1, move_array2.size());
 
   board.MakeMove(move_array2.get(0));
@@ -236,8 +227,7 @@ TEST_F(MoveGeneratorTest, VerifyEnpassantMoves2) {
 TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
   constexpr Variant variant = Variant::STANDARD;
   Board board(variant);
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   static const string valid_moves[] = {"a2a3", "b2b3", "c2c3", "d2d3", "e2e3",
                                        "f2f3", "g2g3", "h2h3", "a2a4", "b2b4",
                                        "c2c4", "d2d4", "e2e4", "f2f4", "g2g4",
@@ -260,8 +250,7 @@ TEST_F(MoveGeneratorTest, VerifyInitialMoves) {
 TEST_F(MoveGeneratorTest, VerifyPinnedPieceMoves) {
   constexpr Variant variant = Variant::STANDARD;
   Board board(variant, "8/8/4r3/b7/3b4/2Q2p2/4P3/4K3 w - -");
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   static const string valid_moves[] = {
       "e2e3", "e2e4", "c3d2", "c3b4", "c3a5", "e1d1", "e1f1", "e1d2",
   };
@@ -285,8 +274,7 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck) {
   Board board(variant,
               "rnb1kbnr/pppp1p1p/6p1/4P3/1q2P3/8/PPPK1PPP/RNBQ1BNR w KQkq -");
   board.DebugPrintBoard();
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   DebugPrintMoveList(move_array);
   static const string valid_moves[] = {"d2e2", "d2d3", "d2e3", "c2c3", "b1c3"};
   static const unsigned num_valid_moves = 5;
@@ -308,8 +296,7 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
   constexpr Variant variant = Variant::STANDARD;
   Board board(variant,
               "rnb1kbnr/pppp1ppp/4p3/8/3P4/2P5/PP1KPqPP/RNBQ1BNR w KQkq -");
-  MoveArray move_array;
-  GenerateMoves<variant>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(board);
   static const string valid_moves[] = {"a2a3", "b2b3", "g2g3", "h2h3", "c3c4",
                                        "d4d5", "a2a4", "b2b4", "g2g4", "h2h4",
                                        "d1e1", "d1c2", "d1b3", "d1a4", "b1a3",
@@ -331,8 +318,7 @@ TEST_F(MoveGeneratorTest, VerifyMovesUnderCheck2) {
 
 TEST_F(MoveGeneratorTest, ProblemPosition1) {
   Board board(Variant::STANDARD, "8/8/2p2p2/6r1/2k1pP1R/4P3/8/7K b - f3");
-  MoveArray move_array;
-  GenerateMoves<Variant::STANDARD>(&board, &move_array);
+  MoveArray move_array = GenerateMoves<Variant::STANDARD>(board);
   static const std::vector<std::string> valid_moves = {
       "c4b3", "c4c3", "c4d3", "c4b4", "c4b5", "c4c5", "c4d5", "c6c5",
       "f6f5", "g5g1", "g5g2", "g5g3", "g5g4", "g5a5", "g5b5", "g5c5",
@@ -384,8 +370,7 @@ TEST_F(MoveGeneratorTest, VerifySlidingAttackMaps) {
 
 template <Variant variant>
 int CountLeafMoves(Board* board, unsigned int depth) {
-  MoveArray move_array;
-  GenerateMoves<variant>(board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(*board);
 
   if (depth == 1) {
     return move_array.size();

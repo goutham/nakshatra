@@ -38,10 +38,10 @@ enum PawnMoveType {
 
 template <Variant variant, Side side>
 void AddPawnPromotions(const int from_index, const int to_index,
-                       MoveArray* move_array) {
+                       MoveArray& move_array) {
   auto add_move = [&from_index, &to_index,
                    &move_array](const Piece piece_type) {
-    move_array->Add(Move(from_index, to_index, PieceOfSide(piece_type, side)));
+    move_array.Add(Move(from_index, to_index, PieceOfSide(piece_type, side)));
   };
 
   add_move(BISHOP);
@@ -55,7 +55,7 @@ void AddPawnPromotions(const int from_index, const int to_index,
 }
 
 template <Variant variant, Side side, PawnMoveType pawn_move_type>
-void AddPawnMoves(U64 pawn_bitboard, MoveArray* move_array) {
+void AddPawnMoves(U64 pawn_bitboard, MoveArray& move_array) {
   static_assert(side == Side::WHITE || side == Side::BLACK, "Invalid side");
 
   constexpr int add = side == Side::WHITE ? -pawn_move_type : pawn_move_type;
@@ -66,22 +66,22 @@ void AddPawnMoves(U64 pawn_bitboard, MoveArray* move_array) {
     if (lsb_index <= 7 || lsb_index >= 56) {
       AddPawnPromotions<variant, side>(from_index, lsb_index, move_array);
     } else {
-      move_array->Add(Move(from_index, lsb_index));
+      move_array.Add(Move(from_index, lsb_index));
     }
     pawn_bitboard ^= (1ULL << lsb_index);
   }
 }
 
 template <Variant variant, Side side, PawnMoveType>
-void AddPawnMoves(U64 pawn_bitboard, int* move_count) {
+void AddPawnMoves(U64 pawn_bitboard, int& move_count) {
   constexpr int promotion_count =
       IsStandard(variant) ? 4
                           : (IsAntichessLike(variant)
                                  ? 5
                                  : throw std::logic_error("Unknown variant"));
   const U64 mask_7th_row = bitmanip::siderel::MaskRow<side>(7);
-  *move_count += PopCount(pawn_bitboard & mask_7th_row) * promotion_count +
-                 PopCount(pawn_bitboard & ~mask_7th_row);
+  move_count += PopCount(pawn_bitboard & mask_7th_row) * promotion_count +
+                PopCount(pawn_bitboard & ~mask_7th_row);
 }
 
 template <Side side>
@@ -94,7 +94,7 @@ U64 EnpassantBitBoard(const Board& board) {
 
 template <Variant variant, Side side, typename MoveAccumulatorType>
 void GeneratePawnMoves(const Board& board, const bool generate_captures_only,
-                       MoveAccumulatorType move_acc) {
+                       MoveAccumulatorType& move_acc) {
   const U64 opp_bitboard = board.BitBoard(OppositeSide(side));
   const U64 pawn_capturable = opp_bitboard | EnpassantBitBoard<side>(board);
 
@@ -160,22 +160,22 @@ U64 GenerateAttackBitBoard(const Board& board) {
          attacks(ROOK) | attacks(BISHOP) | attacks(KNIGHT) | attacks(KING);
 }
 
-void BitBoardToMoves(const int index, U64 bitboard, MoveArray* move_array) {
+void BitBoardToMoves(const int index, U64 bitboard, MoveArray& move_array) {
   while (bitboard) {
     const int lsb_index = Lsb1(bitboard);
-    move_array->Add(Move(index, lsb_index));
+    move_array.Add(Move(index, lsb_index));
     bitboard ^= (1ULL << lsb_index);
   }
 }
 
-void BitBoardToMoves(const int unused_index, U64 bitboard, int* move_count) {
-  *move_count += PopCount(bitboard);
+void BitBoardToMoves(const int unused_index, U64 bitboard, int& move_count) {
+  move_count += PopCount(bitboard);
 }
 
 // Assumes king is not in check.
 template <Side side>
 void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
-                           MoveArray* move_array) {
+                           MoveArray& move_array) {
 
   constexpr int row = (side == Side::WHITE) ? 0 : 7;
   constexpr U64 mask_fg = SetBit(row, FILE_F) | SetBit(row, FILE_G);
@@ -193,13 +193,13 @@ void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
 
   if (board.CanCastle(side, KING)) {
     if (!(board.BitBoard() & mask_fg) && !(restricted_squares & mask_fg)) {
-      move_array->Add(Move(INDX(row, FILE_E), INDX(row, FILE_G)));
+      move_array.Add(Move(INDX(row, FILE_E), INDX(row, FILE_G)));
     }
   }
 
   if (board.CanCastle(side, QUEEN)) {
     if (!(mask_bcd & board.BitBoard()) && !(restricted_squares & mask_cd)) {
-      move_array->Add(Move(INDX(row, FILE_E), INDX(row, FILE_C)));
+      move_array.Add(Move(INDX(row, FILE_E), INDX(row, FILE_C)));
     }
   }
 }
@@ -208,7 +208,7 @@ void GenerateCastlingMoves(const Board& board, const U64 opp_attack_map,
 template <Variant variant, Side side, typename MoveAccumulatorType>
 void GeneratePieceMoves(const Board& board, const Piece piece,
                         const bool generate_captures_only,
-                        MoveAccumulatorType move_acc) {
+                        MoveAccumulatorType& move_acc) {
   assert(PieceOfSide(piece, side) == piece);
 
   if (PieceType(piece) == PAWN) {
@@ -256,7 +256,7 @@ bool Captures(const Board& board) {
 
 template <Variant variant, Side side, typename MoveAccumulatorType>
   requires(IsAntichessLike(variant))
-void GenerateMoves(const Board& board, MoveAccumulatorType move_acc) {
+void GenerateMovesInternal(const Board& board, MoveAccumulatorType& move_acc) {
   const bool generate_captures_only = Captures<side>(board);
 
   auto generate = [&](const Piece piece_type) {
@@ -274,12 +274,12 @@ void GenerateMoves(const Board& board, MoveAccumulatorType move_acc) {
 
 template <Variant variant, Side side>
   requires(IsStandard(variant))
-void GenerateMoves(Board* board, MoveArray* move_array) {
+void GenerateMovesInternal(Board& board, MoveArray& move_array) {
   MoveArray pseudo_legal_move_array;
 
   auto generate = [&](const Piece piece_type) {
-    GeneratePieceMoves<variant, side>(*board, PieceOfSide(piece_type, side),
-                                      false, &pseudo_legal_move_array);
+    GeneratePieceMoves<variant, side>(board, PieceOfSide(piece_type, side),
+                                      false, pseudo_legal_move_array);
   };
 
   generate(BISHOP);
@@ -290,41 +290,41 @@ void GenerateMoves(Board* board, MoveArray* move_array) {
   generate(ROOK);
 
   constexpr Piece king_piece = PieceOfSide(KING, side);
-  const int king_index = Lsb1(board->BitBoard(king_piece));
+  const int king_index = Lsb1(board.BitBoard(king_piece));
 
   assert(king_index >= 0);
 
   // Attacks on current playing side.
-  const U64 opp_attack_map = GenerateAttackBitBoard<OppositeSide(side)>(*board);
+  const U64 opp_attack_map = GenerateAttackBitBoard<OppositeSide(side)>(board);
 
   // If king is under check, work on evading check.
-  if (opp_attack_map & board->BitBoard(king_piece)) {
+  if (opp_attack_map & board.BitBoard(king_piece)) {
     for (size_t i = 0; i < pseudo_legal_move_array.size(); ++i) {
       const Move& move = pseudo_legal_move_array.get(i);
 
-      board->MakeMove(move);
+      board.MakeMove(move);
 
       // New opponent attack map.
       const U64 new_opp_attack_map =
-          GenerateAttackBitBoard<OppositeSide(side)>(*board);
+          GenerateAttackBitBoard<OppositeSide(side)>(board);
 
       // Include move if legal.
-      if (!(new_opp_attack_map & board->BitBoard(king_piece))) {
-        move_array->Add(move);
+      if (!(new_opp_attack_map & board.BitBoard(king_piece))) {
+        move_array.Add(move);
       }
 
-      board->UnmakeLastMove();
+      board.UnmakeLastMove();
     }
   } else {
-    if (board->CanCastle(side, KING) || board->CanCastle(side, QUEEN)) {
-      GenerateCastlingMoves<side>(*board, opp_attack_map, move_array);
+    if (board.CanCastle(side, KING) || board.CanCastle(side, QUEEN)) {
+      GenerateCastlingMoves<side>(board, opp_attack_map, move_array);
     }
 
     // Check if there are any pinned pieces. This is not an exact set of
     // pins but always a superset.
     const U64 potential_pins =
-        attacks::Attacks(board->BitBoard(king_piece), king_index, QUEEN) &
-        board->BitBoard(side);
+        attacks::Attacks(board.BitBoard(king_piece), king_index, QUEEN) &
+        board.BitBoard(side);
 
     for (size_t i = 0; i < pseudo_legal_move_array.size(); ++i) {
       const Move& move = pseudo_legal_move_array.get(i);
@@ -332,21 +332,21 @@ void GenerateMoves(Board* board, MoveArray* move_array) {
       // Add all non-king, non-pinned piece moves.
       if (move.from_index() != king_index &&
           !((1ULL << move.from_index()) & potential_pins)) {
-        move_array->Add(move);
+        move_array.Add(move);
         continue;
       }
 
       // For king moves and pinned pieces, make sure the moves are valid.
-      board->MakeMove(move);
+      board.MakeMove(move);
 
       const U64 new_opp_attack_map =
-          GenerateAttackBitBoard<OppositeSide(side)>(*board);
+          GenerateAttackBitBoard<OppositeSide(side)>(board);
 
-      if (!(new_opp_attack_map & board->BitBoard(king_piece))) {
-        move_array->Add(move);
+      if (!(new_opp_attack_map & board.BitBoard(king_piece))) {
+        move_array.Add(move);
       }
 
-      board->UnmakeLastMove();
+      board.UnmakeLastMove();
     }
   }
 }
@@ -355,70 +355,69 @@ void GenerateMoves(Board* board, MoveArray* move_array) {
 
 template <Variant variant>
   requires(IsStandard(variant))
-void GenerateMoves(Board* board, MoveArray* move_array) {
-  const Side side = board->SideToMove();
+MoveArray GenerateMoves(Board& board) {
+  MoveArray move_array;
+  const Side side = board.SideToMove();
   if (side == Side::BLACK) {
-    GenerateMoves<variant, Side::BLACK>(board, move_array);
+    GenerateMovesInternal<variant, Side::BLACK>(board, move_array);
   } else {
     assert(side == Side::WHITE);
-    GenerateMoves<variant, Side::WHITE>(board, move_array);
+    GenerateMovesInternal<variant, Side::WHITE>(board, move_array);
   }
+  return move_array;
 }
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-void GenerateMoves(Board* board, MoveArray* move_array) {
-  const Side side = board->SideToMove();
+MoveArray GenerateMoves(Board& board) {
+  MoveArray move_array;
+  const Side side = board.SideToMove();
   if (side == Side::BLACK) {
-    GenerateMoves<variant, Side::BLACK>(*board, move_array);
+    GenerateMovesInternal<variant, Side::BLACK>(board, move_array);
   } else {
     assert(side == Side::WHITE);
-    GenerateMoves<variant, Side::WHITE>(*board, move_array);
+    GenerateMovesInternal<variant, Side::WHITE>(board, move_array);
   }
+  return move_array;
 }
 
-template void GenerateMoves<Variant::STANDARD>(Board*, MoveArray*);
-template void GenerateMoves<Variant::ANTICHESS>(Board*, MoveArray*);
-template void GenerateMoves<Variant::SUICIDE>(Board*, MoveArray*);
+template MoveArray GenerateMoves<Variant::STANDARD>(Board&);
+template MoveArray GenerateMoves<Variant::ANTICHESS>(Board&);
+template MoveArray GenerateMoves<Variant::SUICIDE>(Board&);
 
 template <Variant variant>
   requires(IsStandard(variant))
-int CountMoves(Board* board) {
-  MoveArray move_array;
-  GenerateMoves<Variant::STANDARD>(board, &move_array);
-  return move_array.size();
+int CountMoves(Board& board) {
+  return GenerateMoves<Variant::STANDARD>(board).size();
 }
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-int CountMoves(Board* board) {
-  const Side side = board->SideToMove();
+int CountMoves(Board& board) {
+  const Side side = board.SideToMove();
   int move_count = 0;
   if (side == Side::BLACK) {
-    GenerateMoves<variant, Side::BLACK>(*board, &move_count);
+    GenerateMovesInternal<variant, Side::BLACK>(board, move_count);
   } else {
     assert(side == Side::WHITE);
-    GenerateMoves<variant, Side::WHITE>(*board, &move_count);
+    GenerateMovesInternal<variant, Side::WHITE>(board, move_count);
   }
   return move_count;
 }
 
-template int CountMoves<Variant::STANDARD>(Board*);
-template int CountMoves<Variant::ANTICHESS>(Board*);
-template int CountMoves<Variant::SUICIDE>(Board*);
+template int CountMoves<Variant::STANDARD>(Board&);
+template int CountMoves<Variant::ANTICHESS>(Board&);
+template int CountMoves<Variant::SUICIDE>(Board&);
 
-bool IsValidMove(const Variant variant, Board* board, const Move& move) {
-  MoveArray move_array;
+bool IsValidMove(const Variant variant, Board& board, const Move move) {
   if (variant == Variant::STANDARD) {
-    GenerateMoves<Variant::STANDARD>(board, &move_array);
+    return GenerateMoves<Variant::STANDARD>(board).Contains(move);
   } else if (variant == Variant::ANTICHESS) {
-    GenerateMoves<Variant::ANTICHESS>(board, &move_array);
+    return GenerateMoves<Variant::ANTICHESS>(board).Contains(move);
   } else if (variant == Variant::SUICIDE) {
-    GenerateMoves<Variant::SUICIDE>(board, &move_array);
-  } else {
-    assert(false); // unreachable
+    return GenerateMoves<Variant::SUICIDE>(board).Contains(move);
   }
-  return move_array.Contains(move);
+  assert(false); // unreachable
 }
 
 U64 ComputeAttackMap(const Board& board, const Side attacker_side) {

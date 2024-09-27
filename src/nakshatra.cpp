@@ -31,8 +31,7 @@ int main(int argc, char** argv) {
 
   string cmd_string;
   while (getline(std::cin, cmd_string)) {
-    std::vector<string> response;
-    executor.Execute(cmd_string, &response);
+    const std::vector<string> response = executor.Execute(cmd_string);
     for (const string& s : response) {
       cout << s << endl;
     }

@@ -115,7 +115,7 @@ void EGTBGenerate(std::list<BoardDesc> all_pos_list, EGTBStore* store) {
   const size_t init_pos = all_pos_list.size();
   for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
     Board board(Variant::ANTICHESS, *iter);
-    int result = EvalResult<Variant::ANTICHESS>(&board);
+    int result = EvalResult<Variant::ANTICHESS>(board);
     if (result == WIN) {
       store->Put(board, 0, Move(), 1);
       iter = all_pos_list.erase(iter);
@@ -137,8 +137,7 @@ void EGTBGenerate(std::list<BoardDesc> all_pos_list, EGTBStore* store) {
     bool deleted = false;
     for (auto iter = all_pos_list.begin(); iter != all_pos_list.end();) {
       Board board(Variant::ANTICHESS, *iter);
-      MoveArray movelist;
-      GenerateMoves<Variant::ANTICHESS>(&board, &movelist);
+      MoveArray movelist = GenerateMoves<Variant::ANTICHESS>(board);
       int count_winning = 0;
       int count_losing = 0;
       int count_draw = 0;
@@ -149,7 +148,7 @@ void EGTBGenerate(std::list<BoardDesc> all_pos_list, EGTBStore* store) {
       Move best_losing_move;
       Move best_draw_move;
       for (size_t i = 0; i < movelist.size(); ++i) {
-        const Move& move = movelist.get(i);
+        const Move move = movelist.get(i);
         board.MakeMove(move);
         EGTBIndexEntry* e = store->Get(board);
         if (e != nullptr) {

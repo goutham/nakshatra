@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <string>
+#include <type_traits>
 
 // Space efficient move encoding which may be used in data structures such as
 // the transposition table where storage efficiency is critical.
@@ -106,5 +107,8 @@ private:
 
   EncodedMove encoded_move_;
 };
+
+static_assert(std::is_trivially_copy_constructible_v<Move> &&
+              std::is_trivially_copy_assignable_v<Move>);
 
 #endif

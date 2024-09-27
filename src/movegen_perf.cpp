@@ -14,8 +14,7 @@
 
 template <Variant variant>
 int64_t Perft(Board* board, unsigned int depth) {
-  MoveArray move_array;
-  GenerateMoves<variant>(board, &move_array);
+  MoveArray move_array = GenerateMoves<variant>(*board);
 
   // Bulk counting at depth 1.
   if (depth == 1) {

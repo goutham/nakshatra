@@ -13,13 +13,18 @@
 // Iterative deepening search parameters.
 struct IDSParams {
   bool thinking_output = false;
-  unsigned search_depth = MAX_DEPTH;
+  int search_depth = MAX_DEPTH;
   MoveArray pruned_ordered_moves;
 };
 
+struct IDSResult {
+  Move best_move;
+  int best_move_score;
+  SearchStats id_search_stats;
+};
+
 template <Variant variant>
-void IDSearch(const IDSParams& ids_params, Board* board, Timer* timer,
-              TranspositionTable* transpos, EGTB* egtb, Move* best_move,
-              int* best_move_score, SearchStats* id_search_stats);
+IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
+                   TranspositionTable& transpos, EGTB* egtb);
 
 #endif

@@ -25,7 +25,7 @@ std::string GetPosition(const char* arg) {
   Board board(variant);
   const auto move_str_vec = SplitString(arg, ' ');
   for (const auto& move_str : move_str_vec) {
-    const Move move = SANToMove<variant>(move_str, &board);
+    const Move move = SANToMove<variant>(move_str, board);
     if (!move.is_valid()) {
       throw std::invalid_argument("Invalid move " + move_str);
     }
@@ -51,9 +51,9 @@ int main(int argc, char* argv[]) {
   pns_params.pns_type = pns_type;
   pns_params.quiet = false;
   pns_params.log_progress = 10;
-  PNSearch<Variant::ANTICHESS> pn_search(&board, nullptr, nullptr, nullptr);
-  PNSResult pns_result;
-  pn_search.Search(pns_params, &pns_result);
+  const PNSResult pns_result =
+      PNSearch<Variant::ANTICHESS>(board, nullptr, nullptr, nullptr)
+          .Search(pns_params);
   std::cout << "tree_size: " << pns_result.pns_tree->tree_size << "\n"
             << "proof: " << pns_result.pns_tree->proof << "\n"
             << "disproof: " << pns_result.pns_tree->disproof << std::endl;

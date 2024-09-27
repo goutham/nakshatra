@@ -19,8 +19,8 @@ struct SearchParams {
 
 class Player {
 public:
-  Player(const Variant variant, Board* board, TranspositionTable* transpos,
-         Timer* timer)
+  Player(const Variant variant, Board& board, TranspositionTable& transpos,
+         Timer& timer)
       : variant_(variant), board_(board), transpos_(transpos), timer_(timer),
         egtb_(GetEGTB(variant)) {}
 
@@ -32,9 +32,9 @@ private:
                       long time_for_move_centis);
 
   const Variant variant_;
-  Board* board_;
-  TranspositionTable* transpos_;
-  Timer* timer_;
+  Board& board_;
+  TranspositionTable& transpos_;
+  Timer& timer_;
   EGTB* egtb_;
 };
 

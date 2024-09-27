@@ -9,14 +9,13 @@
 #include "movegen.h"
 
 // Return the standard algebraic notation (SAN) of the move.
-std::string SAN(const Board& board, const Move& move);
+std::string SAN(const Board& board, Move move);
 
 template <Variant variant>
-Move SANToMove(const std::string& move_san, Board* board) {
-  MoveArray move_array;
-  GenerateMoves<variant>(board, &move_array);
+Move SANToMove(const std::string& move_san, Board& board) {
+  MoveArray move_array = GenerateMoves<variant>(board);
   for (size_t i = 0; i < move_array.size(); ++i) {
-    if (const Move& move = move_array.get(i); SAN(*board, move) == move_san) {
+    if (const Move move = move_array.get(i); SAN(board, move) == move_san) {
       return move;
     }
   }

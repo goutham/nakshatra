@@ -531,12 +531,12 @@ TEST(BoardTest, SANTest3) {
 TEST(BoardTest, SANToMoveTest1) {
   constexpr Variant v = Variant::ANTICHESS;
   Board board(v);
-  EXPECT_EQ("e2e3", SANToMove<v>("e3", &board).str());
-  EXPECT_EQ("g2g4", SANToMove<v>("g4", &board).str());
-  EXPECT_EQ("g1f3", SANToMove<v>("Nf3", &board).str());
-  EXPECT_EQ("g1h3", SANToMove<v>("Nh3", &board).str());
-  EXPECT_EQ("b1a3", SANToMove<v>("Na3", &board).str());
-  EXPECT_EQ("b1c3", SANToMove<v>("Nc3", &board).str());
+  EXPECT_EQ("e2e3", SANToMove<v>("e3", board).str());
+  EXPECT_EQ("g2g4", SANToMove<v>("g4", board).str());
+  EXPECT_EQ("g1f3", SANToMove<v>("Nf3", board).str());
+  EXPECT_EQ("g1h3", SANToMove<v>("Nh3", board).str());
+  EXPECT_EQ("b1a3", SANToMove<v>("Na3", board).str());
+  EXPECT_EQ("b1c3", SANToMove<v>("Nc3", board).str());
 }
 
 TEST(BoardTest, HalfMoveClock) {
