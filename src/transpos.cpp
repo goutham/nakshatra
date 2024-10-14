@@ -11,9 +11,9 @@ uint64_t ZKey(const TTEntry& tt_entry) {
   return tt_entry.zkey ^ data;
 }
 
-void SetZKey(int64_t zkey, TTEntry* tt_entry) {
-  const uint64_t data = reinterpret_cast<const uint64_t&>(tt_entry->data);
-  tt_entry->zkey = (zkey ^ data);
+void SetZKey(int64_t zkey, TTEntry& tt_entry) {
+  const uint64_t data = reinterpret_cast<const uint64_t&>(tt_entry.data);
+  tt_entry.zkey = (zkey ^ data);
 }
 
 TranspositionTable::TranspositionTable(int size) : size_(size) {
@@ -30,7 +30,7 @@ std::optional<TTData> TranspositionTable::Get(U64 zkey) {
     TTEntry tt_entry = bucket.tt_entries[i];
     if (tt_entry.data.is_valid() && ZKey(tt_entry) == zkey) {
       tt_entry.data.epoch = epoch_;
-      SetZKey(zkey, &tt_entry);
+      SetZKey(zkey, tt_entry);
       ++hits_;
       bucket.tt_entries[i] = tt_entry;
       return tt_entry.data;
@@ -47,7 +47,7 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
     TTEntry& tt_entry = bucket.tt_entries[i];
     if (!tt_entry.data.is_valid() || ZKey(tt_entry) == zkey) {
       ++new_puts_;
-      Set(score, node_type, depth, zkey, best_move, &tt_entry);
+      Set(score, node_type, depth, zkey, best_move, tt_entry);
       return;
     }
   }
@@ -55,7 +55,7 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
     TTEntry& tt_entry = bucket.tt_entries[i];
     if (tt_entry.data.epoch < epoch_) {
       ++old_replace_;
-      Set(score, node_type, depth, zkey, best_move, &tt_entry);
+      Set(score, node_type, depth, zkey, best_move, tt_entry);
       return;
     }
   }
@@ -67,16 +67,16 @@ void TranspositionTable::Put(int score, NodeType node_type, int depth, U64 zkey,
     }
   }
   ++depth_replace_;
-  Set(score, node_type, depth, zkey, best_move, shallow_entry);
+  Set(score, node_type, depth, zkey, best_move, *shallow_entry);
 }
 
 void TranspositionTable::Set(int score, NodeType node_type, int depth, U64 zkey,
-                             Move best_move, TTEntry* tt_entry) {
-  tt_entry->data.best_move = best_move;
-  tt_entry->data.score = score;
-  tt_entry->data.depth = depth;
-  tt_entry->data.epoch = epoch_;
-  tt_entry->data.flags = (uint16_t(node_type) << 1) | (0x1);
+                             Move best_move, TTEntry& tt_entry) {
+  tt_entry.data.best_move = best_move;
+  tt_entry.data.score = score;
+  tt_entry.data.depth = depth;
+  tt_entry.data.epoch = epoch_;
+  tt_entry.data.flags = (uint16_t(node_type) << 1) | (0x1);
   SetZKey(zkey, tt_entry);
 }
 

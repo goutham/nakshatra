@@ -354,21 +354,6 @@ void GenerateMovesInternal(Board& board, MoveArray& move_array) {
 } // namespace
 
 template <Variant variant>
-  requires(IsStandard(variant))
-MoveArray GenerateMoves(Board& board) {
-  MoveArray move_array;
-  const Side side = board.SideToMove();
-  if (side == Side::BLACK) {
-    GenerateMovesInternal<variant, Side::BLACK>(board, move_array);
-  } else {
-    assert(side == Side::WHITE);
-    GenerateMovesInternal<variant, Side::WHITE>(board, move_array);
-  }
-  return move_array;
-}
-
-template <Variant variant>
-  requires(IsAntichessLike(variant))
 MoveArray GenerateMoves(Board& board) {
   MoveArray move_array;
   const Side side = board.SideToMove();
@@ -387,13 +372,13 @@ template MoveArray GenerateMoves<Variant::SUICIDE>(Board&);
 
 template <Variant variant>
   requires(IsStandard(variant))
-int CountMoves(Board& board) {
+int CountMovesInternal(Board& board) {
   return GenerateMoves<Variant::STANDARD>(board).size();
 }
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-int CountMoves(Board& board) {
+int CountMovesInternal(Board& board) {
   const Side side = board.SideToMove();
   int move_count = 0;
   if (side == Side::BLACK) {
@@ -403,6 +388,11 @@ int CountMoves(Board& board) {
     GenerateMovesInternal<variant, Side::WHITE>(board, move_count);
   }
   return move_count;
+}
+
+template <Variant variant>
+int CountMoves(Board& board) {
+  return CountMovesInternal<variant>(board);
 }
 
 template int CountMoves<Variant::STANDARD>(Board&);

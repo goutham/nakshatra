@@ -10,8 +10,8 @@
 
 template <Variant variant>
   requires(IsStandard(variant))
-MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
-                         const PrefMoves* pref_moves) {
+MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
+                                 const PrefMoves* pref_moves) {
   MoveInfoArray move_info_array;
   move_info_array.size = move_array.size();
   for (size_t i = 0; i < move_array.size(); ++i) {
@@ -43,8 +43,8 @@ MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
 
 template <Variant variant>
   requires(IsAntichessLike(variant))
-MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
-                         const PrefMoves* pref_moves) {
+MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
+                                 const PrefMoves* pref_moves) {
   MoveInfoArray move_info_array;
   move_info_array.size = move_array.size();
   for (size_t i = 0; i < move_array.size(); ++i) {
@@ -64,6 +64,12 @@ MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
   }
   move_info_array.Sort();
   return move_info_array;
+}
+
+template <Variant variant>
+MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
+                         const PrefMoves* pref_moves) {
+  return OrderMovesInternal<variant>(board, move_array, pref_moves);
 }
 
 template MoveInfoArray OrderMoves<Variant::STANDARD>(Board&, const MoveArray&,

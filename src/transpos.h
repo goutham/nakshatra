@@ -50,7 +50,7 @@ public:
 
 private:
   void Set(int score, NodeType node_type, int depth, U64 zkey, Move best_move,
-           TTEntry* t);
+           TTEntry& t);
 
   int hash(const U64 key) const { return key % size_; }
 

@@ -7,19 +7,9 @@
 #include "move_array.h"
 
 template <Variant variant>
-  requires(IsStandard(variant))
 MoveArray GenerateMoves(Board& board);
 
 template <Variant variant>
-  requires(IsAntichessLike(variant))
-MoveArray GenerateMoves(Board& board);
-
-template <Variant variant>
-  requires(IsStandard(variant))
-int CountMoves(Board& board);
-
-template <Variant variant>
-  requires(IsAntichessLike(variant))
 int CountMoves(Board& board);
 
 bool IsValidMove(Variant variant, Board& board, Move move);

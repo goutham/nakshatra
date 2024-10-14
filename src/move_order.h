@@ -46,12 +46,6 @@ struct PrefMoves {
 };
 
 template <Variant variant>
-  requires(IsStandard(variant))
-MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
-                         const PrefMoves* pref_moves);
-
-template <Variant variant>
-  requires(IsAntichessLike(variant))
 MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
                          const PrefMoves* pref_moves);
 
