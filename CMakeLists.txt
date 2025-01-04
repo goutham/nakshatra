@@ -73,6 +73,9 @@ if(BUILD_ALL_EXECUTABLES)
 
   add_executable(movegen_perf src/movegen_perf.cpp)
   target_link_libraries(movegen_perf nakshatra_core)
+
+  add_executable(tune src/tuning/tune.cpp)
+  target_link_libraries(tune nakshatra_core)
 endif()
 
 #

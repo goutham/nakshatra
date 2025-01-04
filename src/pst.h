@@ -2,14 +2,14 @@
 #define PIECE_H
 
 #include "common.h"
-#include "piece_values.h"
+#include "std_eval_params.h"
 
 #include <array>
 
 namespace standard {
 
 // clang-format off
-constexpr int PST_KING_MGAME[] = {
+constexpr std::array<int, 64> PST_KING_MGAME = {
 -88, 226, 196, 106, -136, -68,  67,  50, 
 146,  62,  35, 173,  56,  64, -23, -168, 
  71,  90,  99,  13,  66, 117, 136, -15, 
@@ -20,7 +20,7 @@ constexpr int PST_KING_MGAME[] = {
   5,  67,  29, -69,  18, -29,  53,  49, 
 };
 
-constexpr int PST_QUEEN_MGAME[] = {
+constexpr std::array<int, 64> PST_QUEEN_MGAME = {
 -12,  -3,   5,  11, 131, 149,  56,  45, 
 -18, -46,   3, -13, -24,  59,  37,  64, 
 -22, -16,   4,   1,  34,  62,  65,  70, 
@@ -31,7 +31,7 @@ constexpr int PST_QUEEN_MGAME[] = {
  -2, -20, -10,  16, -17, -32, -33, -69, 
 };
 
-constexpr int PST_ROOK_MGAME[] = {
+constexpr std::array<int, 64> PST_ROOK_MGAME = {
  43,  65,  34, 100,  87, -18,   8,  29, 
  31,  33,  85,  90, 114, 105,  23,  48, 
 -20,  18,  18,  39,  16,  68,  95,  16, 
@@ -42,7 +42,7 @@ constexpr int PST_ROOK_MGAME[] = {
 -27, -21,  -4,   7,   9,  -5, -37, -27, 
 };
 
-constexpr int PST_BISHOP_MGAME[] = {
+constexpr std::array<int, 64> PST_BISHOP_MGAME = {
 -45,   4, -98, -47, -60, -18, -14,  16, 
 -26,  21, -12, -23,  52,  54,  27, -47, 
 -12,  47,  51,  58,  44,  75,  31,  -2, 
@@ -53,7 +53,7 @@ constexpr int PST_BISHOP_MGAME[] = {
 -33,   1,  -9, -19, -14,  -8, -42, -24, 
 };
 
-constexpr int PST_KNIGHT_MGAME[] = {
+constexpr std::array<int, 64> PST_KNIGHT_MGAME = {
 -213, -94, -63, -82,  70, -123, -28, -160, 
 -107, -58,  66,  15,  18,  61,   1,  -5, 
 -74,  68,  39,  68, 102, 142,  78,  32, 
@@ -64,7 +64,7 @@ constexpr int PST_KNIGHT_MGAME[] = {
 -148, -32, -76, -54, -27, -39, -28, -27, 
 };
 
-constexpr int PST_PAWN_MGAME[] = {
+constexpr std::array<int, 64> PST_PAWN_MGAME = {
   0,   0,   0,   0,   0,   0,   0,   0, 
  99, 161,  95, 155,  96, 154,  39, -35, 
 -22,  -1,  24,  36,  76,  69,  23, -26, 
@@ -75,7 +75,7 @@ constexpr int PST_PAWN_MGAME[] = {
   0,   0,   0,   0,   0,   0,   0,   0, 
 };
 
-constexpr int PST_KING_EGAME[] = {
+constexpr std::array<int, 64> PST_KING_EGAME = {
 -63, -76, -56, -53,  12,  19,  -2, -24, 
 -48,   3,   5, -24,   4,  29,  23,  41, 
  -8,   3,   6,  10,   2,  27,  23,  11, 
@@ -86,7 +86,7 @@ constexpr int PST_KING_EGAME[] = {
 -69, -57, -32,  -8, -40, -13, -43, -70, 
 };
 
-constexpr int PST_QUEEN_EGAME[] = {
+constexpr std::array<int, 64> PST_QUEEN_EGAME = {
 -17,  35,  48,  43, -18, -44,  -6,  34, 
  -5,  37,  47,  73,  88,  32,  33,   0, 
  -5,  18,  18,  63,  62,  46,  31,  -4, 
@@ -97,7 +97,7 @@ constexpr int PST_QUEEN_EGAME[] = {
 -28, -21, -15, -54,  -2, -22,  -1, -27, 
 };
 
-constexpr int PST_ROOK_EGAME[] = {
+constexpr std::array<int, 64> PST_ROOK_EGAME = {
  20,  11,  26,   9,  10,  32,  23,  15, 
  17,  22,  10,   7, -10,  -5,  20,   8, 
  24,  17,  19,  11,  13,  -3, -11,   4, 
@@ -108,7 +108,7 @@ constexpr int PST_ROOK_EGAME[] = {
   6,  15,  16,  14,   8,   5,  17, -12, 
 };
 
-constexpr int PST_BISHOP_EGAME[] = {
+constexpr std::array<int, 64> PST_BISHOP_EGAME = {
 -12, -27,  -2,  -4,   2, -10, -12, -29, 
  -8,  -6,   5, -10, -10, -10,  -6, -13, 
   1, -14,  -1,  -7,  -4,  -1,   2,   2, 
@@ -119,7 +119,7 @@ constexpr int PST_BISHOP_EGAME[] = {
 -24, -11, -29,  -4,  -8, -22,  -6, -17, 
 };
 
-constexpr int PST_KNIGHT_EGAME[] = {
+constexpr std::array<int, 64> PST_KNIGHT_EGAME = {
 -53, -51,  -8, -26, -43, -24, -75, -104, 
 -31, -11, -34,  -9, -17, -35, -33, -67, 
 -31, -34,   1,   2, -18, -24, -33, -55, 
@@ -130,7 +130,7 @@ constexpr int PST_KNIGHT_EGAME[] = {
 -32, -66, -26, -20, -33, -27, -63, -91, 
 };
 
-constexpr int PST_PAWN_EGAME[] = {
+constexpr std::array<int, 64> PST_PAWN_EGAME = {
   0,   0,   0,   0,   0,   0,   0,   0, 
 174, 162, 146, 109, 134, 114, 165, 195, 
  87,  93,  74,  48,  30,  28,  69,  74, 
@@ -142,13 +142,13 @@ constexpr int PST_PAWN_EGAME[] = {
 };
 // clang-format on
 
-constexpr const int* PST_MGAME[7] = {
-    nullptr,          PST_KING_MGAME,   PST_QUEEN_MGAME, PST_ROOK_MGAME,
-    PST_BISHOP_MGAME, PST_KNIGHT_MGAME, PST_PAWN_MGAME};
+constexpr const PST<int> PST_MGAME = {
+    std::array<int, 64>{0}, PST_KING_MGAME,   PST_QUEEN_MGAME, PST_ROOK_MGAME,
+    PST_BISHOP_MGAME,       PST_KNIGHT_MGAME, PST_PAWN_MGAME};
 
-constexpr const int* PST_EGAME[7] = {
-    nullptr,          PST_KING_EGAME,   PST_QUEEN_EGAME, PST_ROOK_EGAME,
-    PST_BISHOP_EGAME, PST_KNIGHT_EGAME, PST_PAWN_EGAME};
+constexpr const PST<int> PST_EGAME = {
+    std::array<int, 64>{0}, PST_KING_EGAME,   PST_QUEEN_EGAME, PST_ROOK_EGAME,
+    PST_BISHOP_EGAME,       PST_KNIGHT_EGAME, PST_PAWN_EGAME};
 
 constexpr int PSTVal(Side side, Piece piece, int sq) {
   return PST_MGAME[PieceType(piece)][(side == Side::WHITE) ? (sq ^ 56) : sq];
