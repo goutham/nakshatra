@@ -145,7 +145,6 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   const std::string param_type = GetParamType<ValueType>();
   const std::string fn_suffix = GetFnSuffix<ValueType>();
   const std::string fn_name = exp_name + fn_suffix;
-  const std::string array_type_64 = "std::array<" + param_type + ", 64>";
   ofs << "inline StdEvalParams<" << param_type << ">" << fn_name << "() {"
       << std::endl;
   ofs << "static constexpr StdEvalParams<" << param_type << "> params{"
