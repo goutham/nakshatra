@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-#include <sstream>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <string>
 
 const std::string kExperimentName = "Params";
@@ -18,6 +18,7 @@ const std::string kDataFile = "";
 constexpr double kMultiplier = 1.0 / 113.6;
 constexpr double kLearningRate = 10.0;
 constexpr int kBatchSize = 1024;
+constexpr int kMaxEpochs = 100;
 
 struct EPDRecord {
   std::string fen;
@@ -80,101 +81,88 @@ inline StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
 }
 
 template <typename ValueType>
-void WriteFunction(const StdEvalParams<ValueType>& params, const std::string exp_name, std::ofstream& ofs) {
-  std::string param_type, fn_suffix;
-  if (std::is_same_v<ValueType, int>) {
-    param_type = "int";
-    fn_suffix = "Int";
-  } else if (std::is_same_v<ValueType, double>) {
-    param_type = "double";
-    fn_suffix = "Dbl";
-  } else {
-    throw std::invalid_argument("invalid param type");
+std::string GetParamType() {
+  if constexpr (std::is_same_v<ValueType, int>) {
+    return "int";
   }
+  if constexpr (std::is_same_v<ValueType, double>) {
+    return "double";
+  }
+  throw std::invalid_argument("unsupported param type");
+}
+
+template <typename ValueType>
+std::string GetFnSuffix() {
+  if constexpr (std::is_same_v<ValueType, int>) {
+    return "Int";
+  }
+  if constexpr (std::is_same_v<ValueType, double>) {
+    return "Dbl";
+  }
+  throw std::invalid_argument("unsupported param type");
+}
+
+template <typename ValueType>
+void WriteParams(std::ofstream& ofs, const std::string& name,
+                 const PieceValues<ValueType>& pv) {
+  const std::string param_type = GetParamType<ValueType>();
+  ofs << "  ." << name << " = {";
+  for (size_t i = 0; i < pv.size(); ++i) {
+    ofs << pv[i] << ", ";
+  }
+  ofs << "}," << std::endl;
+}
+
+template <typename ValueType>
+void WriteParams(std::ofstream& ofs, const std::string& name,
+                 const PST<ValueType>& pst) {
+  const std::string param_type = GetParamType<ValueType>();
+  ofs << "  ." << name << " = {";
+  for (size_t i = 0; i < pst.size(); ++i) {
+    ofs << "std::array<" << param_type << ", 64>{";
+    for (size_t j = 0; j < pst[i].size(); ++j) {
+      ofs << pst[i][j] << ", ";
+    }
+    ofs << "}," << std::endl;
+  }
+  ofs << "}," << std::endl;
+}
+
+template <typename ValueType>
+void WriteParams(std::ofstream& ofs, const std::string& name,
+                 const std::array<ValueType, 64>& array) {
+  const std::string param_type = GetParamType<ValueType>();
+  ofs << "  ." << name << " = {";
+  for (size_t i = 0; i < array.size(); ++i) {
+    ofs << array[i] << ", ";
+  }
+  ofs << "}," << std::endl;
+}
+
+template <typename ValueType>
+void WriteFunction(const StdEvalParams<ValueType>& params,
+                   const std::string exp_name, std::ofstream& ofs) {
+  const std::string param_type = GetParamType<ValueType>();
+  const std::string fn_suffix = GetFnSuffix<ValueType>();
   const std::string fn_name = exp_name + fn_suffix;
   const std::string array_type_64 = "std::array<" + param_type + ", 64>";
-  ofs << "inline StdEvalParams<" << param_type << ">" << fn_name << "() {" << std::endl;
-  ofs << "static constexpr StdEvalParams<" << param_type << "> params{" << std::endl;
+  ofs << "inline StdEvalParams<" << param_type << ">" << fn_name << "() {"
+      << std::endl;
+  ofs << "static constexpr StdEvalParams<" << param_type << "> params{"
+      << std::endl;
 
-  ofs << "  .pv_mgame = {";
-  for (size_t i = 0; i < params.pv_mgame.size(); ++i) {
-    ofs << params.pv_mgame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .pv_egame = {";
-  for (size_t i = 0; i < params.pv_egame.size(); ++i) {
-    ofs << params.pv_egame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .pst_mgame = {";
-  for (size_t i = 0; i < params.pst_mgame.size(); ++i) {
-    ofs << array_type_64 << "{";
-    for (size_t j = 0; j < params.pst_mgame[i].size(); ++j) {
-      ofs << params.pst_mgame[i][j] << ", ";
-    }
-    ofs << "}," << std::endl;
-  }
-  ofs << "}," << std::endl;
-
-  ofs << "  .pst_egame = {";
-  for (size_t i = 0; i < params.pst_egame.size(); ++i) {
-    ofs << array_type_64 << "{";
-    for (size_t j = 0; j < params.pst_egame[i].size(); ++j) {
-      ofs << params.pst_egame[i][j] << ", ";
-    }
-    ofs << "}," << std::endl;
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .doubled_pawns_mgame = {";
-  for (size_t i = 0; i < params.doubled_pawns_mgame.size(); ++i) {
-    ofs << params.doubled_pawns_mgame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .doubled_pawns_egame = {";
-  for (size_t i = 0; i < params.doubled_pawns_egame.size(); ++i) {
-    ofs << params.doubled_pawns_egame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .passed_pawns_mgame = {";
-  for (size_t i = 0; i < params.passed_pawns_mgame.size(); ++i) {
-    ofs << params.passed_pawns_mgame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .passed_pawns_egame = {";
-  for (size_t i = 0; i < params.passed_pawns_egame.size(); ++i) {
-    ofs << params.passed_pawns_egame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .isolated_pawns_mgame = {";
-  for (size_t i = 0; i < params.isolated_pawns_mgame.size(); ++i) {
-    ofs << params.isolated_pawns_mgame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-  ofs << "  .isolated_pawns_egame = {";
-  for (size_t i = 0; i < params.isolated_pawns_egame.size(); ++i) {
-    ofs << params.isolated_pawns_egame[i] << ", ";
-  }
-  ofs << "}," << std::endl;
-
-  ofs << "  .mobility_mgame = {";
-  for (size_t i = 0; i < params.mobility_mgame.size(); ++i) {
-    ofs << array_type_64 << "{";
-    for (size_t j = 0; j < params.mobility_mgame[i].size(); ++j) {
-      ofs << params.mobility_mgame[i][j] << ", ";
-    }
-    ofs << "}," << std::endl;
-  }
-  ofs << "}," << std::endl;
-
-  ofs << "  .mobility_egame = {";
-  for (size_t i = 0; i < params.mobility_egame.size(); ++i) {
-    ofs << array_type_64 << "{";
-    for (size_t j = 0; j < params.mobility_egame[i].size(); ++j) {
-      ofs << params.mobility_egame[i][j] << ", ";
-    }
-    ofs << "}," << std::endl;
-  }
-  ofs << "}," << std::endl;
+  WriteParams(ofs, "pv_mgame", params.pv_mgame);
+  WriteParams(ofs, "pv_egame", params.pv_egame);
+  WriteParams(ofs, "pst_mgame", params.pst_mgame);
+  WriteParams(ofs, "pst_egame", params.pst_egame);
+  WriteParams(ofs, "doubled_pawns_mgame", params.doubled_pawns_mgame);
+  WriteParams(ofs, "doubled_pawns_egame", params.doubled_pawns_egame);
+  WriteParams(ofs, "passed_pawns_mgame", params.passed_pawns_mgame);
+  WriteParams(ofs, "passed_pawns_egame", params.passed_pawns_egame);
+  WriteParams(ofs, "isolated_pawns_mgame", params.isolated_pawns_mgame);
+  WriteParams(ofs, "isolated_pawns_egame", params.isolated_pawns_egame);
+  WriteParams(ofs, "mobility_mgame", params.mobility_mgame);
+  WriteParams(ofs, "mobility_egame", params.mobility_egame);
 
   ofs << "};" << std::endl;
   ofs << "return params;" << std::endl;
@@ -182,12 +170,14 @@ void WriteFunction(const StdEvalParams<ValueType>& params, const std::string exp
   ofs << std::endl;
 }
 
-void WriteFile(const StdEvalParams<double>& params, int epoch, int step) {
+void WriteFile(const StdEvalParams<double>& params, int epoch, int step,
+               const std::string& suffix = "") {
   std::stringstream ss;
   ss << kExperimentName << "Epoch" << epoch << "Step" << step;
-  const std::string exp_name = ss.str();
+  const std::string exp_name = ss.str() + suffix;
   const std::string filename = exp_name + ".h";
   const std::string header_guard = exp_name + "_H";
+  std::cout << "Writing parameters to file: " << filename << std::endl;
   std::ofstream ofs(filename);
   ofs << "#ifndef " << header_guard << std::endl;
   ofs << "#define " << header_guard << std::endl;
@@ -337,7 +327,8 @@ int main() {
   int step = 0;
   int log_step = 0;
   int epoch = 0;
-  for (; epoch < 100; ++epoch) {
+  do {
+    epoch++;
     for (const auto& record : train_records) {
       Board board(Variant::STANDARD, record.fen);
       auto score = standard::StaticEval<Variable, false>(eval_params, board);
@@ -377,7 +368,7 @@ int main() {
                   AvgLoss(test_records, int_params));
       }
     }
-  }
+  } while (epoch + 1 <= kMaxEpochs);
 
   {
     auto double_params = Convert<Variable, double>(eval_params);
@@ -390,7 +381,7 @@ int main() {
               << AvgLoss(train_records, int_params) << std::endl;
     std::cout << "Final Test Loss (integerized): "
               << AvgLoss(test_records, int_params) << std::endl;
-    WriteFile(double_params, epoch, step);
+    WriteFile(double_params, epoch, step, "Final");
   }
 
   return 0;
