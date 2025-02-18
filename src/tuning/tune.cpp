@@ -30,10 +30,18 @@ struct EPDRecord {
   }
 };
 
+template <typename FromType, typename ToType>
+ToType Cast(FromType from) {
+  if constexpr (std::is_same_v<FromType, double> && std::is_same_v<ToType, int>) {
+    return static_cast<ToType>(std::round(from));
+  }
+  return ToType(from);
+}
+
 template <typename FromType, typename ToType, size_t N>
 void Convert(const std::array<FromType, N>& from, std::array<ToType, N>& to) {
   for (size_t i = 0; i < from.size(); ++i) {
-    to[i] = ToType(from[i]);
+    to[i] = Cast<FromType, ToType>(from[i]);
   }
 }
 
@@ -42,7 +50,7 @@ void Convert(const std::array<std::array<FromType, M>, N>& from,
              std::array<std::array<ToType, M>, N>& to) {
   for (size_t i = 0; i < from.size(); ++i) {
     for (size_t j = 0; j < from[i].size(); ++j) {
-      to[i][j] = ToType(from[i][j]);
+      to[i][j] = Cast<FromType, ToType>(from[i][j]);
     }
   }
 }
