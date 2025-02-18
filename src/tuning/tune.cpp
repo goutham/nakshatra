@@ -30,53 +30,38 @@ struct EPDRecord {
   }
 };
 
+template <typename FromType, typename ToType, size_t N>
+void Convert(const std::array<FromType, N>& from, std::array<ToType, N>& to) {
+  for (size_t i = 0; i < from.size(); ++i) {
+    to[i] = ToType(from[i]);
+  }
+}
+
+template <typename FromType, typename ToType, size_t M, size_t N>
+void Convert(const std::array<std::array<FromType, M>, N>& from,
+             std::array<std::array<ToType, M>, N>& to) {
+  for (size_t i = 0; i < from.size(); ++i) {
+    for (size_t j = 0; j < from[i].size(); ++j) {
+      to[i][j] = ToType(from[i][j]);
+    }
+  }
+}
+
 template <typename FromType, typename ToType>
-inline StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
+StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   StdEvalParams<ToType> params;
-  for (size_t i = 0; i < fparams.pv_mgame.size(); ++i) {
-    params.pv_mgame[i] = ToType(fparams.pv_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.pv_egame.size(); ++i) {
-    params.pv_egame[i] = ToType(fparams.pv_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.pst_mgame.size(); ++i) {
-    for (size_t j = 0; j < fparams.pst_mgame[i].size(); ++j) {
-      params.pst_mgame[i][j] = ToType(fparams.pst_mgame[i][j]);
-    }
-  }
-  for (size_t i = 0; i < fparams.pst_egame.size(); ++i) {
-    for (size_t j = 0; j < fparams.pst_egame[i].size(); ++j) {
-      params.pst_egame[i][j] = ToType(fparams.pst_egame[i][j]);
-    }
-  }
-  for (size_t i = 0; i < fparams.doubled_pawns_mgame.size(); ++i) {
-    params.doubled_pawns_mgame[i] = ToType(fparams.doubled_pawns_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.doubled_pawns_egame.size(); ++i) {
-    params.doubled_pawns_egame[i] = ToType(fparams.doubled_pawns_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.passed_pawns_mgame.size(); ++i) {
-    params.passed_pawns_mgame[i] = ToType(fparams.passed_pawns_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.passed_pawns_egame.size(); ++i) {
-    params.passed_pawns_egame[i] = ToType(fparams.passed_pawns_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.isolated_pawns_mgame.size(); ++i) {
-    params.isolated_pawns_mgame[i] = ToType(fparams.isolated_pawns_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.isolated_pawns_egame.size(); ++i) {
-    params.isolated_pawns_egame[i] = ToType(fparams.isolated_pawns_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.mobility_mgame.size(); ++i) {
-    for (size_t j = 0; j < fparams.mobility_mgame[i].size(); ++j) {
-      params.mobility_mgame[i][j] = ToType(fparams.mobility_mgame[i][j]);
-    }
-  }
-  for (size_t i = 0; i < fparams.mobility_egame.size(); ++i) {
-    for (size_t j = 0; j < fparams.mobility_egame[i].size(); ++j) {
-      params.mobility_egame[i][j] = ToType(fparams.mobility_egame[i][j]);
-    }
-  }
+  Convert(fparams.pv_mgame, params.pv_mgame);
+  Convert(fparams.pv_egame, params.pv_egame);
+  Convert(fparams.pst_mgame, params.pst_mgame);
+  Convert(fparams.pst_egame, params.pst_egame);
+  Convert(fparams.doubled_pawns_mgame, params.doubled_pawns_mgame);
+  Convert(fparams.doubled_pawns_egame, params.doubled_pawns_egame);
+  Convert(fparams.passed_pawns_mgame, params.passed_pawns_mgame);
+  Convert(fparams.passed_pawns_egame, params.passed_pawns_egame);
+  Convert(fparams.isolated_pawns_mgame, params.isolated_pawns_mgame);
+  Convert(fparams.isolated_pawns_egame, params.isolated_pawns_egame);
+  Convert(fparams.mobility_mgame, params.mobility_mgame);
+  Convert(fparams.mobility_egame, params.mobility_egame);
   return params;
 }
 

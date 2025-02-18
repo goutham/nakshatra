@@ -53,52 +53,36 @@ private:
   std::vector<Variable> params_;
 };
 
+template <size_t N>
+void Add(const std::array<Variable, N>& array, Parameters& params) {
+  for (size_t i = 0; i < array.size(); ++i) {
+    params.Add(array[i]);
+  }
+}
+
+template <size_t M, size_t N>
+void Add(const std::array<std::array<Variable, M>, N>& array, Parameters& params) {
+  for (size_t i = 0; i < array.size(); ++i) {
+    for (size_t j = 0; j < array[i].size(); ++j) {
+      params.Add(array[i][j]);
+    }
+  }
+}
+
 inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Parameters params;
-  for (size_t i = 0; i < fparams.pv_mgame.size(); ++i) {
-    params.Add(fparams.pv_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.pv_egame.size(); ++i) {
-    params.Add(fparams.pv_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.pst_mgame.size(); ++i) {
-    for (size_t j = 0; j < fparams.pst_mgame[i].size(); ++j) {
-      params.Add(fparams.pst_mgame[i][j]);
-    }
-  }
-  for (size_t i = 0; i < fparams.pst_egame.size(); ++i) {
-    for (size_t j = 0; j < fparams.pst_egame[i].size(); ++j) {
-      params.Add(fparams.pst_egame[i][j]);
-    }
-  }
-  for (size_t i = 0; i < fparams.doubled_pawns_mgame.size(); ++i) {
-    params.Add(fparams.doubled_pawns_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.doubled_pawns_egame.size(); ++i) {
-    params.Add(fparams.doubled_pawns_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.passed_pawns_mgame.size(); ++i) {
-    params.Add(fparams.passed_pawns_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.passed_pawns_egame.size(); ++i) {
-    params.Add(fparams.passed_pawns_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.isolated_pawns_mgame.size(); ++i) {
-    params.Add(fparams.isolated_pawns_mgame[i]);
-  }
-  for (size_t i = 0; i < fparams.isolated_pawns_egame.size(); ++i) {
-    params.Add(fparams.isolated_pawns_egame[i]);
-  }
-  for (size_t i = 0; i < fparams.mobility_mgame.size(); ++i) {
-    for (size_t j = 0; j < fparams.mobility_mgame[i].size(); ++j) {
-      params.Add(fparams.mobility_mgame[i][j]);
-    }
-  }
-  for (size_t i = 0; i < fparams.mobility_egame.size(); ++i) {
-    for (size_t j = 0; j < fparams.mobility_egame[i].size(); ++j) {
-      params.Add(fparams.mobility_egame[i][j]);
-    }
-  }
+  Add(fparams.pv_mgame, params);
+  Add(fparams.pv_egame, params);
+  Add(fparams.pst_mgame, params);
+  Add(fparams.pst_egame, params);
+  Add(fparams.doubled_pawns_mgame, params);
+  Add(fparams.doubled_pawns_egame, params);
+  Add(fparams.passed_pawns_mgame, params);
+  Add(fparams.passed_pawns_egame, params);
+  Add(fparams.isolated_pawns_mgame, params);
+  Add(fparams.isolated_pawns_egame, params);
+  Add(fparams.mobility_mgame, params);
+  Add(fparams.mobility_egame, params);
   return params;
 }
 #endif
