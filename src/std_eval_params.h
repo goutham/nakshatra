@@ -23,6 +23,10 @@ struct StdEvalParams {
   std::array<ValueType, 64> isolated_pawns_egame = {};
   PST<ValueType> mobility_mgame = {};
   PST<ValueType> mobility_egame = {};
+  ValueType tempo_w_mgame = 0;
+  ValueType tempo_w_egame = 0;
+  ValueType tempo_b_mgame = 0;
+  ValueType tempo_b_egame = 0;
 };
 
 #endif

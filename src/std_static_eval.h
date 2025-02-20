@@ -191,6 +191,14 @@ ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   AddMobilityScores<-BISHOP>(params, board, b_mgame_score, b_egame_score);
   AddMobilityScores<-KNIGHT>(params, board, b_mgame_score, b_egame_score);
 
+  if (board.SideToMove() == Side::WHITE) {
+    w_mgame_score += params.tempo_w_mgame;
+    w_egame_score += params.tempo_w_egame;
+  } else {
+    b_mgame_score += params.tempo_b_mgame;
+    b_egame_score += params.tempo_b_egame;
+  }
+
   const int mgame_phase = std::min(24, game_phase);
   const int egame_phase = 24 - mgame_phase;
   const ValueType mgame_score = w_mgame_score - b_mgame_score;

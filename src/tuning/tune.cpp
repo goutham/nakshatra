@@ -56,6 +56,11 @@ void Convert(const std::array<std::array<FromType, M>, N>& from,
 }
 
 template <typename FromType, typename ToType>
+void Convert(const FromType& from, ToType& to) {
+  to = Cast<FromType, ToType>(from);
+}
+
+template <typename FromType, typename ToType>
 StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   StdEvalParams<ToType> params;
   Convert(fparams.pv_mgame, params.pv_mgame);
@@ -70,6 +75,10 @@ StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   Convert(fparams.isolated_pawns_egame, params.isolated_pawns_egame);
   Convert(fparams.mobility_mgame, params.mobility_mgame);
   Convert(fparams.mobility_egame, params.mobility_egame);
+  Convert(fparams.tempo_w_mgame, params.tempo_w_mgame);
+  Convert(fparams.tempo_w_egame, params.tempo_w_egame);
+  Convert(fparams.tempo_b_mgame, params.tempo_b_mgame);
+  Convert(fparams.tempo_b_egame, params.tempo_b_egame);
   return params;
 }
 
@@ -124,12 +133,16 @@ void WriteParams(std::ofstream& ofs, const std::string& name,
 template <typename ValueType>
 void WriteParams(std::ofstream& ofs, const std::string& name,
                  const std::array<ValueType, 64>& array) {
-  const std::string param_type = GetParamType<ValueType>();
   ofs << "  ." << name << " = {";
   for (size_t i = 0; i < array.size(); ++i) {
     ofs << array[i] << ", ";
   }
   ofs << "}," << std::endl;
+}
+
+template <typename ValueType>
+void WriteParams(std::ofstream& ofs, const std::string& name, const ValueType& v) {
+  ofs << "  ." << name << " = " << v << "," << std::endl;
 }
 
 template <typename ValueType>
@@ -155,6 +168,10 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   WriteParams(ofs, "isolated_pawns_egame", params.isolated_pawns_egame);
   WriteParams(ofs, "mobility_mgame", params.mobility_mgame);
   WriteParams(ofs, "mobility_egame", params.mobility_egame);
+  WriteParams(ofs, "tempo_w_mgame", params.tempo_w_mgame);
+  WriteParams(ofs, "tempo_w_egame", params.tempo_w_egame);
+  WriteParams(ofs, "tempo_b_mgame", params.tempo_b_mgame);
+  WriteParams(ofs, "tempo_b_egame", params.tempo_b_egame);
 
   ofs << "};" << std::endl;
   ofs << "return params;" << std::endl;
@@ -285,7 +302,7 @@ int _main() {
 
 int main() {
   StdEvalParams<Variable> eval_params =
-      Convert<int, Variable>(MobilityParamsEpoch13Step8500());
+      Convert<double, Variable>(Params20241117Epoch99Step63720());
   //StdEvalParams<Variable> eval_params = ZeroParams<Variable>();
   Parameters params = AsParameters(eval_params);
 

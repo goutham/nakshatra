@@ -69,6 +69,10 @@ void Add(const std::array<std::array<Variable, M>, N>& array, Parameters& params
   }
 }
 
+void Add(const Variable& v, Parameters& params) {
+  params.Add(v);
+}
+
 inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Parameters params;
   Add(fparams.pv_mgame, params);
@@ -83,6 +87,10 @@ inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Add(fparams.isolated_pawns_egame, params);
   Add(fparams.mobility_mgame, params);
   Add(fparams.mobility_egame, params);
+  Add(fparams.tempo_w_mgame, params);
+  Add(fparams.tempo_w_egame, params);
+  Add(fparams.tempo_b_mgame, params);
+  Add(fparams.tempo_b_egame, params);
   return params;
 }
 #endif
