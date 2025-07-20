@@ -48,6 +48,8 @@ std::vector<std::string> UCIExecutor::Execute(const std::string& command_str) {
     return HandlePonderHit();
   } else if (command == "setoption") {
     return HandleSetOption(tokens);
+  } else if (command == "debug") {
+    return HandleDebug(tokens);
   }
   
   // Unknown command - ignore silently per UCI spec
@@ -196,6 +198,7 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
   int binc_ms = 0;
   int movestogo = 0;
   long nodes = 0;
+  std::vector<std::string> searchmoves;
   
   for (size_t i = 1; i < tokens.size(); ++i) {
     if (tokens[i] == "infinite") {
@@ -205,6 +208,8 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
     } else if (tokens[i] == "movetime" && i + 1 < tokens.size()) {
       try {
         movetime_ms = std::stoi(tokens[i + 1]);
+        // Bounds check: reasonable range for movetime (1ms to 1 hour)
+        movetime_ms = std::max(1, std::min(movetime_ms, 3600000));
         ++i;  // Skip the movetime value
       } catch (const std::exception& e) {
         // Invalid movetime value - ignore
@@ -212,6 +217,8 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
     } else if (tokens[i] == "depth" && i + 1 < tokens.size()) {
       try {
         depth = std::stoi(tokens[i + 1]);
+        // Bounds check: reasonable range for depth (1 to 100)
+        depth = std::max(1, std::min(depth, 100));
         ++i;  // Skip the depth value
       } catch (const std::exception& e) {
         // Invalid depth value - ignore
@@ -261,26 +268,67 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
     } else if (tokens[i] == "mate" && i + 1 < tokens.size()) {
       try {
         mate = std::stoi(tokens[i + 1]);
+        // Bounds check: reasonable range for mate search (1 to 50 moves)
+        mate = std::max(1, std::min(mate, 50));
         ++i;  // Skip the mate value
       } catch (const std::exception& e) {
         // Invalid mate value - ignore
       }
+    } else if (tokens[i] == "searchmoves") {
+      // Parse searchmoves list until end of command or next parameter
+      for (size_t j = i + 1; j < tokens.size(); ++j) {
+        // Check if this is another parameter (starts with known parameter names)
+        if (tokens[j] == "wtime" || tokens[j] == "btime" || tokens[j] == "winc" || 
+            tokens[j] == "binc" || tokens[j] == "movestogo" || tokens[j] == "depth" ||
+            tokens[j] == "nodes" || tokens[j] == "mate" || tokens[j] == "movetime" ||
+            tokens[j] == "infinite" || tokens[j] == "ponder") {
+          break;
+        }
+        searchmoves.push_back(tokens[j]);
+        ++i;  // Skip this move in the main loop
+      }
     }
+  }
+  
+  // Store searchmoves for the search
+  current_searchmoves_ = searchmoves;
+  
+  if (debug_mode_) {
+    std::cout << "info string Parsed go command: infinite=" << infinite 
+              << " ponder=" << ponder << " movetime=" << movetime_ms 
+              << " depth=" << depth << " mate=" << mate << std::endl;
   }
   
   // Calculate time for this move from time control parameters
   int calculated_time_ms = 0;
   if (wtime_ms > 0 || btime_ms > 0) {
-    // Determine which color we are (assume we're white if no board state info)
-    // For simplicity, use white time for now - real implementation would check current side
-    int our_time_ms = wtime_ms > 0 ? wtime_ms : btime_ms;
-    int our_inc_ms = wtime_ms > 0 ? winc_ms : binc_ms;
+    // Determine which color we are based on current side to move
+    bool we_are_white = !board_ || board_->SideToMove() == Side::WHITE;
+    int our_time_ms = we_are_white ? wtime_ms : btime_ms;
+    int our_inc_ms = we_are_white ? winc_ms : binc_ms;
     
-    // Simple time management: use 1/30 of remaining time plus increment
-    calculated_time_ms = our_time_ms / 30 + our_inc_ms;
+    // Only proceed if we have valid time for our side
+    if (our_time_ms <= 0) {
+      our_time_ms = we_are_white ? btime_ms : wtime_ms;
+      our_inc_ms = we_are_white ? binc_ms : winc_ms;
+    }
     
-    // Minimum 100ms, maximum 1/3 of remaining time
-    calculated_time_ms = std::max(100, std::min(calculated_time_ms, our_time_ms / 3));
+    // Enhanced time management with movestogo consideration
+    if (our_time_ms > 0) {
+      if (movestogo > 0) {
+        // If moves to go is specified, divide remaining time by moves plus buffer
+        calculated_time_ms = our_time_ms / (movestogo + 2) + our_inc_ms;
+      } else {
+        // Default: use 1/30 of remaining time plus increment
+        calculated_time_ms = our_time_ms / 30 + our_inc_ms;
+      }
+      
+      // Minimum 100ms, maximum 1/3 of remaining time for safety
+      calculated_time_ms = std::max(100, std::min(calculated_time_ms, our_time_ms / 3));
+    } else {
+      // Fallback if no valid time information
+      calculated_time_ms = 1000; // 1 second default
+    }
   }
   
   // If no valid search parameters, ignore (but allow ponder and mate)
@@ -383,6 +431,12 @@ void UCIExecutor::SearchAndOutput(bool infinite, int movetime_ms, int depth) {
       }
       std::cout << "bestmove 0000" << std::endl;  // No best move in draw position
       return;
+    }
+    
+    // TODO: Implement searchmoves restriction in search algorithm
+    // For now, log if searchmoves were provided but proceed with normal search
+    if (!current_searchmoves_.empty()) {
+      std::cout << "info string searchmoves parameter provided (" << current_searchmoves_.size() << " moves) but not yet implemented" << std::endl;
     }
     
     SearchParams params;
@@ -593,4 +647,21 @@ bool UCIExecutor::IsFiftyMoveRuleDraw() const {
 
 bool UCIExecutor::IsDrawPosition() const {
   return IsRepetitionDraw() || IsFiftyMoveRuleDraw();
+}
+
+std::vector<std::string> UCIExecutor::HandleDebug(const std::vector<std::string>& tokens) {
+  if (tokens.size() >= 2) {
+    if (tokens[1] == "on") {
+      debug_mode_ = true;
+      if (debug_mode_) {
+        std::cout << "info string Debug mode enabled" << std::endl;
+      }
+    } else if (tokens[1] == "off") {
+      if (debug_mode_) {
+        std::cout << "info string Debug mode disabled" << std::endl;
+      }
+      debug_mode_ = false;
+    }
+  }
+  return {};
 }

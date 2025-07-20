@@ -58,6 +58,12 @@ private:
   std::vector<U64> position_history_;  // Track zobrist keys for repetition detection
   int fifty_move_rule_counter_ = 0;    // Track half-moves since pawn move or capture
   
+  // Current search restrictions
+  std::vector<std::string> current_searchmoves_;  // Moves to restrict search to
+  
+  // Debug mode
+  bool debug_mode_ = false;  // Enable debug output
+  
   // Individual command handlers
   std::vector<std::string> HandleUCI();
   std::vector<std::string> HandleIsReady();
@@ -68,6 +74,7 @@ private:
   std::vector<std::string> HandleStop();
   std::vector<std::string> HandlePonderHit();
   std::vector<std::string> HandleSetOption(const std::vector<std::string>& tokens);
+  std::vector<std::string> HandleDebug(const std::vector<std::string>& tokens);
   
   // Helper methods
   void ResetBoard();
