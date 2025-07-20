@@ -13,6 +13,7 @@
 
 struct SearchParams {
   bool thinking_output = false;
+  bool uci_output_format = false;  // Use UCI info format instead of XBoard
   int search_depth = MAX_DEPTH;
   bool antichess_pns = true;
 };

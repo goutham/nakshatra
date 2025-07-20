@@ -13,6 +13,7 @@
 // Iterative deepening search parameters.
 struct IDSParams {
   bool thinking_output = false;
+  bool uci_output_format = false;  // Use UCI info format instead of XBoard
   int search_depth = MAX_DEPTH;
   MoveArray pruned_ordered_moves;
 };

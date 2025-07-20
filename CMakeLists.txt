@@ -49,6 +49,7 @@ set(SOURCES
     src/executor.cpp
     src/fen.cpp
     src/id_search.cpp
+    src/main_utils.cpp
     src/move_order.cpp
     src/movegen.cpp
     src/player.cpp
@@ -57,6 +58,7 @@ set(SOURCES
     src/san.cpp
     src/see.cpp
     src/transpos.cpp
+    src/uci_executor.cpp
     src/zobrist.cpp)
 add_library(nakshatra_core OBJECT ${SOURCES})
 

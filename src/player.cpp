@@ -43,6 +43,7 @@ Move Player::SearchInternal(const SearchParams& search_params,
   }
 
   IDSParams ids_params{.thinking_output = search_params.thinking_output,
+                       .uci_output_format = search_params.uci_output_format,
                        .search_depth = search_params.search_depth};
 
   if constexpr (IsAntichessLike(variant)) {

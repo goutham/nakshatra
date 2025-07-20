@@ -170,13 +170,23 @@ IDSResult IterativeDeepener<variant>::Search() {
       ids_result.id_search_stats.search_depth = stat.second.search_depth;
     }
 
-    // XBoard style thinking output.
+    // Thinking output in XBoard or UCI format.
     if (ids_params_.thinking_output) {
-      char output[256];
-      snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth, last_istat.score,
-               int(elapsed_time), ids_result.id_search_stats.nodes_searched,
-               PV(ids_result.best_move).c_str());
-      std::cout << output << std::endl;
+      if (ids_params_.uci_output_format) {
+        // UCI info format: info depth <d> score cp <score> time <time> nodes <nodes> pv <moves>
+        std::cout << "info depth " << depth 
+                  << " score cp " << last_istat.score
+                  << " time " << int(elapsed_time * 10)  // Convert centiseconds to milliseconds
+                  << " nodes " << ids_result.id_search_stats.nodes_searched
+                  << " pv " << PV(ids_result.best_move) << std::endl;
+      } else {
+        // XBoard style thinking output.
+        char output[256];
+        snprintf(output, 256, "%2d\t%5d\t%5d\t%10lu\t%s", depth, last_istat.score,
+                 int(elapsed_time), ids_result.id_search_stats.nodes_searched,
+                 PV(ids_result.best_move).c_str());
+        std::cout << output << std::endl;
+      }
     }
 
     // Don't go any deeper if a win is confirmed or timer has lapsed.
