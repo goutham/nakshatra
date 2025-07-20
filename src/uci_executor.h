@@ -47,6 +47,16 @@ private:
   bool ponder_ = false;  // Pondering (thinking on opponent's time)
   bool analyse_mode_ = false;  // Analysis mode
   bool pns_enabled_ = true;  // Proof Number Search for antichess
+  int threads_ = 1;  // Number of search threads
+  int multipv_ = 1;  // Number of principal variations to show
+  bool show_currline_ = false;  // Show currently searched line
+  bool show_refutations_ = false;  // Show refutation lines
+  bool limit_strength_ = false;  // Limit engine strength
+  int elo_rating_ = 2850;  // Elo rating when strength limited
+  
+  // Game state tracking for draw detection
+  std::vector<U64> position_history_;  // Track zobrist keys for repetition detection
+  int fifty_move_rule_counter_ = 0;    // Track half-moves since pawn move or capture
   
   // Individual command handlers
   std::vector<std::string> HandleUCI();
@@ -63,6 +73,13 @@ private:
   void ResetBoard();
   void InitializeSearchComponents();
   void SearchAndOutput(bool infinite = true, int movetime_ms = 0, int depth = 0);
+  void PonderAndOutput(int depth);
+  
+  // Game state tracking methods
+  void UpdatePositionHistory();
+  bool IsRepetitionDraw() const;
+  bool IsFiftyMoveRuleDraw() const;
+  bool IsDrawPosition() const;
 };
 
 #endif

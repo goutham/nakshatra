@@ -111,6 +111,31 @@ int EnpassantIndex(const string& fen) {
   return Move::index(fen.substr(index, 2));
 }
 
+int HalfMoveClock(const string& fen) {
+  int index = 0;
+  int spaces_found = 0;
+  // Skip to the 5th field (half-move clock)
+  while (spaces_found < 4 && index < (int)fen.length()) {
+    if (fen[index] == ' ') {
+      ++spaces_found;
+    }
+    ++index;
+  }
+  
+  if (spaces_found < 4 || index >= (int)fen.length()) {
+    return 0; // Default if not present
+  }
+  
+  // Parse the integer from this position
+  string half_move_str = "";
+  while (index < (int)fen.length() && fen[index] != ' ') {
+    half_move_str += fen[index];
+    ++index;
+  }
+  
+  return std::atoi(half_move_str.c_str());
+}
+
 string MakeFEN(const Piece board_array[], Side player_side,
                const unsigned char castle, int ep_index) {
   string fen;

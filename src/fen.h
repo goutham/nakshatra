@@ -16,6 +16,8 @@ unsigned char CastlingAvailability(const std::string& fen);
 
 int EnpassantIndex(const std::string& fen);
 
+int HalfMoveClock(const std::string& fen);
+
 std::string MakeFEN(const Piece board_array[], Side player_move,
                     const unsigned char castled, int ep_index);
 } // namespace FEN

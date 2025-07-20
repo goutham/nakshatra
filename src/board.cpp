@@ -47,6 +47,7 @@ Board::Board(const Variant variant, const std::string& fen) {
   FEN::MakeBoardArray(fen, board_array_);
   side_to_move_ = FEN::PlayerToMove(fen);
   top->ep_index = FEN::EnpassantIndex(fen);
+  top->half_move_clock = FEN::HalfMoveClock(fen);
   if (castling_allowed_) {
     top->castle = FEN::CastlingAvailability(fen);
   }

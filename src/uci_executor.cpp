@@ -67,6 +67,12 @@ std::vector<std::string> UCIExecutor::HandleUCI() {
   response.push_back("option name Ponder type check default false");
   response.push_back("option name UCI_AnalyseMode type check default false");
   response.push_back("option name PNS type check default true");
+  response.push_back("option name Threads type spin default 1 min 1 max 8");
+  response.push_back("option name MultiPV type spin default 1 min 1 max 5");
+  response.push_back("option name UCI_ShowCurrLine type check default false");
+  response.push_back("option name UCI_ShowRefutations type check default false");
+  response.push_back("option name UCI_LimitStrength type check default false");
+  response.push_back("option name UCI_Elo type spin default 2850 min 1000 max 3000");
   
   // Signal end of UCI response
   response.push_back("uciok");
@@ -111,6 +117,9 @@ std::vector<std::string> UCIExecutor::HandlePosition(const std::vector<std::stri
     try {
       board_ = std::make_unique<Board>(variant_, fen);
       player_ = std::make_unique<Player>(variant_, *board_, *transpos_, *timer_);
+      // Reset position history for new FEN position
+      position_history_.clear();
+      UpdatePositionHistory();
       moves_index = 8;  // Look for moves starting at token 8
     } catch (const std::exception& e) {
       // Invalid FEN - ignore silently per UCI spec
@@ -147,6 +156,7 @@ std::vector<std::string> UCIExecutor::HandlePosition(const std::vector<std::stri
           
           if (is_legal) {
             board_->MakeMove(move);
+            UpdatePositionHistory();
           } else {
             // Illegal move - stop processing
             break;
@@ -176,8 +186,10 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
   
   // Parse go command parameters
   bool infinite = false;
+  bool ponder = false;
   int movetime_ms = 0;
   int depth = 0;
+  int mate = 0;
   int wtime_ms = 0;
   int btime_ms = 0;
   int winc_ms = 0;
@@ -188,6 +200,8 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
   for (size_t i = 1; i < tokens.size(); ++i) {
     if (tokens[i] == "infinite") {
       infinite = true;
+    } else if (tokens[i] == "ponder") {
+      ponder = true;
     } else if (tokens[i] == "movetime" && i + 1 < tokens.size()) {
       try {
         movetime_ms = std::stoi(tokens[i + 1]);
@@ -244,6 +258,13 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
       } catch (const std::exception& e) {
         // Invalid nodes value - ignore
       }
+    } else if (tokens[i] == "mate" && i + 1 < tokens.size()) {
+      try {
+        mate = std::stoi(tokens[i + 1]);
+        ++i;  // Skip the mate value
+      } catch (const std::exception& e) {
+        // Invalid mate value - ignore
+      }
     }
   }
   
@@ -262,17 +283,30 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
     calculated_time_ms = std::max(100, std::min(calculated_time_ms, our_time_ms / 3));
   }
   
-  // If no valid search parameters, ignore
-  if (!infinite && movetime_ms <= 0 && depth <= 0 && calculated_time_ms <= 0 && nodes <= 0) {
+  // If no valid search parameters, ignore (but allow ponder and mate)
+  if (!infinite && !ponder && movetime_ms <= 0 && depth <= 0 && calculated_time_ms <= 0 && nodes <= 0 && mate <= 0) {
     return {};
   }
   
-  // Determine final search time - prefer explicit movetime, then calculated time
-  int final_time_ms = movetime_ms > 0 ? movetime_ms : calculated_time_ms;
-  
-  // Start search in a separate thread
-  searching_ = true;
-  search_thread_ = std::thread(&UCIExecutor::SearchAndOutput, this, infinite, final_time_ms, depth);
+  if (ponder && ponder_) {
+    // Start pondering if enabled
+    pondering_ = true;
+    ponder_thread_ = std::thread(&UCIExecutor::PonderAndOutput, this, depth > 0 ? depth : MAX_DEPTH);
+  } else {
+    // Regular search
+    // Determine final search time - prefer explicit movetime, then calculated time
+    int final_time_ms = movetime_ms > 0 ? movetime_ms : calculated_time_ms;
+    
+    // For mate search, set deep depth and reasonable time
+    if (mate > 0) {
+      depth = mate * 2 + 2;  // Mate in N needs at least 2*N plies
+      final_time_ms = std::max(final_time_ms, 10000);  // At least 10 seconds for mate search
+    }
+    
+    // Start search in a separate thread
+    searching_ = true;
+    search_thread_ = std::thread(&UCIExecutor::SearchAndOutput, this, infinite, final_time_ms, depth);
+  }
   
   return {};
 }
@@ -296,9 +330,9 @@ std::vector<std::string> UCIExecutor::HandleStop() {
 
 std::vector<std::string> UCIExecutor::HandlePonderHit() {
   if (pondering_) {
-    // Convert pondering search to regular search
+    // Stop pondering - the search becomes a regular search
     pondering_ = false;
-    // The ponder thread will detect this and output bestmove
+    // The ponder thread will detect this and output bestmove immediately
   }
   return {};
 }
@@ -306,6 +340,11 @@ std::vector<std::string> UCIExecutor::HandlePonderHit() {
 void UCIExecutor::ResetBoard() {
   board_ = std::make_unique<Board>(variant_);
   player_ = std::make_unique<Player>(variant_, *board_, *transpos_, *timer_);
+  
+  // Reset game state tracking
+  position_history_.clear();
+  fifty_move_rule_counter_ = 0;
+  UpdatePositionHistory();
 }
 
 void UCIExecutor::InitializeSearchComponents() {
@@ -334,6 +373,18 @@ void UCIExecutor::SearchAndOutput(bool infinite, int movetime_ms, int depth) {
       timer_->Run(1000);  // 1 second for infinite (will be stopped by stop command)
     }
     
+    // Check for draw before searching
+    if (IsDrawPosition()) {
+      std::cout << "info string Draw detected: ";
+      if (IsRepetitionDraw()) {
+        std::cout << "threefold repetition" << std::endl;
+      } else if (IsFiftyMoveRuleDraw()) {
+        std::cout << "fifty-move rule" << std::endl;
+      }
+      std::cout << "bestmove 0000" << std::endl;  // No best move in draw position
+      return;
+    }
+    
     SearchParams params;
     params.thinking_output = uci_info_output_;  // Enable UCI info output
     params.uci_output_format = true;           // Use UCI info format
@@ -357,6 +408,39 @@ void UCIExecutor::SearchAndOutput(bool infinite, int movetime_ms, int depth) {
   
   // Always reset searching flag
   searching_ = false;
+}
+
+void UCIExecutor::PonderAndOutput(int depth) {
+  try {
+    // Set up pondering search with infinite time but limited depth
+    timer_->Run(3600000);  // 1 hour - effectively infinite for pondering
+    
+    SearchParams params;
+    params.thinking_output = uci_info_output_;  // Enable UCI info output
+    params.uci_output_format = true;           // Use UCI info format
+    params.search_depth = depth;
+    params.antichess_pns = pns_enabled_ && (variant_ == Variant::ANTICHESS || variant_ == Variant::SUICIDE);
+    
+    Move best_move = player_->Search(params, 360000);  // 1 hour in centiseconds
+    
+    // Only output bestmove if pondering wasn't stopped (ponderhit or stop)
+    if (pondering_ && best_move.is_valid()) {
+      std::cout << "bestmove " << best_move.str() << std::endl;
+    }
+  } catch (const std::exception& e) {
+    // Handle any exceptions during pondering
+    if (pondering_) {
+      std::cout << "bestmove 0000" << std::endl;
+    }
+  } catch (...) {
+    // Handle any other exceptions
+    if (pondering_) {
+      std::cout << "bestmove 0000" << std::endl;
+    }
+  }
+  
+  // Always reset pondering flag
+  pondering_ = false;
 }
 
 std::vector<std::string> UCIExecutor::HandleSetOption(const std::vector<std::string>& tokens) {
@@ -421,7 +505,92 @@ std::vector<std::string> UCIExecutor::HandleSetOption(const std::vector<std::str
     } else if (option_value == "false") {
       pns_enabled_ = false;
     }
+  } else if (option_name == "Threads") {
+    try {
+      int threads = std::stoi(option_value);
+      if (threads >= 1 && threads <= 8) {
+        threads_ = threads;
+      }
+    } catch (const std::exception& e) {
+      // Invalid threads value - ignore
+    }
+  } else if (option_name == "MultiPV") {
+    try {
+      int multipv = std::stoi(option_value);
+      if (multipv >= 1 && multipv <= 5) {
+        multipv_ = multipv;
+      }
+    } catch (const std::exception& e) {
+      // Invalid MultiPV value - ignore
+    }
+  } else if (option_name == "UCI_ShowCurrLine") {
+    if (option_value == "true") {
+      show_currline_ = true;
+    } else if (option_value == "false") {
+      show_currline_ = false;
+    }
+  } else if (option_name == "UCI_ShowRefutations") {
+    if (option_value == "true") {
+      show_refutations_ = true;
+    } else if (option_value == "false") {
+      show_refutations_ = false;
+    }
+  } else if (option_name == "UCI_LimitStrength") {
+    if (option_value == "true") {
+      limit_strength_ = true;
+    } else if (option_value == "false") {
+      limit_strength_ = false;
+    }
+  } else if (option_name == "UCI_Elo") {
+    try {
+      int elo = std::stoi(option_value);
+      if (elo >= 1000 && elo <= 3000) {
+        elo_rating_ = elo;
+      }
+    } catch (const std::exception& e) {
+      // Invalid Elo value - ignore
+    }
   }
   
   return {};
+}
+
+void UCIExecutor::UpdatePositionHistory() {
+  if (board_) {
+    U64 current_zobrist = board_->ZobristKey();
+    position_history_.push_back(current_zobrist);
+    fifty_move_rule_counter_ = board_->HalfMoveClock();
+  }
+}
+
+bool UCIExecutor::IsRepetitionDraw() const {
+  if (position_history_.empty() || !board_) {
+    return false;
+  }
+  
+  U64 current_zobrist = board_->ZobristKey();
+  int repetition_count = 0;
+  
+  // Count how many times current position has occurred
+  for (U64 zobrist : position_history_) {
+    if (zobrist == current_zobrist) {
+      repetition_count++;
+    }
+  }
+  
+  // Draw if position has occurred 3 times (threefold repetition)
+  return repetition_count >= 3;
+}
+
+bool UCIExecutor::IsFiftyMoveRuleDraw() const {
+  if (!board_) {
+    return false;
+  }
+  
+  // Draw if 50 moves (100 half-moves) have passed without pawn move or capture
+  return board_->HalfMoveClock() >= 100;
+}
+
+bool UCIExecutor::IsDrawPosition() const {
+  return IsRepetitionDraw() || IsFiftyMoveRuleDraw();
 }
