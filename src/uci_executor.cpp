@@ -57,7 +57,7 @@ std::vector<std::string> UCIExecutor::HandleUCI() {
   response.push_back("id author Goutham Bhat");
   
   // Engine options
-  response.push_back("option name Hash type spin default 1 min 1 max 1024");
+  response.push_back("option name Hash type spin default 1 min 1 max 64");
   response.push_back("option name UCI_Variant type combo default standard var standard var suicide");
   
   // Signal end of UCI response
@@ -197,9 +197,10 @@ void UCIExecutor::ResetBoard() {
 }
 
 void UCIExecutor::InitializeSearchComponents() {
-  // Use configurable transposition table size
-  size_t table_size = static_cast<size_t>(hash_size_mb_) << 20; // Convert MB to bytes
-  transpos_ = std::make_unique<TranspositionTable>(table_size);
+  // Use configurable transposition table size  
+  size_t table_size_bytes = static_cast<size_t>(hash_size_mb_) << 20; // Convert MB to bytes
+  size_t num_buckets = table_size_bytes / sizeof(TTBucket);
+  transpos_ = std::make_unique<TranspositionTable>(num_buckets);
   timer_ = std::make_unique<Timer>();
 }
 
@@ -262,7 +263,7 @@ std::vector<std::string> UCIExecutor::HandleSetOption(const std::vector<std::str
   if (option_name == "Hash") {
     try {
       int hash_mb = std::stoi(option_value);
-      if (hash_mb >= 1 && hash_mb <= 1024) {
+      if (hash_mb >= 1 && hash_mb <= 64) {
         hash_size_mb_ = hash_mb;
         // Rebuild transposition table with new size
         if (!searching_) {
