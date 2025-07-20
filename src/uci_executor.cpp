@@ -10,12 +10,15 @@ UCIExecutor::UCIExecutor() {
 }
 
 UCIExecutor::~UCIExecutor() {
-  // Always try to stop any running search and join thread
+  // Always try to stop any running search and join threads
   if (timer_) {
     timer_->Invalidate();
   }
   if (search_thread_.joinable()) {
     search_thread_.join();
+  }
+  if (ponder_thread_.joinable()) {
+    ponder_thread_.join();
   }
 }
 
@@ -41,6 +44,8 @@ std::vector<std::string> UCIExecutor::Execute(const std::string& command_str) {
     return HandleGo(tokens);
   } else if (command == "stop") {
     return HandleStop();
+  } else if (command == "ponderhit") {
+    return HandlePonderHit();
   } else if (command == "setoption") {
     return HandleSetOption(tokens);
   }
@@ -58,7 +63,10 @@ std::vector<std::string> UCIExecutor::HandleUCI() {
   
   // Engine options
   response.push_back("option name Hash type spin default 1 min 1 max 64");
-  response.push_back("option name UCI_Variant type combo default standard var standard var suicide");
+  response.push_back("option name UCI_Variant type combo default standard var standard var suicide var giveaway");
+  response.push_back("option name Ponder type check default false");
+  response.push_back("option name UCI_AnalyseMode type check default false");
+  response.push_back("option name PNS type check default true");
   
   // Signal end of UCI response
   response.push_back("uciok");
@@ -119,9 +127,32 @@ std::vector<std::string> UCIExecutor::HandlePosition(const std::vector<std::stri
       try {
         Move move(tokens[i]);
         if (move.is_valid()) {
-          board_->MakeMove(move);
+          // Validate move is legal in current position
+          MoveArray legal_moves;
+          if (variant_ == Variant::STANDARD) {
+            legal_moves = GenerateMoves<Variant::STANDARD>(*board_);
+          } else if (variant_ == Variant::ANTICHESS) {
+            legal_moves = GenerateMoves<Variant::ANTICHESS>(*board_);
+          } else if (variant_ == Variant::SUICIDE) {
+            legal_moves = GenerateMoves<Variant::SUICIDE>(*board_);
+          }
+          
+          bool is_legal = false;
+          for (size_t j = 0; j < legal_moves.size(); ++j) {
+            if (legal_moves.get(j) == move) {
+              is_legal = true;
+              break;
+            }
+          }
+          
+          if (is_legal) {
+            board_->MakeMove(move);
+          } else {
+            // Illegal move - stop processing
+            break;
+          }
         } else {
-          // Invalid move - stop processing
+          // Invalid move format - stop processing
           break;
         }
       } catch (const std::exception& e) {
@@ -152,6 +183,7 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
   int winc_ms = 0;
   int binc_ms = 0;
   int movestogo = 0;
+  long nodes = 0;
   
   for (size_t i = 1; i < tokens.size(); ++i) {
     if (tokens[i] == "infinite") {
@@ -205,6 +237,13 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
       } catch (const std::exception& e) {
         // Invalid movestogo value - ignore
       }
+    } else if (tokens[i] == "nodes" && i + 1 < tokens.size()) {
+      try {
+        nodes = std::stol(tokens[i + 1]);
+        ++i;  // Skip the nodes value
+      } catch (const std::exception& e) {
+        // Invalid nodes value - ignore
+      }
     }
   }
   
@@ -224,7 +263,7 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
   }
   
   // If no valid search parameters, ignore
-  if (!infinite && movetime_ms <= 0 && depth <= 0 && calculated_time_ms <= 0) {
+  if (!infinite && movetime_ms <= 0 && depth <= 0 && calculated_time_ms <= 0 && nodes <= 0) {
     return {};
   }
   
@@ -245,6 +284,21 @@ std::vector<std::string> UCIExecutor::HandleStop() {
       search_thread_.join();
     }
     searching_ = false;
+  }
+  if (pondering_) {
+    if (ponder_thread_.joinable()) {
+      ponder_thread_.join();
+    }
+    pondering_ = false;
+  }
+  return {};
+}
+
+std::vector<std::string> UCIExecutor::HandlePonderHit() {
+  if (pondering_) {
+    // Convert pondering search to regular search
+    pondering_ = false;
+    // The ponder thread will detect this and output bestmove
   }
   return {};
 }
@@ -284,7 +338,7 @@ void UCIExecutor::SearchAndOutput(bool infinite, int movetime_ms, int depth) {
     params.thinking_output = uci_info_output_;  // Enable UCI info output
     params.uci_output_format = true;           // Use UCI info format
     params.search_depth = search_depth;
-    params.antichess_pns = false;    // Keep PNS disabled for basic functionality
+    params.antichess_pns = pns_enabled_ && (variant_ == Variant::ANTICHESS || variant_ == Variant::SUICIDE);  // Enable PNS for antichess variants if option enabled
     
     Move best_move = player_->Search(params, time_centis);
     
@@ -341,10 +395,31 @@ std::vector<std::string> UCIExecutor::HandleSetOption(const std::vector<std::str
     } else if (option_value == "suicide") {
       variant_ = Variant::SUICIDE;
       uci_variant_ = "suicide";
+    } else if (option_value == "giveaway") {
+      variant_ = Variant::ANTICHESS;
+      uci_variant_ = "giveaway";
     }
     // Rebuild board and player with new variant
     if (!searching_) {
       ResetBoard();
+    }
+  } else if (option_name == "Ponder") {
+    if (option_value == "true") {
+      ponder_ = true;
+    } else if (option_value == "false") {
+      ponder_ = false;
+    }
+  } else if (option_name == "UCI_AnalyseMode") {
+    if (option_value == "true") {
+      analyse_mode_ = true;
+    } else if (option_value == "false") {
+      analyse_mode_ = false;
+    }
+  } else if (option_name == "PNS") {
+    if (option_value == "true") {
+      pns_enabled_ = true;
+    } else if (option_value == "false") {
+      pns_enabled_ = false;
     }
   }
   

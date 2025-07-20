@@ -6,6 +6,8 @@
 #include "player.h"
 #include "timer.h"
 #include "transpos.h"
+#include "movegen.h"
+#include "move_array.h"
 
 #include <string>
 #include <vector>
@@ -34,12 +36,17 @@ private:
   std::unique_ptr<Timer> timer_;
   std::unique_ptr<Player> player_;
   std::atomic<bool> searching_{false};
+  std::atomic<bool> pondering_{false};
   std::thread search_thread_;
+  std::thread ponder_thread_;
   
   // UCI Options
   int hash_size_mb_ = 1;  // Default 1MB transposition table
   std::string uci_variant_ = "standard";  // Default variant
   bool uci_info_output_ = true;  // Enable UCI info output by default
+  bool ponder_ = false;  // Pondering (thinking on opponent's time)
+  bool analyse_mode_ = false;  // Analysis mode
+  bool pns_enabled_ = true;  // Proof Number Search for antichess
   
   // Individual command handlers
   std::vector<std::string> HandleUCI();
@@ -49,6 +56,7 @@ private:
   std::vector<std::string> HandlePosition(const std::vector<std::string>& tokens);
   std::vector<std::string> HandleGo(const std::vector<std::string>& tokens);
   std::vector<std::string> HandleStop();
+  std::vector<std::string> HandlePonderHit();
   std::vector<std::string> HandleSetOption(const std::vector<std::string>& tokens);
   
   // Helper methods
