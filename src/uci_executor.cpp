@@ -147,6 +147,11 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
   bool infinite = false;
   int movetime_ms = 0;
   int depth = 0;
+  int wtime_ms = 0;
+  int btime_ms = 0;
+  int winc_ms = 0;
+  int binc_ms = 0;
+  int movestogo = 0;
   
   for (size_t i = 1; i < tokens.size(); ++i) {
     if (tokens[i] == "infinite") {
@@ -165,17 +170,70 @@ std::vector<std::string> UCIExecutor::HandleGo(const std::vector<std::string>& t
       } catch (const std::exception& e) {
         // Invalid depth value - ignore
       }
+    } else if (tokens[i] == "wtime" && i + 1 < tokens.size()) {
+      try {
+        wtime_ms = std::stoi(tokens[i + 1]);
+        ++i;  // Skip the wtime value
+      } catch (const std::exception& e) {
+        // Invalid wtime value - ignore
+      }
+    } else if (tokens[i] == "btime" && i + 1 < tokens.size()) {
+      try {
+        btime_ms = std::stoi(tokens[i + 1]);
+        ++i;  // Skip the btime value
+      } catch (const std::exception& e) {
+        // Invalid btime value - ignore
+      }
+    } else if (tokens[i] == "winc" && i + 1 < tokens.size()) {
+      try {
+        winc_ms = std::stoi(tokens[i + 1]);
+        ++i;  // Skip the winc value
+      } catch (const std::exception& e) {
+        // Invalid winc value - ignore
+      }
+    } else if (tokens[i] == "binc" && i + 1 < tokens.size()) {
+      try {
+        binc_ms = std::stoi(tokens[i + 1]);
+        ++i;  // Skip the binc value
+      } catch (const std::exception& e) {
+        // Invalid binc value - ignore
+      }
+    } else if (tokens[i] == "movestogo" && i + 1 < tokens.size()) {
+      try {
+        movestogo = std::stoi(tokens[i + 1]);
+        ++i;  // Skip the movestogo value
+      } catch (const std::exception& e) {
+        // Invalid movestogo value - ignore
+      }
     }
   }
   
+  // Calculate time for this move from time control parameters
+  int calculated_time_ms = 0;
+  if (wtime_ms > 0 || btime_ms > 0) {
+    // Determine which color we are (assume we're white if no board state info)
+    // For simplicity, use white time for now - real implementation would check current side
+    int our_time_ms = wtime_ms > 0 ? wtime_ms : btime_ms;
+    int our_inc_ms = wtime_ms > 0 ? winc_ms : binc_ms;
+    
+    // Simple time management: use 1/30 of remaining time plus increment
+    calculated_time_ms = our_time_ms / 30 + our_inc_ms;
+    
+    // Minimum 100ms, maximum 1/3 of remaining time
+    calculated_time_ms = std::max(100, std::min(calculated_time_ms, our_time_ms / 3));
+  }
+  
   // If no valid search parameters, ignore
-  if (!infinite && movetime_ms <= 0 && depth <= 0) {
+  if (!infinite && movetime_ms <= 0 && depth <= 0 && calculated_time_ms <= 0) {
     return {};
   }
   
+  // Determine final search time - prefer explicit movetime, then calculated time
+  int final_time_ms = movetime_ms > 0 ? movetime_ms : calculated_time_ms;
+  
   // Start search in a separate thread
   searching_ = true;
-  search_thread_ = std::thread(&UCIExecutor::SearchAndOutput, this, infinite, movetime_ms, depth);
+  search_thread_ = std::thread(&UCIExecutor::SearchAndOutput, this, infinite, final_time_ms, depth);
   
   return {};
 }
