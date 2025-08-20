@@ -80,6 +80,8 @@ private:
 
   double time_centis_;
   double otime_centis_;
+  int inc_centis_ = 0;        // Increment per move in centiseconds
+  int movestogo_ = 0;         // Moves to next time control
 
   // Custom board FEN which is used as initial board for all games if it is non
   // empty.
