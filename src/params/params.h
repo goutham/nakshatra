@@ -6,11 +6,12 @@
 #include "params/OrigParams.h"
 #include "params/Params20241117Epoch99Step63720.h"
 #include "params/ExpTempo202502Epoch4Step2000.h"
+#include "params/WithKSEpoch16Step9800.h"
 #include "params/ZeroParams.h"
 #include "std_eval_params.h"
 
 inline StdEvalParams<int> BlessedParams() {
-  return ExpTempo202502Epoch4Step2000Int();
+  return WithKSEpoch16Step9800Int();
 }
 
 #endif

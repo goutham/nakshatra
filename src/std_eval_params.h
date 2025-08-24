@@ -27,6 +27,9 @@ struct StdEvalParams {
   ValueType tempo_w_egame = 0;
   ValueType tempo_b_mgame = 0;
   ValueType tempo_b_egame = 0;
+
+  // King safety parameters
+  ValueType ks_pawn_shield_bonus = 0;
 };
 
 #endif

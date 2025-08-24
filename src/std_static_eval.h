@@ -13,6 +13,10 @@ namespace standard {
 
 inline constexpr int GAME_PHASE_INC[7] = {0, 0, 4, 2, 1, 1, 0};
 
+// Helper function declarations
+inline U64 GetKingZone(int king_sq, Side side);
+inline U64 GetAttackZone(int king_sq, Side side);
+
 template <Piece piece, typename ValueType>
 void AddPSTScores(const StdEvalParams<ValueType>& params, U64 bb,
                   int& game_phase, ValueType& mgame_score,
@@ -136,6 +140,69 @@ void AddMobilityScores(const StdEvalParams<ValueType>& params,
   }
 }
 
+template <Piece piece, typename ValueType>
+void AddKingSafetyScores(const StdEvalParams<ValueType>& params,
+                        const Board& board, ValueType& mgame_score,
+                        ValueType& egame_score) {
+  constexpr Side side = PieceSide(piece);
+  const U64 king_bb = board.BitBoard(piece);
+  if (king_bb == 0) {
+    return;
+  }
+  const int king_sq = Lsb1(king_bb);
+
+  ValueType king_safety_score = 0;
+
+  const U64 own_pawns = board.BitBoard(PieceOfSide(PAWN, side));
+  const U64 king_zone = GetKingZone(king_sq, side);
+  const U64 pawn_shield = own_pawns & king_zone;
+  const int pawn_shield_count = PopCount(pawn_shield);
+
+  // Bonus for pawn shield (more pawns = better protection)
+  king_safety_score = king_safety_score + ValueType(pawn_shield_count) * params.ks_pawn_shield_bonus;
+
+  // Apply king safety score only to middlegame
+  mgame_score = mgame_score + king_safety_score;
+}
+
+// Helper function to get king zone (squares around king + forward squares)
+inline U64 GetKingZone(int king_sq, Side side) {
+  const int row = ROW(king_sq);
+  const int col = COL(king_sq);
+  
+  U64 zone = 0;
+  
+  // Add king's current square and adjacent squares
+  for (int dr = -1; dr <= 1; ++dr) {
+    for (int dc = -1; dc <= 1; ++dc) {
+      const int new_row = row + dr;
+      const int new_col = col + dc;
+      if (new_row >= 0 && new_row < 8 && new_col >= 0 && new_col < 8) {
+        zone |= (1ULL << INDX(new_row, new_col));
+      }
+    }
+  }
+  
+  // Add forward squares (towards opponent)
+  if (side == Side::WHITE) {
+    // White king - add squares in front (higher rows)
+    for (int r = row; r <= std::min(7, row + 2); ++r) {
+      for (int c = std::max(0, col - 1); c <= std::min(7, col + 1); ++c) {
+        zone |= (1ULL << INDX(r, c));
+      }
+    }
+  } else {
+    // Black king - add squares in front (lower rows)
+    for (int r = std::max(0, row - 2); r <= row; ++r) {
+      for (int c = std::max(0, col - 1); c <= std::min(7, col + 1); ++c) {
+        zone |= (1ULL << INDX(r, c));
+      }
+    }
+  }
+  
+  return zone;
+}
+
 template <typename ValueType, bool score_flip = true>
 ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   const U64 w_king = board.BitBoard(KING);
@@ -165,6 +232,8 @@ ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   AddMobilityScores<BISHOP>(params, board, w_mgame_score, w_egame_score);
   AddMobilityScores<KNIGHT>(params, board, w_mgame_score, w_egame_score);
 
+  AddKingSafetyScores<KING>(params, board, w_mgame_score, w_egame_score);
+
   const U64 b_king = board.BitBoard(-KING);
   const U64 b_queen = board.BitBoard(-QUEEN);
   const U64 b_rook = board.BitBoard(-ROOK);
@@ -190,6 +259,8 @@ ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   AddMobilityScores<-ROOK>(params, board, b_mgame_score, b_egame_score);
   AddMobilityScores<-BISHOP>(params, board, b_mgame_score, b_egame_score);
   AddMobilityScores<-KNIGHT>(params, board, b_mgame_score, b_egame_score);
+
+  AddKingSafetyScores<-KING>(params, board, b_mgame_score, b_egame_score);
 
   if (board.SideToMove() == Side::WHITE) {
     w_mgame_score += params.tempo_w_mgame;

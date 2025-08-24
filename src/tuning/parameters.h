@@ -91,6 +91,7 @@ inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Add(fparams.tempo_w_egame, params);
   Add(fparams.tempo_b_mgame, params);
   Add(fparams.tempo_b_egame, params);
+  Add(fparams.ks_pawn_shield_bonus, params);
   return params;
 }
 #endif

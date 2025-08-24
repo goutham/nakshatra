@@ -13,12 +13,12 @@
 #include <sstream>
 #include <string>
 
-const std::string kExperimentName = "Params";
-const std::string kDataFile = "";
+const std::string kExperimentName = "WithKS";
+const std::string kDataFile = "/home/goutham/workspace/github/goutham/nakshatra-tools/experiments/tuning_1/nakshatra/zurichess/quiet-labeled.epd";
 constexpr double kMultiplier = 1.0 / 113.6;
-constexpr double kLearningRate = 10.0;
+constexpr double kLearningRate = 5.0;
 constexpr int kBatchSize = 1024;
-constexpr int kMaxEpochs = 100;
+constexpr int kMaxEpochs = 500;
 
 struct EPDRecord {
   std::string fen;
@@ -79,6 +79,7 @@ StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   Convert(fparams.tempo_w_egame, params.tempo_w_egame);
   Convert(fparams.tempo_b_mgame, params.tempo_b_mgame);
   Convert(fparams.tempo_b_egame, params.tempo_b_egame);
+  Convert(fparams.ks_pawn_shield_bonus, params.ks_pawn_shield_bonus);
   return params;
 }
 
@@ -172,6 +173,7 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   WriteParams(ofs, "tempo_w_egame", params.tempo_w_egame);
   WriteParams(ofs, "tempo_b_mgame", params.tempo_b_mgame);
   WriteParams(ofs, "tempo_b_egame", params.tempo_b_egame);
+  WriteParams(ofs, "ks_pawn_shield_bonus", params.ks_pawn_shield_bonus);
 
   ofs << "};" << std::endl;
   ofs << "return params;" << std::endl;
@@ -302,7 +304,7 @@ int _main() {
 
 int main() {
   StdEvalParams<Variable> eval_params =
-      Convert<double, Variable>(Params20241117Epoch99Step63720());
+      Convert<double, Variable>(ExpTempo202502Epoch4Step2000Dbl());
   //StdEvalParams<Variable> eval_params = ZeroParams<Variable>();
   Parameters params = AsParameters(eval_params);
 
