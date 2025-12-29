@@ -17,7 +17,7 @@
 #include <string>
 
 const std::string kExperimentName = "PawnStructExp2";
-const std::string kDataFile = "../../../tuning_1/nakshatra/zurichess/quiet-labeled.epd";
+const std::string kDataFile = "/home/goutham/workspace/github/goutham/nakshatra-tools/tuning/main.epd";
 constexpr double kMultiplier = 1.0 / 113.6;
 constexpr double kLearningRate = 10.0;
 constexpr int kBatchSize = 1024;
