@@ -65,6 +65,7 @@ Board::Board(const Variant variant, const std::string& fen) {
   }
 
   top->zobrist_key = GenerateZobristKey();
+  top->pawn_zobrist_key = GeneratePawnZobristKey();
 }
 
 Board::Board(const Variant variant, const BoardDesc& board_desc) {
@@ -98,6 +99,7 @@ Board::Board(const Variant variant, const BoardDesc& board_desc) {
   }
 
   top->zobrist_key = GenerateZobristKey();
+  top->pawn_zobrist_key = GeneratePawnZobristKey();
 }
 
 void Board::MakeMove(const Move move) {
@@ -117,6 +119,7 @@ void Board::MakeMove(const Move move) {
   top->move = move;
   top->captured_piece = dest_piece;
   top->zobrist_key = prev->zobrist_key;
+  top->pawn_zobrist_key = prev->pawn_zobrist_key;
   top->castle = prev->castle;
   top->half_move_clock = prev->half_move_clock + 1;
 
@@ -229,6 +232,7 @@ void Board::MakeNullMove() {
   top->captured_piece = NULLPIECE;
   top->ep_index = prev->ep_index;
   top->zobrist_key = prev->zobrist_key;
+  top->pawn_zobrist_key = prev->pawn_zobrist_key;
   top->castle = prev->castle;
   top->half_move_clock = 0;
   FlipSideToMove();
@@ -314,6 +318,7 @@ void Board::DebugPrintBoard() const {
   cout << "# W pieces: " << NumPieces(Side::WHITE) << endl;
   cout << "# B pieces: " << NumPieces(Side::BLACK) << endl;
   cout << "# Zobrist key: " << move_stack_.Top()->zobrist_key << endl;
+  cout << "# Pawn Zobrist key: " << move_stack_.Top()->pawn_zobrist_key << endl;
   cout << "# FEN: " << ParseIntoFEN() << endl;
   cout << "# EP index: " << move_stack_.Top()->ep_index << endl;
   cout << "##### End Board Dump #####" << endl;
@@ -340,12 +345,27 @@ U64 Board::GenerateZobristKey() {
   return zkey;
 }
 
+U64 Board::GeneratePawnZobristKey() {
+  U64 zkey = 0;
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    Piece piece = board_array_[i];
+    if (piece == PAWN || piece == -PAWN) {
+      zkey ^= zobrist::Get(piece, i);
+    }
+  }
+  return zkey;
+}
+
 void Board::PlacePiece(const int index, const Piece piece) {
   board_array_[index] = piece;
   const U64 bit_mask = (1ULL << index);
   bitboard_sides_[SideIndex(PieceSide(piece))] |= bit_mask;
   bitboard_pieces_[PieceIndex(piece)] |= bit_mask;
-  move_stack_.Top()->zobrist_key ^= zobrist::Get(piece, index);
+  const U64 zob = zobrist::Get(piece, index);
+  move_stack_.Top()->zobrist_key ^= zob;
+  if (piece == PAWN || piece == -PAWN) {
+    move_stack_.Top()->pawn_zobrist_key ^= zob;
+  }
 }
 
 void Board::PlacePieceNoZ(const int index, const Piece piece) {
@@ -361,7 +381,11 @@ void Board::RemovePiece(const int index) {
   const U64 bit_mask = ~(1ULL << index);
   bitboard_sides_[SideIndex(PieceSide(piece))] &= bit_mask;
   bitboard_pieces_[PieceIndex(piece)] &= bit_mask;
-  move_stack_.Top()->zobrist_key ^= zobrist::Get(piece, index);
+  const U64 zob = zobrist::Get(piece, index);
+  move_stack_.Top()->zobrist_key ^= zob;
+  if (piece == PAWN || piece == -PAWN) {
+    move_stack_.Top()->pawn_zobrist_key ^= zob;
+  }
 }
 
 void Board::RemovePieceNoZ(const int index) {

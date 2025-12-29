@@ -7,6 +7,7 @@
 #include "pawns.h"
 #include "pst.h"
 #include "std_eval_params.h"
+#include <array>
 #include <iostream>
 
 namespace standard {
@@ -33,6 +34,16 @@ void AddPSTScores(const StdEvalParams<ValueType>& params, U64 bb,
     bb ^= (1ULL << sq);
   }
 }
+
+struct PawnStructData {
+  U64 pawn_zobrist_key;
+  U64 white_bb;
+  U64 black_bb;
+  int w_mgame_score;
+  int w_egame_score;
+  int b_mgame_score;
+  int b_egame_score;
+};
 
 /*
 Params20241117Epoch99Step63720IntegerizedNoP: PawnStructureScores turned off
@@ -111,6 +122,58 @@ void AddPawnStructureScores(const StdEvalParams<ValueType>& params,
   }
 }
 
+template <typename ValueType, bool enable_pawn_hashtable>
+  requires(enable_pawn_hashtable == false)
+void AddWBPawnStructureScores(const StdEvalParams<ValueType>& params,
+                              const Board& board, ValueType& w_mgame_score,
+                              ValueType& w_egame_score,
+                              ValueType& b_mgame_score,
+                              ValueType& b_egame_score) {
+  AddPawnStructureScores<Side::WHITE>(params, board, w_mgame_score,
+                                      w_egame_score);
+  AddPawnStructureScores<Side::BLACK>(params, board, b_mgame_score,
+                                      b_egame_score);
+}
+
+template <typename ValueType, bool enable_pawn_hashtable>
+  requires(enable_pawn_hashtable == true)
+void AddWBPawnStructureScores(const StdEvalParams<ValueType>& params,
+                              const Board& board, ValueType& w_mgame_score,
+                              ValueType& w_egame_score,
+                              ValueType& b_mgame_score,
+                              ValueType& b_egame_score) {
+  static constexpr int PAWN_HASHTABLE_SIZE = 2048;
+  static thread_local std::array<PawnStructData, PAWN_HASHTABLE_SIZE>
+      pawn_hashtable;
+  const U64 pawn_zkey = board.PawnZobristKey();
+  const int map_index = static_cast<int>(pawn_zkey % PAWN_HASHTABLE_SIZE);
+  const auto& data = pawn_hashtable[map_index];
+  if (pawn_zkey == data.pawn_zobrist_key &&
+      board.BitBoard(PAWN) == data.white_bb &&
+      board.BitBoard(-PAWN) == data.black_bb) {
+    w_mgame_score += data.w_mgame_score;
+    w_egame_score += data.w_egame_score;
+    b_mgame_score += data.b_mgame_score;
+    b_egame_score += data.b_egame_score;
+    return;
+  }
+  ValueType wmscore = 0, wescore = 0, bmscore = 0, bescore = 0;
+  AddWBPawnStructureScores<ValueType, false>(params, board, wmscore, wescore, bmscore, bescore);
+  pawn_hashtable[map_index] = PawnStructData{
+      .pawn_zobrist_key = pawn_zkey,
+      .white_bb = board.BitBoard(PAWN),
+      .black_bb = board.BitBoard(-PAWN),
+      .w_mgame_score = wmscore,
+      .w_egame_score = wescore,
+      .b_mgame_score = bmscore,
+      .b_egame_score = bescore,
+  };
+  w_mgame_score += wmscore;
+  w_egame_score += wescore;
+  b_mgame_score += bmscore;
+  b_egame_score += bescore;
+}
+
 template <Piece piece, typename ValueType>
 void AddMobilityScores(const StdEvalParams<ValueType>& params,
                        const Board& board, ValueType& mgame_score,
@@ -136,7 +199,9 @@ void AddMobilityScores(const StdEvalParams<ValueType>& params,
   }
 }
 
-template <typename ValueType, bool score_flip = true>
+template <typename ValueType, bool score_flip = true,
+          bool enable_pawn_hashtable = true,
+          bool include_pawn_structure_score = true>
 ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   const U64 w_king = board.BitBoard(KING);
   const U64 w_queen = board.BitBoard(QUEEN);
@@ -157,8 +222,6 @@ ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   AddPSTScores<KNIGHT>(params, w_knight, game_phase, w_mgame_score,
                        w_egame_score);
   AddPSTScores<PAWN>(params, w_pawn, game_phase, w_mgame_score, w_egame_score);
-  AddPawnStructureScores<Side::WHITE>(params, board, w_mgame_score,
-                                      w_egame_score);
 
   AddMobilityScores<QUEEN>(params, board, w_mgame_score, w_egame_score);
   AddMobilityScores<ROOK>(params, board, w_mgame_score, w_egame_score);
@@ -183,8 +246,12 @@ ValueType StaticEval(const StdEvalParams<ValueType>& params, Board& board) {
   AddPSTScores<-KNIGHT>(params, b_knight, game_phase, b_mgame_score,
                         b_egame_score);
   AddPSTScores<-PAWN>(params, b_pawn, game_phase, b_mgame_score, b_egame_score);
-  AddPawnStructureScores<Side::BLACK>(params, board, b_mgame_score,
-                                      b_egame_score);
+
+  if constexpr (include_pawn_structure_score) {
+    AddWBPawnStructureScores<ValueType, enable_pawn_hashtable>(
+        params, board, w_mgame_score, w_egame_score, b_mgame_score,
+        b_egame_score);
+  }
 
   AddMobilityScores<-QUEEN>(params, board, b_mgame_score, b_egame_score);
   AddMobilityScores<-ROOK>(params, board, b_mgame_score, b_egame_score);

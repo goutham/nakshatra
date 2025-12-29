@@ -262,7 +262,7 @@ double AvgLoss(const std::vector<EPDRecord>& epd_records,
   double loss = 0.0;
   for (const auto& record : epd_records) {
     Board board(Variant::STANDARD, record.fen);
-    const double score = standard::StaticEval<ValueType, false>(params, board);
+    const double score = standard::StaticEval<ValueType, false, false>(params, board);
     loss += double(Loss(score, record.result, params, multiplier));
   }
   return loss / epd_records.size();
@@ -284,7 +284,7 @@ int _main() {
     double loss = 0.0;
     for (auto& record : epd_records) {
       Board board(Variant::STANDARD, record.fen);
-      auto score = standard::StaticEval<double, false>(eval_params, board);
+      auto score = standard::StaticEval<double, false, false>(eval_params, board);
       loss += Loss(score, record.result, eval_params, 1.0 / d);
     }
     loss = loss / epd_records.size();
@@ -340,7 +340,7 @@ int main() {
     epoch++;
     for (const auto& record : train_records) {
       Board board(Variant::STANDARD, record.fen);
-      auto score = standard::StaticEval<Variable, false>(eval_params, board);
+      auto score = standard::StaticEval<Variable, false, false>(eval_params, board);
       {
         auto loss = Loss(score, record.result, eval_params);
         losses.push_back(loss);

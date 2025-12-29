@@ -68,6 +68,13 @@ public:
     return move_stack_.Seek(num_half_moves)->zobrist_key;
   }
 
+  // The pawn zobrist key num_half_moves ago (default: 0). Returns zobrist key at
+  // current position by default. Callers must check num_half_moves is <=
+  // HalfMoves().
+  U64 PawnZobristKey(const int num_half_moves = 0) const {
+    return move_stack_.Seek(num_half_moves)->pawn_zobrist_key;
+  }
+
   // Returns the board as an FEN (Forsyth-Edwards Notation) string.
   std::string ParseIntoFEN() const;
 
@@ -123,6 +130,9 @@ private:
     // Zobrist key of the board position after this move is played.
     U64 zobrist_key;
 
+    // Zobrist key of the pawn structure bitboard after this move is played.
+    U64 pawn_zobrist_key;
+
     // Number of half-moves since a pawn move or capture.
     int half_move_clock = 0;
   };
@@ -152,6 +162,8 @@ private:
   // Generates Zobrist key for the board. Call this only after the board array,
   // side to move, en-passant target (if any) have been set.
   U64 GenerateZobristKey();
+
+  U64 GeneratePawnZobristKey();
 
   // Places piece on the board. Two versions - one updates zobrist key and
   // another doesn't. It's an error to call these methods if the square given by
