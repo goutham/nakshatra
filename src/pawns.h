@@ -36,6 +36,17 @@ U64 IsolatedPawns(const Board& board) {
   return pawn_bitboard & ~neighbor_files_fill;
 }
 
+template <Side side>
+  requires(side == Side::WHITE || side == Side::BLACK)
+U64 DefendedPawns(const Board& board) {
+  const U64 pawn_bitboard = board.BitBoard(PieceOfSide(PAWN, side));
+  const U64 se_defenders = bitmanip::siderel::PushSouthEast<side>(pawn_bitboard) & pawn_bitboard;
+  const U64 sw_defenders = bitmanip::siderel::PushSouthWest<side>(pawn_bitboard) & pawn_bitboard;
+  const U64 se_nw = bitmanip::siderel::PushNorthWest<side>(se_defenders);
+  const U64 sw_ne = bitmanip::siderel::PushNorthEast<side>(sw_defenders);
+  return se_nw | sw_ne;
+}
+
 } // namespace pawns
 
 #endif

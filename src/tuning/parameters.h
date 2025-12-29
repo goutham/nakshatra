@@ -85,6 +85,8 @@ inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Add(fparams.passed_pawns_egame, params);
   Add(fparams.isolated_pawns_mgame, params);
   Add(fparams.isolated_pawns_egame, params);
+  Add(fparams.defended_pawns_mgame, params);
+  Add(fparams.defended_pawns_egame, params);
   Add(fparams.mobility_mgame, params);
   Add(fparams.mobility_egame, params);
   Add(fparams.tempo_w_mgame, params);

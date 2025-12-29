@@ -134,6 +134,20 @@ U64 PushNorthWest(U64 bitboard) {
 
 template <Side side>
   requires(side == Side::WHITE || side == Side::BLACK)
+U64 PushSouthEast(U64 bitboard) {
+  return side == Side::WHITE ? bitmanip::PushSouthEast(bitboard)
+                             : bitmanip::PushNorthWest(bitboard);
+}
+
+template <Side side>
+  requires(side == Side::WHITE || side == Side::BLACK)
+U64 PushSouthWest(U64 bitboard) {
+  return side == Side::WHITE ? bitmanip::PushSouthWest(bitboard)
+                             : bitmanip::PushNorthEast(bitboard);
+}
+
+template <Side side>
+  requires(side == Side::WHITE || side == Side::BLACK)
 U64 FrontFill(U64 bitboard) {
   if constexpr (side == Side::WHITE) {
     return bitmanip::FrontFill(bitboard);

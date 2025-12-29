@@ -13,4 +13,8 @@ inline StdEvalParams<int> BlessedParams() {
   return ExpTempo202502Epoch4Step2000Int();
 }
 
+inline StdEvalParams<double> BlessedParamsDbl() {
+  return ExpTempo202502Epoch4Step2000Dbl();
+}
+
 #endif

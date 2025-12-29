@@ -13,8 +13,8 @@
 #include <sstream>
 #include <string>
 
-const std::string kExperimentName = "Params";
-const std::string kDataFile = "";
+const std::string kExperimentName = "Exp20251229Iter1";
+const std::string kDataFile = "/home/goutham/workspace/github/goutham/nakshatra-tools/tuning/main.epd";
 constexpr double kMultiplier = 1.0 / 113.6;
 constexpr double kLearningRate = 10.0;
 constexpr int kBatchSize = 1024;
@@ -32,7 +32,8 @@ struct EPDRecord {
 
 template <typename FromType, typename ToType>
 ToType Cast(FromType from) {
-  if constexpr (std::is_same_v<FromType, double> && std::is_same_v<ToType, int>) {
+  if constexpr (std::is_same_v<FromType, double> &&
+                std::is_same_v<ToType, int>) {
     return static_cast<ToType>(std::round(from));
   }
   return ToType(from);
@@ -73,6 +74,8 @@ StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   Convert(fparams.passed_pawns_egame, params.passed_pawns_egame);
   Convert(fparams.isolated_pawns_mgame, params.isolated_pawns_mgame);
   Convert(fparams.isolated_pawns_egame, params.isolated_pawns_egame);
+  Convert(fparams.defended_pawns_mgame, params.defended_pawns_mgame);
+  Convert(fparams.defended_pawns_egame, params.defended_pawns_egame);
   Convert(fparams.mobility_mgame, params.mobility_mgame);
   Convert(fparams.mobility_egame, params.mobility_egame);
   Convert(fparams.tempo_w_mgame, params.tempo_w_mgame);
@@ -141,7 +144,8 @@ void WriteParams(std::ofstream& ofs, const std::string& name,
 }
 
 template <typename ValueType>
-void WriteParams(std::ofstream& ofs, const std::string& name, const ValueType& v) {
+void WriteParams(std::ofstream& ofs, const std::string& name,
+                 const ValueType& v) {
   ofs << "  ." << name << " = " << v << "," << std::endl;
 }
 
@@ -166,6 +170,8 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   WriteParams(ofs, "passed_pawns_egame", params.passed_pawns_egame);
   WriteParams(ofs, "isolated_pawns_mgame", params.isolated_pawns_mgame);
   WriteParams(ofs, "isolated_pawns_egame", params.isolated_pawns_egame);
+  WriteParams(ofs, "defended_pawns_mgame", params.defended_pawns_mgame);
+  WriteParams(ofs, "defended_pawns_egame", params.defended_pawns_egame);
   WriteParams(ofs, "mobility_mgame", params.mobility_mgame);
   WriteParams(ofs, "mobility_egame", params.mobility_egame);
   WriteParams(ofs, "tempo_w_mgame", params.tempo_w_mgame);
@@ -262,7 +268,8 @@ double AvgLoss(const std::vector<EPDRecord>& epd_records,
   double loss = 0.0;
   for (const auto& record : epd_records) {
     Board board(Variant::STANDARD, record.fen);
-    const double score = standard::StaticEval<ValueType, false, false>(params, board);
+    const double score =
+        standard::StaticEval<ValueType, false, false>(params, board);
     loss += double(Loss(score, record.result, params, multiplier));
   }
   return loss / epd_records.size();
@@ -302,7 +309,7 @@ int _main() {
 
 int main() {
   StdEvalParams<Variable> eval_params =
-      Convert<double, Variable>(Params20241117Epoch99Step63720());
+      Convert<double, Variable>(BlessedParamsDbl());
   //StdEvalParams<Variable> eval_params = ZeroParams<Variable>();
   Parameters params = AsParameters(eval_params);
 
@@ -340,7 +347,8 @@ int main() {
     epoch++;
     for (const auto& record : train_records) {
       Board board(Variant::STANDARD, record.fen);
-      auto score = standard::StaticEval<Variable, false, false>(eval_params, board);
+      auto score =
+          standard::StaticEval<Variable, false, false>(eval_params, board);
       {
         auto loss = Loss(score, record.result, eval_params);
         losses.push_back(loss);

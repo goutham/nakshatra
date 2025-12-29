@@ -120,6 +120,20 @@ void AddPawnStructureScores(const StdEvalParams<ValueType>& params,
       isolated_pawns ^= (1ULL << sq);
     }
   }
+
+  {
+    U64 defended_pawns = pawns::DefendedPawns<side>(board);
+    while (defended_pawns) {
+      const int sq = Lsb1(defended_pawns);
+      int index = sq;
+      if constexpr (side == Side::WHITE) {
+        index = index ^ 56;
+      }
+      mgame_score += params.defended_pawns_mgame[index];
+      egame_score += params.defended_pawns_egame[index];
+      defended_pawns ^= (1ULL << sq);
+    }
+  }
 }
 
 template <typename ValueType, bool enable_pawn_hashtable>
