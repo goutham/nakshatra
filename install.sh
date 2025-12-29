@@ -14,7 +14,7 @@ cd build
 cmake .. \
     -DCMAKE_CXX_COMPILER=g++ \
     -GNinja \
-    -DLOWMEM=ON \
+    -DLOWMEM=OFF \
     -DNUM_THREADS=1 \
     -DDEBUG=OFF \
     -DBUILD_ALL_EXECUTABLES=ON
@@ -24,5 +24,5 @@ echo "Running unit tests..."
 ./unit_tests
 
 # Change cmake settings to not build all executables by default.
-# echo "Updating cmake default settings..."
-# cmake .. -DBUILD_ALL_EXECUTABLES=OFF
+echo "Updating cmake default settings..."
+cmake .. -DBUILD_ALL_EXECUTABLES=OFF
