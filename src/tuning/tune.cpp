@@ -2,6 +2,9 @@
 #include "common.h"
 #include "params/params.h"
 #include "std_static_eval.h"
+#include "tuning/layer.h"
+#include "tuning/mlp.h"
+#include "tuning/neuron.h"
 #include "tuning/parameters.h"
 #include "tuning/variable.h"
 
@@ -13,8 +16,8 @@
 #include <sstream>
 #include <string>
 
-const std::string kExperimentName = "Params";
-const std::string kDataFile = "";
+const std::string kExperimentName = "PawnStructExp2";
+const std::string kDataFile = "../../../tuning_1/nakshatra/zurichess/quiet-labeled.epd";
 constexpr double kMultiplier = 1.0 / 113.6;
 constexpr double kLearningRate = 10.0;
 constexpr int kBatchSize = 1024;
@@ -61,6 +64,43 @@ void Convert(const FromType& from, ToType& to) {
 }
 
 template <typename FromType, typename ToType>
+void Convert(const std::vector<FromType>& from, std::vector<ToType>& to) {
+  to.resize(from.size());
+  for (size_t i = 0; i < from.size(); ++i) {
+    to[i] = Cast<FromType, ToType>(from[i]);
+  }
+}
+
+void ConvertMLP(const std::optional<MLP<double>>& from, std::optional<MLP<Variable>>& to) {
+  if (!from) {
+    to = std::nullopt;
+    return;
+  }
+  to.emplace(from->nin_, from->nouts_, from->Parameters());
+}
+
+void ConvertMLP(const std::optional<MLP<Variable>>& from, std::optional<MLP<double>>& to) {
+  if (!from) {
+    to = std::nullopt;
+    return;
+  }
+  std::vector<double> weights;
+  Convert(from->Parameters(), weights);
+  to.emplace(from->nin_, from->nouts_, weights);
+}
+
+template <typename T>
+void ConvertMLP(const std::optional<MLP<T>>& from, std::optional<MLP<T>>& to) {
+  if (!from) {
+    to = std::nullopt;
+    return;
+  }
+  std::vector<double> weights;
+  Convert(from->Parameters(), weights);
+  to.emplace(from->nin_, from->nouts_, weights);
+}
+
+template <typename FromType, typename ToType>
 StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   StdEvalParams<ToType> params;
   Convert(fparams.pv_mgame, params.pv_mgame);
@@ -79,6 +119,11 @@ StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   Convert(fparams.tempo_w_egame, params.tempo_w_egame);
   Convert(fparams.tempo_b_mgame, params.tempo_b_mgame);
   Convert(fparams.tempo_b_egame, params.tempo_b_egame);
+  ConvertMLP(fparams.pawn_struct_mlp, params.pawn_struct_mlp);
+  Convert(fparams.pawn_struct_w_mgame, params.pawn_struct_w_mgame);
+  Convert(fparams.pawn_struct_w_egame, params.pawn_struct_w_egame);
+  Convert(fparams.pawn_struct_b_mgame, params.pawn_struct_b_mgame);
+  Convert(fparams.pawn_struct_b_egame, params.pawn_struct_b_egame);
   return params;
 }
 
@@ -146,6 +191,25 @@ void WriteParams(std::ofstream& ofs, const std::string& name, const ValueType& v
 }
 
 template <typename ValueType>
+void WriteParams(std::ofstream& ofs, const std::string& name,
+                 const std::optional<MLP<ValueType>>& mlp) {
+  if (mlp.has_value()) {
+    ofs << "  ." << name << " = MLP<double>(" << mlp->nin_ << ", {";
+    for (size_t i = 0; i < mlp->nouts_.size(); ++i) {
+      ofs << mlp->nouts_[i] << ", ";
+    }
+    ofs << "}, {";
+    auto params = mlp->Parameters();
+    for (size_t i = 0; i < params.size(); ++i) {
+      ofs << params[i] << ", ";
+    }
+    ofs << "})," << std::endl;
+  } else {
+    ofs << "  ." << name << " = std::nullopt," << std::endl;
+  }
+}
+
+template <typename ValueType>
 void WriteFunction(const StdEvalParams<ValueType>& params,
                    const std::string exp_name, std::ofstream& ofs) {
   const std::string param_type = GetParamType<ValueType>();
@@ -153,7 +217,7 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   const std::string fn_name = exp_name + fn_suffix;
   ofs << "inline StdEvalParams<" << param_type << ">" << fn_name << "() {"
       << std::endl;
-  ofs << "static constexpr StdEvalParams<" << param_type << "> params{"
+  ofs << "static const StdEvalParams<" << param_type << "> params{"
       << std::endl;
 
   WriteParams(ofs, "pv_mgame", params.pv_mgame);
@@ -172,6 +236,11 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   WriteParams(ofs, "tempo_w_egame", params.tempo_w_egame);
   WriteParams(ofs, "tempo_b_mgame", params.tempo_b_mgame);
   WriteParams(ofs, "tempo_b_egame", params.tempo_b_egame);
+  WriteParams(ofs, "pawn_struct_mlp", params.pawn_struct_mlp);
+  WriteParams(ofs, "pawn_struct_w_mgame", params.pawn_struct_w_mgame);
+  WriteParams(ofs, "pawn_struct_w_egame", params.pawn_struct_w_egame);
+  WriteParams(ofs, "pawn_struct_b_mgame", params.pawn_struct_b_mgame);
+  WriteParams(ofs, "pawn_struct_b_egame", params.pawn_struct_b_egame);
 
   ofs << "};" << std::endl;
   ofs << "return params;" << std::endl;
@@ -255,6 +324,23 @@ Variable Loss(Variable score, double result,
   return (Variable(result) - score.Sigmoid(multiplier)).Power(2.0);
 }
 
+Variable PawnStructLoss(Variable val, double result) {
+  return (Variable(result) - val.Sigmoid()).Power(2.0);
+}
+
+double AvgPawnStructLoss(const std::vector<EPDRecord>& epd_records, MLP<Variable>& mlp) {
+  double full_loss = 0.0;
+  for (const auto& record : epd_records) {
+    Board board(Variant::STANDARD, record.fen);
+    std::vector<U64> bbs = {board.BitBoard(PAWN), board.BitBoard(-PAWN)};
+    double val = double(mlp(bbs)[0]);
+    auto loss = (record.result - (1.0 / (1.0 + exp(-val))));
+    loss *= loss;
+    full_loss += loss;
+  }
+  return full_loss / epd_records.size();
+}
+
 template <typename ValueType>
 double AvgLoss(const std::vector<EPDRecord>& epd_records,
                const StdEvalParams<ValueType>& params,
@@ -262,7 +348,7 @@ double AvgLoss(const std::vector<EPDRecord>& epd_records,
   double loss = 0.0;
   for (const auto& record : epd_records) {
     Board board(Variant::STANDARD, record.fen);
-    const double score = standard::StaticEval<ValueType, false>(params, board);
+    const double score = standard::StaticEval<ValueType, false, false>(params, board);
     loss += double(Loss(score, record.result, params, multiplier));
   }
   return loss / epd_records.size();
@@ -273,9 +359,8 @@ void LogMetric(int epoch, int step, const std::string& metric, double value) {
             << ", value:" << value << std::endl;
 }
 
-/*
 // best multiplier = 1 / 113.6
-int _main() {
+void main_find_best_multiplier() {
   StdEvalParams<double> eval_params = Convert<int, double>(OrigParams());
   auto epd_records = Parse();
   double best_loss = 100000.;
@@ -284,7 +369,7 @@ int _main() {
     double loss = 0.0;
     for (auto& record : epd_records) {
       Board board(Variant::STANDARD, record.fen);
-      auto score = standard::StaticEval<double, false>(eval_params, board);
+      auto score = standard::StaticEval<double, false, false>(eval_params, board);
       loss += Loss(score, record.result, eval_params, 1.0 / d);
     }
     loss = loss / epd_records.size();
@@ -296,13 +381,154 @@ int _main() {
       std::cout << "loss:" << loss << ", d:" << d << std::endl;
     }
   }
- return 0;
 }
-*/
 
-int main() {
-  StdEvalParams<Variable> eval_params =
-      Convert<double, Variable>(Params20241117Epoch99Step63720());
+void main_piece_occupancy_stats() {
+  const Piece piece = PAWN;
+  auto epd_records = Parse();
+  std::array<int, 64> white_piece_stats{};
+  std::array<int, 64> black_piece_stats{};
+  for (auto& record : epd_records) {
+    Board board(Variant::STANDARD, record.fen);
+    auto white_piece = board.BitBoard(piece);
+    while (white_piece) {
+      int index = Lsb1(white_piece);
+      white_piece_stats[index]++;
+      white_piece ^= (1ULL << index);
+    }
+    auto black_piece = board.BitBoard(-piece);
+    while (black_piece) {
+      int index = Lsb1(black_piece);
+      black_piece_stats[index]++;
+      black_piece ^= (1ULL << index);
+    }
+  }
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; ++j) {
+      std::cout << white_piece_stats[i * 8 + j] << ", ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; ++j) {
+      std::cout << black_piece_stats[i * 8 + j] << ", ";
+    }
+    std::cout << std::endl;
+  }
+}
+
+void main_pawn_struct_tuning_loop() {
+  static constexpr int batch_size = 1024;
+  auto epd_records = Parse();
+  std::cout << "Records: " << epd_records.size() << std::endl;
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(epd_records.begin(), epd_records.end(), g);
+
+  std::vector<EPDRecord> train_records, test_records;
+  int num_train_records = int(epd_records.size() * 0.9);
+  for (int i = 0; i < num_train_records; ++i) {
+    train_records.push_back(epd_records[i]);
+  }
+  for (size_t i = num_train_records; i < epd_records.size(); ++i) {
+    test_records.push_back(epd_records[i]);
+  }
+  epd_records.clear();
+  std::cout << "Train records size: " << train_records.size() << std::endl;
+  std::cout << "Test records size: " << test_records.size() << std::endl;
+
+  MLP<Variable> mlp(128, {12, 6, 3, 1});
+  std::cout << "Network size (params): " << mlp.Parameters().size()
+            << std::endl;
+  auto parameters = mlp.Parameters();
+  Parameters params;
+  for (size_t i = 0; i < mlp.Parameters().size(); ++i) {
+    params.Add(parameters.at(i));
+  }
+
+  // LogMetric(0, 0, "train_loss", AvgPawnStructLoss(train_records, mlp));
+  // LogMetric(0, 0, "test_loss", AvgPawnStructLoss(test_records, mlp));
+
+  std::vector<Variable> losses;
+  int step = 0;
+  int log_step = 0;
+  for (int epoch = 0; epoch < 1000; ++epoch) {
+    for (const auto& record : train_records) {
+      Board board(Variant::STANDARD, record.fen);
+      std::vector<U64> bbs = {board.BitBoard(PAWN), board.BitBoard(-PAWN)};
+      auto val = mlp(bbs)[0];
+      auto loss = PawnStructLoss(val, record.result);
+      losses.push_back(loss);
+      if (losses.size() >= batch_size) {
+        step++;
+        log_step++;
+        auto avg_loss = losses.at(0);
+        for (size_t i = 1; i < losses.size(); ++i) {
+          avg_loss += losses.at(i);
+        }
+        avg_loss = avg_loss / losses.size();
+        LogMetric(epoch, step, "batch_loss", double(avg_loss));
+        params.ZeroGrad();
+        avg_loss.Backward();
+        params.ApplyMomentum();
+        LogMetric(epoch, step, "grad_norm", params.GradNorm());
+        params.ApplyGrad(1.0);
+        LogMetric(epoch, step, "weights", params.WeightsMag());
+        losses.clear();
+      }
+      if (log_step >= 250) {
+        log_step = 0;
+        LogMetric(epoch, step, "train_loss",
+                  AvgPawnStructLoss(train_records, mlp));
+        LogMetric(epoch, step, "test_loss",
+                  AvgPawnStructLoss(test_records, mlp));
+        std::cout << "MLP Parameters: ";
+        for (const auto& param : mlp.Parameters()) {
+          std::cout << param << ", ";
+        }
+        std::cout << std::endl;
+      }
+    }
+  }
+}
+
+// best multiplier 1 / 136.2 -> loss 0.177305
+void main_pawn_struct_eval_scoring_avg_loss() {
+  auto epd_records = Parse();
+  std::cout << "Records: " << epd_records.size() << std::endl;
+  const StdEvalParams<double> eval_params = Params20241117Epoch99Step63720();
+
+  double best_loss = 100000.;
+  double best_d = -1.0;
+
+  for (double d = 136.2; d <= 140.0; d += 0.01) {
+    double loss = 0.0;
+    for (auto& record : epd_records) {
+      Board board(Variant::STANDARD, record.fen);
+      auto full_eval_score =
+          standard::StaticEval<double, false, false>(eval_params, board);
+      auto partial_eval_score =
+          standard::StaticEval<double, false, false, false>(eval_params, board);
+      auto pawn_struct_score = full_eval_score - partial_eval_score;
+      double val = 1.0 / (1.0 + exp(-pawn_struct_score * (1 / d)));
+      val = record.result - val;
+      loss += (val * val);
+    }
+    loss /= epd_records.size();
+    if (loss < best_loss) {
+      best_loss = loss;
+      best_d = d;
+      std::cout << "best_loss: " << best_loss << ", " << "best_d: " << best_d
+                << std::endl;
+    } else {
+      std::cout << "loss: " << loss << std::endl;
+    }
+  }
+}
+
+void main_tuning_loop() {
+  StdEvalParams<Variable> eval_params = Convert<double, Variable>(ExpTempo202502Epoch4Step2000Dbl());
   //StdEvalParams<Variable> eval_params = ZeroParams<Variable>();
   Parameters params = AsParameters(eval_params);
 
@@ -340,7 +566,7 @@ int main() {
     epoch++;
     for (const auto& record : train_records) {
       Board board(Variant::STANDARD, record.fen);
-      auto score = standard::StaticEval<Variable, false>(eval_params, board);
+      auto score = standard::StaticEval<Variable, false, false>(eval_params, board);
       {
         auto loss = Loss(score, record.result, eval_params);
         losses.push_back(loss);
@@ -392,6 +618,13 @@ int main() {
               << AvgLoss(test_records, int_params) << std::endl;
     WriteFile(double_params, epoch, step, "Final");
   }
+}
 
+int main() {
+  main_tuning_loop();
+  // main_find_best_multiplier();
+  // main_piece_occupancy_stats();
+  // main_pawn_struct_tuning_loop();
+  //main_pawn_struct_eval_scoring_avg_loss();
   return 0;
 }

@@ -242,45 +242,7 @@ vector<string> Executor::Execute(const string& command_str) {
     search_params_.thinking_output = true;
   } else if (cmd == "quit") {
     quit_ = true;
-  } else if (cmd == "level") {
-    // XBoard level command: "level MOVES BASE INC"
-    // MOVES = moves per time control (0 = all moves)
-    // BASE = base time in minutes:seconds or minutes
-    // INC = increment per move in seconds
-    if (cmd_parts.size() >= 4) {
-      try {
-        movestogo_ = StringToInt(cmd_parts.at(1));
-        
-        // Parse base time (can be "minutes" or "minutes:seconds")
-        const std::string& base_str = cmd_parts.at(2);
-        size_t colon_pos = base_str.find(':');
-        double base_minutes = 0;
-        if (colon_pos != std::string::npos) {
-          // Format: "minutes:seconds"
-          int minutes = StringToInt(base_str.substr(0, colon_pos));
-          int seconds = StringToInt(base_str.substr(colon_pos + 1));
-          base_minutes = minutes + seconds / 60.0;
-        } else {
-          // Format: "minutes"
-          base_minutes = StringToInt(base_str);
-        }
-        
-        // Convert to centiseconds and set both sides' time
-        double base_centis = base_minutes * 60 * 100;
-        time_centis_ = base_centis;
-        otime_centis_ = base_centis;
-        
-        // Parse increment in seconds, convert to centiseconds
-        double inc_seconds = std::stod(cmd_parts.at(3));
-        inc_centis_ = static_cast<int>(inc_seconds * 100);
-        
-        std::cout << "# Level set: " << movestogo_ << " moves, " 
-                  << base_minutes << " minutes, " << inc_seconds << " sec increment" << std::endl;
-      } catch (const std::exception& e) {
-        std::cout << "# Error parsing level command" << std::endl;
-      }
-    }
-  } else if (cmd == "Error" || cmd == "feature" ||
+  } else if (cmd == "Error" || cmd == "feature" || cmd == "level" ||
              cmd == "xboard" || cmd == "accepted" || cmd == "rejected" ||
              cmd == "?" || cmd == "protover" || cmd == "sigterm" ||
              cmd == "name" || cmd == "rating" || cmd == "computer" ||
@@ -306,32 +268,35 @@ long Executor::AllocateTime() const {
   if (think_time_centis_ > 0) {
     return think_time_centis_;
   }
-  
-  // In XBoard protocol: time = engine's time, otim = opponent's time
-  double our_time_centis = time_centis_;
-  double our_inc_centis = inc_centis_;
-  
-  long calculated_time_centis = 0;
-  if (our_time_centis > 0) {
-    if (movestogo_ > 0) {
-      // If moves to go is specified, divide remaining time by moves plus buffer
-      calculated_time_centis = static_cast<long>(our_time_centis / (movestogo_ + 2) + our_inc_centis);
-    } else {
-      // Default: use 1/30 of remaining time plus increment
-      calculated_time_centis = static_cast<long>(our_time_centis / 30 + our_inc_centis);
-    }
-    
-    // Minimum 10 centis (0.1s), maximum 1/3 of remaining time for safety
-    calculated_time_centis = std::max(10l, std::min(calculated_time_centis, static_cast<long>(our_time_centis / 3)));
-  } else {
-    // Fallback if no valid time information
-    calculated_time_centis = 100l; // 1 second default
+  if (time_centis_ < 500) {
+    return 1l;
   }
-  
-  std::cout << "# Time allocation: " << calculated_time_centis << " centis" 
-            << " (time=" << our_time_centis << ", inc=" << our_inc_centis 
-            << ", movestogo=" << movestogo_ << ")" << std::endl;
-  return calculated_time_centis;
+  double a, b, c, d, e;
+  if (IsStandard(variant_)) {
+    a = -1.50140990e-08;
+    b = 7.61654331e-06;
+    c = 1.86255488e-04;
+    d = -5.43305966e-01;
+    e = 9.66625927e+01;
+  } else if (IsAntichessLike(variant_)) {
+    a = 1.04978830e-06;
+    b = -3.17302622e-04;
+    c = 3.41067191e-02;
+    d = -1.57304241e+00;
+    e = 4.83298816e+01;
+  } else {
+    assert(false); // unreachable
+  }
+  const int movenum = main_context_->board->HalfMoveClock();
+  const double est_self_moves_remaining =
+      (std::max(a * pow(movenum, 4) + b * pow(movenum, 3) +
+                    c * pow(movenum, 2) + d * movenum + e,
+                20.0)) /
+      2;
+  const long alloc_centis =
+      static_cast<long>(time_centis_ / est_self_moves_remaining);
+  std::cout << "# Allocating time: " << alloc_centis << " centis" << std::endl;
+  return alloc_centis;
 }
 
 void Executor::OutputFEN() const {

@@ -5,7 +5,7 @@
 #include <array>
 
 inline StdEvalParams<int> OrigParams() {
-  static constexpr StdEvalParams<int> int_params{
+  static const StdEvalParams<int> int_params{
       .pv_mgame = {0, 20000, 1182, 546, 422, 405, 96},
       .pv_egame = {0, 20000, 998, 553, 316, 304, 130},
       .pst_mgame =
@@ -138,7 +138,7 @@ Rank Name                          Elo     +/-   Games    Wins  Losses   Draws  
    3 pretuned                      -42      15    1665     541     742     382    732.0   44.0%   22.9%   42.9%   45.0%
 */
 inline StdEvalParams<double> OrigParamsStep41250() {
-  static constexpr StdEvalParams<double> params{
+  static const StdEvalParams<double> params{
       .pv_mgame =
           {
               0,
@@ -338,7 +338,7 @@ constexpr double learning_rate = 1000.0;
 constexpr int batch_size = 1024;
 */
 inline StdEvalParams<int> OrigParamsStep2000() {
-  static constexpr StdEvalParams<int> params{
+  static const StdEvalParams<int> params{
       .pv_mgame =
           {
               0,

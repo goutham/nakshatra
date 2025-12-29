@@ -23,7 +23,7 @@ Score of MobilityParamsEpoch13Step8500 vs OrigParams: 641 - 353 - 255  [0.615] 1
 Elo difference: 81.6 +/- 17.5, LOS: 100.0 %, DrawRatio: 20.4 %
 */
 inline StdEvalParams<int> MobilityParamsEpoch13Step8500() {
-  static constexpr StdEvalParams<int> params{
+  static const StdEvalParams<int> params{
       .pv_mgame =
           {
               0,

@@ -5,7 +5,7 @@
 #include <array>
 
 inline StdEvalParams<double>ExpTempo202502Epoch4Step2000Dbl() {
-static constexpr StdEvalParams<double> params{
+static const StdEvalParams<double> params{
   .pv_mgame = {0, 20000, 1174.44, 544.097, 426.878, 420.838, 110.792, },
   .pv_egame = {0, 20000, 989.533, 539.687, 296.919, 316.388, 113.182, },
   .pst_mgame = {std::array<double, 64>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
@@ -55,7 +55,7 @@ return params;
 }
 
 inline StdEvalParams<int>ExpTempo202502Epoch4Step2000Int() {
-static constexpr StdEvalParams<int> params{
+static const StdEvalParams<int> params{
   .pv_mgame = {0, 20000, 1174, 544, 427, 421, 111, },
   .pv_egame = {0, 20000, 990, 540, 297, 316, 113, },
   .pst_mgame = {std::array<int, 64>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },

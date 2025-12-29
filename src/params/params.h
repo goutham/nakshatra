@@ -6,6 +6,7 @@
 #include "params/OrigParams.h"
 #include "params/Params20241117Epoch99Step63720.h"
 #include "params/ExpTempo202502Epoch4Step2000.h"
+#include "params/PawnStructEpoch100Step63720Final.h"
 #include "params/ZeroParams.h"
 #include "std_eval_params.h"
 

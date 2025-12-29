@@ -2,12 +2,26 @@
 #define STD_EVAL_PARAMS_H
 
 #include <array>
+#include <optional>
+
+#include "tuning/mlp.h"
+#include "tuning/variable.h"
 
 template <typename ValueType>
 using PieceValues = std::array<ValueType, 7>;
 
 template <typename ValueType>
 using PST = std::array<std::array<ValueType, 64>, 7>;
+
+template <typename ValueType>
+struct MLPValueType {
+  using T = ValueType;
+};
+
+template <>
+struct MLPValueType<int> {
+  using T = double;
+};
 
 template <typename ValueType>
 struct StdEvalParams {
@@ -27,6 +41,11 @@ struct StdEvalParams {
   ValueType tempo_w_egame = 0;
   ValueType tempo_b_mgame = 0;
   ValueType tempo_b_egame = 0;
+  std::optional<MLP<typename MLPValueType<ValueType>::T>> pawn_struct_mlp = MLP<typename MLPValueType<ValueType>::T>(128, {32, 8, 1}, {});
+  ValueType pawn_struct_w_mgame = 0;
+  ValueType pawn_struct_w_egame = 0;
+  ValueType pawn_struct_b_mgame = 0;
+  ValueType pawn_struct_b_egame = 0;
 };
 
 #endif

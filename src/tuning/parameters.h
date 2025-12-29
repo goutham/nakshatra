@@ -73,6 +73,14 @@ void Add(const Variable& v, Parameters& params) {
   params.Add(v);
 }
 
+void AddMLP(const std::optional<MLP<Variable>>& mlp, Parameters& params) {
+  if (mlp.has_value()) {
+    for (const auto& param : mlp->Parameters()) {
+      params.Add(param);
+    }
+  }
+}
+
 inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Parameters params;
   Add(fparams.pv_mgame, params);
@@ -91,6 +99,11 @@ inline Parameters AsParameters(StdEvalParams<Variable>& fparams) {
   Add(fparams.tempo_w_egame, params);
   Add(fparams.tempo_b_mgame, params);
   Add(fparams.tempo_b_egame, params);
+  AddMLP(fparams.pawn_struct_mlp, params);
+  Add(fparams.pawn_struct_w_mgame, params);
+  Add(fparams.pawn_struct_w_egame, params);
+  Add(fparams.pawn_struct_b_mgame, params);
+  Add(fparams.pawn_struct_b_egame, params);
   return params;
 }
 #endif

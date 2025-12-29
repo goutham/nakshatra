@@ -14,7 +14,7 @@ Score of Params20241117Epoch99Step63720 vs MobilityParamsEpoch13Step8500: 2438 -
 Elo difference: -5.6 +/- 7.1, LOS: 6.1 %, DrawRatio: 26.2 %
 */
 inline StdEvalParams<double> Params20241117Epoch99Step63720() {
-  static constexpr StdEvalParams<double> double_params{
+  static const StdEvalParams<double> double_params{
       .pv_mgame =
           {
               0,
@@ -458,7 +458,7 @@ Score of Params20241117Epoch99Step63720Integerized vs MobilityParamsEpoch13Step8
 Elo difference: 2.6 +/- 14.3, LOS: 64.0 %, DrawRatio: 24.0 %
 */
 inline StdEvalParams<int> Params20241117Epoch99Step63720Integerized() {
-  static constexpr StdEvalParams<int> int_params{
+  static const StdEvalParams<int> int_params{
       .pv_mgame =
           {
               0,
