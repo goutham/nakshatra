@@ -75,20 +75,6 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
     }
   }
 
-  MoveArray move_array = GenerateMoves<variant>(board_);
-
-  // We have essentially reached the end of the game, so evaluate.
-  if (move_array.size() == 0) {
-    return Evaluate<variant>(board_, egtb_, alpha, beta);
-  }
-
-  PrefMoves pref_moves;
-  pref_moves.tt_move = tt_move;
-  pref_moves.killer1 = killers_[ply][0];
-  pref_moves.killer2 = killers_[ply][1];
-  const MoveInfoArray move_info_array =
-      OrderMoves<variant>(board_, move_array, &pref_moves);
-
   // Decide whether to use null move pruning. Disabled for ANTICHESS where
   // zugzwangs are common.
   allow_null_move = !IsAntichessLike(variant) && allow_null_move &&
@@ -104,6 +90,21 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
       return beta;
     }
   }
+
+  MoveArray move_array = GenerateMoves<variant>(board_);
+
+  // We have essentially reached the end of the game, so evaluate.
+  if (move_array.size() == 0) {
+    return Evaluate<variant>(board_, egtb_, alpha, beta);
+  }
+
+  PrefMoves pref_moves;
+  pref_moves.tt_move = tt_move;
+  pref_moves.killer1 = killers_[ply][0];
+  pref_moves.killer2 = killers_[ply][1];
+  const MoveInfoArray move_info_array =
+      OrderMoves<variant>(board_, move_array, &pref_moves);
+
 
   Move best_move;
   NodeType node_type = NodeType::FAIL_LOW_NODE;
