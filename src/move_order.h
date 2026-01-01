@@ -12,7 +12,7 @@
 
 enum class MoveType {
   TT,
-  PROMOTION,
+  QUEEN_PROMOTION,
   SEE_GOOD_CAPTURE,
   KILLER,
   QUIET,

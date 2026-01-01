@@ -78,6 +78,14 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
 
   const bool in_check = attacks::InCheck(board_, board_.SideToMove());
   if constexpr (!IsAntichessLike(variant)) {
+    // Are we likely to be too good already to bother searching this position?
+    if (!in_check && (max_depth == 1 || max_depth == 2)) {
+      const int eval_score = StaticEval(board_);
+      if (eval_score - max_depth * 75 >= beta) {
+        return eval_score;
+      }
+    }
+
     // Decide whether to use null move pruning. Disabled for ANTICHESS where
     // zugzwangs are common.
     allow_null_move = allow_null_move && max_depth >= 2 && beta < INF &&
@@ -126,11 +134,17 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
 
     int value = -INF;
 
-//    if constexpr (!IsAntichessLike(variant)) {
-//      if (!is_check && (max_depth == 1 || is_max_depth == 2) && !move.is_promotion() && move_info.type == MoveType::QUIET )) {
-//
-//      }
-//    }
+    if constexpr (!IsAntichessLike(variant)) {
+      if (!in_check && (max_depth == 1 || max_depth == 2) &&
+          !move.is_promotion() && move_info.type == MoveType::QUIET &&
+          !attacks::InCheck(board_, board_.SideToMove())) {
+        const int eval_score = StaticEval(board_);
+        if (eval_score + max_depth * 120 <= alpha) {
+          board_.UnmakeLastMove();
+          continue;
+        }
+      }
+    }
 
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;
