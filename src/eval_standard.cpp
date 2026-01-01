@@ -6,7 +6,6 @@
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
-#include "params/params.h"
 #include "pawns.h"
 #include "pst.h"
 #include "std_eval_params.h"
@@ -18,11 +17,6 @@
 namespace {
 
 constexpr int FUTILITY_MARGIN = 50;
-
-int StaticEval(Board& board) {
-  static const StdEvalParams<int> params = BlessedParams();
-  return standard::StaticEval(params, board);
-}
 
 } // namespace
 

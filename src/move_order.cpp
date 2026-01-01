@@ -18,6 +18,8 @@ MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
     const Move move = move_array.get(i);
     if (pref_moves && pref_moves->tt_move == move) {
       move_info_array.moves[i] = {move, MoveType::TT, 0};
+    } else if (move.is_promotion()) {
+      move_info_array.moves[i] = {move, MoveType::PROMOTION, 0};
     } else if (board.PieceAt(move.to_index()) != NULLPIECE) {
       const int see_val = SEE(move, board);
       const auto type = (see_val >= 0) ? MoveType::SEE_GOOD_CAPTURE
