@@ -77,12 +77,22 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   }
 
   const bool in_check = attacks::InCheck(board_, board_.SideToMove());
+  int static_eval = INF;
+
   if constexpr (!IsAntichessLike(variant)) {
-    // Are we likely to be too good already to bother searching this position?
-    if (!in_check && (max_depth == 1 || max_depth == 2)) {
-      const int eval_score = StaticEval(board_);
-      if (eval_score - max_depth * 75 >= beta) {
-        return eval_score;
+    if (!in_check) {
+      static_eval = StaticEval(board_);
+
+      // Reverse Futility Pruning
+      if (max_depth <= 3) {
+        if (static_eval - max_depth * 100 >= beta) {
+          return static_eval;
+        }
+      }
+
+      // Razoring
+      if (max_depth <= 1 && static_eval + 450 <= alpha) {
+        return Evaluate<variant>(board_, egtb_, alpha, beta);
       }
     }
 
@@ -92,19 +102,15 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
                       PopCount(board_.BitBoard()) > 10 && !in_check;
     if (allow_null_move) {
       board_.MakeNullMove();
-      int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1,
+      int R = 2;
+      if (max_depth > 6) {
+        R = 3;
+      }
+      int value = -PVS(max_depth - R, -beta, -beta + 1, ply + 1,
                        !allow_null_move, search_stats);
       board_.UnmakeNullMove();
       if (value >= beta) {
         return beta;
-      }
-    }
-
-    // Is it likely futile to search this position as we may not improve alpha?
-    if (!in_check && max_depth == 1) {
-      const int eval_score = StaticEval(board_);
-      if (eval_score + 450 <= alpha) {
-        return Evaluate<variant>(board_, egtb_, alpha, beta);
       }
     }
   }
@@ -135,14 +141,15 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
     int value = -INF;
 
     if constexpr (!IsAntichessLike(variant)) {
-      if (!in_check && (max_depth == 1 || max_depth == 2) &&
-          !move.is_promotion() && move_info.type == MoveType::QUIET &&
+      // Futility Pruning
+      // Prune quiet moves at low depth if they are unlikely to improve alpha.
+      // We check if the move gives check (which is dangerous to prune) after MakeMove.
+      if (!in_check && max_depth <= 3 && !move.is_promotion() &&
+          move_info.type == MoveType::QUIET &&
+          static_eval + max_depth * 200 <= alpha &&
           !attacks::InCheck(board_, board_.SideToMove())) {
-        const int eval_score = -StaticEval(board_);
-        if (eval_score + max_depth * 120 <= alpha) {
-          board_.UnmakeLastMove();
-          continue;
-        }
+        board_.UnmakeLastMove();
+        continue;
       }
     }
 
