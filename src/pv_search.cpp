@@ -138,7 +138,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
       if (!in_check && (max_depth == 1 || max_depth == 2) &&
           !move.is_promotion() && move_info.type == MoveType::QUIET &&
           !attacks::InCheck(board_, board_.SideToMove())) {
-        const int eval_score = StaticEval(board_);
+        const int eval_score = -StaticEval(board_);
         if (eval_score + max_depth * 120 <= alpha) {
           board_.UnmakeLastMove();
           continue;
