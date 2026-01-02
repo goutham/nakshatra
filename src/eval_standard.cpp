@@ -6,7 +6,6 @@
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
-#include "params/params.h"
 #include "pawns.h"
 #include "pst.h"
 #include "std_eval_params.h"
@@ -17,10 +16,7 @@
 
 namespace {
 
-int StaticEval(Board& board) {
-  static const StdEvalParams<int> params = BlessedParams();
-  return standard::StaticEval(params, board);
-}
+constexpr int FUTILITY_MARGIN = 50;
 
 } // namespace
 
@@ -29,8 +25,8 @@ template <Variant variant>
 int Evaluate(Board& board, EGTB* egtb, int alpha, int beta) {
   assert(egtb == nullptr);
   bool in_check = attacks::InCheck(board, board.SideToMove());
+  int standing_pat = StaticEval(board);
   if (!in_check) {
-    int standing_pat = StaticEval(board);
     if (standing_pat >= beta) {
       return standing_pat;
     }
@@ -49,6 +45,12 @@ int Evaluate(Board& board, EGTB* egtb, int alpha, int beta) {
     const Move move = move_info.move;
     if (in_check || move_info.type == MoveType::SEE_GOOD_CAPTURE) {
       board.MakeMove(move);
+      if (!in_check && move_info.type == MoveType::SEE_GOOD_CAPTURE &&
+          standing_pat + move_info.score + FUTILITY_MARGIN < alpha &&
+          !attacks::InCheck(board, board.SideToMove())) {
+        board.UnmakeLastMove();
+        continue;
+      }
       int score = -Evaluate<Variant::STANDARD>(board, egtb, -beta, -alpha);
       board.UnmakeLastMove();
       if (score >= beta) {

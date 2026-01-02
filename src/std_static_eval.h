@@ -120,6 +120,72 @@ void AddPawnStructureScores(const StdEvalParams<ValueType>& params,
       isolated_pawns ^= (1ULL << sq);
     }
   }
+
+  {
+    U64 defended_pawns = pawns::DefendedPawns<side>(board);
+    while (defended_pawns) {
+      const int sq = Lsb1(defended_pawns);
+      int index = sq;
+      if constexpr (side == Side::WHITE) {
+        index = index ^ 56;
+      }
+      mgame_score += params.defended_pawns_mgame[index];
+      egame_score += params.defended_pawns_egame[index];
+      defended_pawns ^= (1ULL << sq);
+    }
+  }
+}
+
+template <typename ValueType, bool enable_pawn_hashtable>
+  requires(enable_pawn_hashtable == false)
+void AddWBPawnStructureScores(const StdEvalParams<ValueType>& params,
+                              const Board& board, ValueType& w_mgame_score,
+                              ValueType& w_egame_score,
+                              ValueType& b_mgame_score,
+                              ValueType& b_egame_score) {
+  AddPawnStructureScores<Side::WHITE>(params, board, w_mgame_score,
+                                      w_egame_score);
+  AddPawnStructureScores<Side::BLACK>(params, board, b_mgame_score,
+                                      b_egame_score);
+}
+
+template <typename ValueType, bool enable_pawn_hashtable>
+  requires(enable_pawn_hashtable == true)
+void AddWBPawnStructureScores(const StdEvalParams<ValueType>& params,
+                              const Board& board, ValueType& w_mgame_score,
+                              ValueType& w_egame_score,
+                              ValueType& b_mgame_score,
+                              ValueType& b_egame_score) {
+  static constexpr int PAWN_HASHTABLE_SIZE = 2048;
+  static thread_local std::array<PawnStructData, PAWN_HASHTABLE_SIZE>
+      pawn_hashtable;
+  const U64 pawn_zkey = board.PawnZobristKey();
+  const int map_index = static_cast<int>(pawn_zkey % PAWN_HASHTABLE_SIZE);
+  const auto& data = pawn_hashtable[map_index];
+  if (pawn_zkey == data.pawn_zobrist_key &&
+      board.BitBoard(PAWN) == data.white_bb &&
+      board.BitBoard(-PAWN) == data.black_bb) {
+    w_mgame_score += data.w_mgame_score;
+    w_egame_score += data.w_egame_score;
+    b_mgame_score += data.b_mgame_score;
+    b_egame_score += data.b_egame_score;
+    return;
+  }
+  ValueType wmscore = 0, wescore = 0, bmscore = 0, bescore = 0;
+  AddWBPawnStructureScores<ValueType, false>(params, board, wmscore, wescore, bmscore, bescore);
+  pawn_hashtable[map_index] = PawnStructData{
+      .pawn_zobrist_key = pawn_zkey,
+      .white_bb = board.BitBoard(PAWN),
+      .black_bb = board.BitBoard(-PAWN),
+      .w_mgame_score = wmscore,
+      .w_egame_score = wescore,
+      .b_mgame_score = bmscore,
+      .b_egame_score = bescore,
+  };
+  w_mgame_score += wmscore;
+  w_egame_score += wescore;
+  b_mgame_score += bmscore;
+  b_egame_score += bescore;
 }
 
 /*

@@ -8,6 +8,7 @@
 #include "move_order.h"
 #include "movegen.h"
 #include "stats.h"
+#include "std_static_eval.h"
 #include "timer.h"
 #include "transpos.h"
 
@@ -75,6 +76,39 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
     }
   }
 
+  const bool in_check = attacks::InCheck(board_, board_.SideToMove());
+  if constexpr (!IsAntichessLike(variant)) {
+    // Are we likely to be too good already to bother searching this position?
+    if (!in_check && (max_depth == 1 || max_depth == 2)) {
+      const int eval_score = StaticEval(board_);
+      if (eval_score - max_depth * 75 >= beta) {
+        return eval_score;
+      }
+    }
+
+    // Decide whether to use null move pruning. Disabled for ANTICHESS where
+    // zugzwangs are common.
+    allow_null_move = allow_null_move && max_depth >= 2 && beta < INF &&
+                      PopCount(board_.BitBoard()) > 10 && !in_check;
+    if (allow_null_move) {
+      board_.MakeNullMove();
+      int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1,
+                       !allow_null_move, search_stats);
+      board_.UnmakeNullMove();
+      if (value >= beta) {
+        return beta;
+      }
+    }
+
+    // Is it likely futile to search this position as we may not improve alpha?
+    if (!in_check && max_depth == 1) {
+      const int eval_score = StaticEval(board_);
+      if (eval_score + 450 <= alpha) {
+        return Evaluate<variant>(board_, egtb_, alpha, beta);
+      }
+    }
+  }
+
   MoveArray move_array = GenerateMoves<variant>(board_);
 
   // We have essentially reached the end of the game, so evaluate.
@@ -89,22 +123,6 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   const MoveInfoArray move_info_array =
       OrderMoves<variant>(board_, move_array, &pref_moves);
 
-  // Decide whether to use null move pruning. Disabled for ANTICHESS where
-  // zugzwangs are common.
-  allow_null_move = !IsAntichessLike(variant) && allow_null_move &&
-                    max_depth >= 2 && beta < INF &&
-                    PopCount(board_.BitBoard()) > 10 &&
-                    !attacks::InCheck(board_, board_.SideToMove());
-  if (allow_null_move) {
-    board_.MakeNullMove();
-    int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1, !allow_null_move,
-                     search_stats);
-    board_.UnmakeNullMove();
-    if (value >= beta) {
-      return beta;
-    }
-  }
-
   Move best_move;
   NodeType node_type = NodeType::FAIL_LOW_NODE;
   int b = beta;
@@ -115,6 +133,18 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
     board_.MakeMove(move);
 
     int value = -INF;
+
+    if constexpr (!IsAntichessLike(variant)) {
+      if (!in_check && (max_depth == 1 || max_depth == 2) &&
+          !move.is_promotion() && move_info.type == MoveType::QUIET &&
+          !attacks::InCheck(board_, board_.SideToMove())) {
+        const int eval_score = StaticEval(board_);
+        if (eval_score + max_depth * 120 <= alpha) {
+          board_.UnmakeLastMove();
+          continue;
+        }
+      }
+    }
 
     // Apply late move reduction if applicable.
     bool lmr_triggered = false;

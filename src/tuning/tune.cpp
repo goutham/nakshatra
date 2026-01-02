@@ -35,7 +35,8 @@ struct EPDRecord {
 
 template <typename FromType, typename ToType>
 ToType Cast(FromType from) {
-  if constexpr (std::is_same_v<FromType, double> && std::is_same_v<ToType, int>) {
+  if constexpr (std::is_same_v<FromType, double> &&
+                std::is_same_v<ToType, int>) {
     return static_cast<ToType>(std::round(from));
   }
   return ToType(from);
@@ -113,6 +114,8 @@ StdEvalParams<ToType> Convert(const StdEvalParams<FromType>& fparams) {
   Convert(fparams.passed_pawns_egame, params.passed_pawns_egame);
   Convert(fparams.isolated_pawns_mgame, params.isolated_pawns_mgame);
   Convert(fparams.isolated_pawns_egame, params.isolated_pawns_egame);
+  Convert(fparams.defended_pawns_mgame, params.defended_pawns_mgame);
+  Convert(fparams.defended_pawns_egame, params.defended_pawns_egame);
   Convert(fparams.mobility_mgame, params.mobility_mgame);
   Convert(fparams.mobility_egame, params.mobility_egame);
   Convert(fparams.tempo_w_mgame, params.tempo_w_mgame);
@@ -186,7 +189,8 @@ void WriteParams(std::ofstream& ofs, const std::string& name,
 }
 
 template <typename ValueType>
-void WriteParams(std::ofstream& ofs, const std::string& name, const ValueType& v) {
+void WriteParams(std::ofstream& ofs, const std::string& name,
+                 const ValueType& v) {
   ofs << "  ." << name << " = " << v << "," << std::endl;
 }
 
@@ -230,6 +234,8 @@ void WriteFunction(const StdEvalParams<ValueType>& params,
   WriteParams(ofs, "passed_pawns_egame", params.passed_pawns_egame);
   WriteParams(ofs, "isolated_pawns_mgame", params.isolated_pawns_mgame);
   WriteParams(ofs, "isolated_pawns_egame", params.isolated_pawns_egame);
+  WriteParams(ofs, "defended_pawns_mgame", params.defended_pawns_mgame);
+  WriteParams(ofs, "defended_pawns_egame", params.defended_pawns_egame);
   WriteParams(ofs, "mobility_mgame", params.mobility_mgame);
   WriteParams(ofs, "mobility_egame", params.mobility_egame);
   WriteParams(ofs, "tempo_w_mgame", params.tempo_w_mgame);
@@ -348,7 +354,12 @@ double AvgLoss(const std::vector<EPDRecord>& epd_records,
   double loss = 0.0;
   for (const auto& record : epd_records) {
     Board board(Variant::STANDARD, record.fen);
+<<<<<<< HEAD
     const double score = standard::StaticEval<ValueType, false, false>(params, board);
+=======
+    const double score =
+        standard::StaticEval<ValueType, false, false>(params, board);
+>>>>>>> master
     loss += double(Loss(score, record.result, params, multiplier));
   }
   return loss / epd_records.size();
@@ -383,6 +394,7 @@ void main_find_best_multiplier() {
   }
 }
 
+<<<<<<< HEAD
 void main_piece_occupancy_stats() {
   const Piece piece = PAWN;
   auto epd_records = Parse();
@@ -529,6 +541,11 @@ void main_pawn_struct_eval_scoring_avg_loss() {
 
 void main_tuning_loop() {
   StdEvalParams<Variable> eval_params = Convert<double, Variable>(ExpTempo202502Epoch4Step2000Dbl());
+=======
+int main() {
+  StdEvalParams<Variable> eval_params =
+      Convert<double, Variable>(BlessedParamsDbl());
+>>>>>>> master
   //StdEvalParams<Variable> eval_params = ZeroParams<Variable>();
   Parameters params = AsParameters(eval_params);
 
@@ -566,7 +583,12 @@ void main_tuning_loop() {
     epoch++;
     for (const auto& record : train_records) {
       Board board(Variant::STANDARD, record.fen);
+<<<<<<< HEAD
       auto score = standard::StaticEval<Variable, false, false>(eval_params, board);
+=======
+      auto score =
+          standard::StaticEval<Variable, false, false>(eval_params, board);
+>>>>>>> master
       {
         auto loss = Loss(score, record.result, eval_params);
         losses.push_back(loss);
