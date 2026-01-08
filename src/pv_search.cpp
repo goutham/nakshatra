@@ -37,6 +37,30 @@ bool Probe(int max_depth, int alpha, int beta, U64 zkey,
   }
   return false;
 }
+
+template <Variant variant>
+int LMRDepthReduction(int max_depth, int move_index, const MoveInfo& move_info) {
+  if constexpr (IsAntichessLike(variant)) {
+    return max_depth >= 2 && move_index >= 4 ? 2 : 0;
+  }
+  if constexpr (IsStandard(variant)) {
+    int lmr_depth_reduction = 0;
+    if (move_index >= 4 && max_depth >= 2 && move_info.type >= MoveType::KILLER) {
+      lmr_depth_reduction = 2;
+    }
+    if (move_index >= 2 && max_depth >= 2 && move_info.type >= MoveType::QUIET) {
+      lmr_depth_reduction = 2;
+    }
+    if (move_index >= 5 && max_depth >= 3 && move_info.type >= MoveType::QUIET) {
+      lmr_depth_reduction = 3;
+    }
+    if (move_index >= 1 && max_depth >= 3 && move_info.type >= MoveType::SEE_BAD_CAPTURE) {
+      lmr_depth_reduction = 3;
+    }
+    return lmr_depth_reduction;
+  }
+  throw std::logic_error("unsupported variant");
+}
 } // namespace
 
 template <Variant variant>
@@ -146,20 +170,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
       }
     }
 
-    int lmr_depth_reduction = 0;
-    if (index >= 4 && max_depth >= 2 && move_info.type >= MoveType::KILLER) {
-      lmr_depth_reduction = 2;
-    }
-    if (index >= 2 && max_depth >= 2 && move_info.type >= MoveType::QUIET) {
-      lmr_depth_reduction = 2;
-    }
-    if (index >= 5 && max_depth >= 3 && move_info.type >= MoveType::QUIET) {
-      lmr_depth_reduction = 3;
-    }
-    if (index >= 1 && max_depth >= 3 && move_info.type >= MoveType::SEE_BAD_CAPTURE) {
-      lmr_depth_reduction = 3;
-    }
-
+    int lmr_depth_reduction = LMRDepthReduction<variant>(max_depth, index, move_info);
 
     // Apply late move reduction if applicable.
     if (lmr_depth_reduction > 0) {
