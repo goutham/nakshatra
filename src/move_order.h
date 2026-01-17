@@ -48,7 +48,8 @@ struct PrefMoves {
 
 template <Variant variant>
 MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
-                         const PrefMoves* pref_moves);
+                         const PrefMoves* pref_moves,
+                         const int (*history)[64] = nullptr);
 
 template <Variant variant>
 MoveInfoArray OrderMovesByEvalScore(Board& board, EGTB* egtb,

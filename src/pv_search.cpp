@@ -12,6 +12,8 @@
 #include "timer.h"
 #include "transpos.h"
 
+#include <cstring>
+
 namespace {
 
 // Probes TT. Returns true if tt_score can be returned as the result of search
@@ -62,6 +64,21 @@ int LMRDepthReduction(int max_depth, int move_index, const MoveInfo& move_info) 
   throw std::logic_error("unsupported variant");
 }
 } // namespace
+
+template <Variant variant>
+void PVSearch<variant>::UpdateHistory(const Move& move, int depth, bool is_bonus) {
+  const int MAX_HISTORY = 16384;
+  const int bonus = depth * depth;
+  const int piece = PieceIndex(board_.PieceAt(move.from_index()));
+  const int to = move.to_index();
+  int& val = history_[piece][to];
+
+  if (is_bonus) {
+    val += bonus - (val * bonus / MAX_HISTORY);
+  } else {
+    val -= bonus + (val * bonus / MAX_HISTORY);
+  }
+}
 
 template <Variant variant>
 int PVSearch<variant>::Search(int max_depth, int alpha, int beta,
@@ -145,15 +162,22 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   pref_moves.killer1 = killers_[ply][0];
   pref_moves.killer2 = killers_[ply][1];
   const MoveInfoArray move_info_array =
-      OrderMoves<variant>(board_, move_array, &pref_moves);
+      OrderMoves<variant>(board_, move_array, &pref_moves, history_);
 
   Move best_move;
   NodeType node_type = NodeType::FAIL_LOW_NODE;
   int b = beta;
   int score = -INF;
+
+  Move searched_quiets[256];
+  int num_searched_quiets = 0;
+
   for (size_t index = 0; index < move_info_array.size; ++index) {
     const MoveInfo& move_info = move_info_array.moves[index];
     const Move move = move_info.move;
+
+    const bool is_capture = board_.PieceAt(move.to_index()) != NULLPIECE;
+
     board_.MakeMove(move);
 
     int value = -INF;
@@ -165,6 +189,9 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
         const int eval_score = -StaticEval(board_);
         if (eval_score + max_depth * 120 <= alpha) {
           board_.UnmakeLastMove();
+          if (!is_capture) {
+            searched_quiets[num_searched_quiets++] = move;
+          }
           continue;
         }
       }
@@ -200,16 +227,25 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
         if (alpha >= beta) {
           node_type = NodeType::FAIL_HIGH_NODE;
           if (move != tt_move && move != killers_[ply][0] &&
-              (IsAntichessLike(variant) ||
-               board_.PieceAt(move.to_index()) == NULLPIECE)) {
+              (IsAntichessLike(variant) || !is_capture)) {
             killers_[ply][1] = killers_[ply][0];
             killers_[ply][0] = move;
+          }
+
+          if (!is_capture) {
+            UpdateHistory(move, max_depth, true);
+            for (int k = 0; k < num_searched_quiets; ++k) {
+              UpdateHistory(searched_quiets[k], max_depth, false);
+            }
           }
           break;
         }
       }
     }
     b = alpha + 1;
+    if (!is_capture) {
+      searched_quiets[num_searched_quiets++] = move;
+    }
   }
 
   if (!(timer_ && timer_->Lapsed())) {
