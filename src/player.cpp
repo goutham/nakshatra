@@ -100,7 +100,7 @@ Move Player::SearchInternal(const SearchParams& search_params,
 
   timer_.Run(time_for_move_centis);
 
-  return IDSearch<variant>(ids_params, board_, timer_, transpos_, egtb_)
+  return IDSearch<variant>(ids_params, board_, timer_, transpos_, egtb_, history_)
       .best_move;
 }
 

@@ -25,6 +25,6 @@ struct IDSResult {
 
 template <Variant variant>
 IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
-                   TranspositionTable& transpos, EGTB* egtb);
+                   TranspositionTable& transpos, EGTB* egtb, int (&history)[12][64]);
 
 #endif

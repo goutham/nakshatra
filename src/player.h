@@ -22,7 +22,13 @@ public:
   Player(const Variant variant, Board& board, TranspositionTable& transpos,
          Timer& timer)
       : variant_(variant), board_(board), transpos_(transpos), timer_(timer),
-        egtb_(GetEGTB(variant)) {}
+        egtb_(GetEGTB(variant)) {
+    for (int i = 0; i < 12; ++i) {
+      for (int j = 0; j < 64; ++j) {
+        history_[i][j] = 0;
+      }
+    }
+  }
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
@@ -36,6 +42,7 @@ private:
   TranspositionTable& transpos_;
   Timer& timer_;
   EGTB* egtb_;
+  int history_[12][64];
 };
 
 #endif
