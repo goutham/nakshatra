@@ -51,12 +51,12 @@ TEST(StandardMoveOrderer, ComprehensiveOrder) {
   pref_moves.killer2 = killer2;
 
   // Setup History
-  // Dimensions: 12x64.
-  int history[12][64] = {{0}};
+  // Dimensions: 2x64x64.
+  int history[2][64][64] = {{{0}}};
   // Set history for d1e2 (Queen move).
-  // Queen = 2.
-  history[QUEEN][INDX("e2")] = 10000;
-  history[QUEEN][INDX("c2")] = 100;
+  // Side = White (0), From = d1, To = e2.
+  history[SideIndex(Side::WHITE)][INDX("d1")][INDX("e2")] = 10000;
+  history[SideIndex(Side::WHITE)][INDX("d1")][INDX("c2")] = 100;
 
   // Order moves
   MoveInfoArray result = OrderMoves<Variant::STANDARD>(board, move_array, &pref_moves, history);

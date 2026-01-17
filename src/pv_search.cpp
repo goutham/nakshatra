@@ -68,10 +68,11 @@ int LMRDepthReduction(int max_depth, int move_index, const MoveInfo& move_info) 
 template <Variant variant>
 void PVSearch<variant>::UpdateHistory(const Move& move, int depth, bool is_bonus) {
   const int MAX_HISTORY = 16384;
-  const int bonus = depth * depth;
-  const int piece = PieceIndex(board_.PieceAt(move.from_index()));
+  const int bonus = std::min(depth * depth, 1200);
+  const int side_idx = SideIndex(board_.SideToMove());
+  const int from = move.from_index();
   const int to = move.to_index();
-  int& val = history_[piece][to];
+  int& val = history_[side_idx][from][to];
 
   if (is_bonus) {
     val += bonus - (val * bonus / MAX_HISTORY);

@@ -23,9 +23,11 @@ public:
          Timer& timer)
       : variant_(variant), board_(board), transpos_(transpos), timer_(timer),
         egtb_(GetEGTB(variant)) {
-    for (int i = 0; i < 12; ++i) {
+    for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 64; ++j) {
-        history_[i][j] = 0;
+        for (int k = 0; k < 64; ++k) {
+          history_[i][j][k] = 0;
+        }
       }
     }
   }
@@ -42,7 +44,7 @@ private:
   TranspositionTable& transpos_;
   Timer& timer_;
   EGTB* egtb_;
-  int history_[12][64];
+  int history_[2][64][64];
 };
 
 #endif

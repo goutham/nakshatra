@@ -59,7 +59,7 @@ template <Variant variant>
 class IterativeDeepener {
 public:
   IterativeDeepener(const IDSParams& ids_params, Board& board, Timer& timer,
-                    TranspositionTable& transpos, EGTB* egtb, int (&history)[12][64])
+                    TranspositionTable& transpos, EGTB* egtb, int (&history)[2][64][64])
       : ids_params_(ids_params), board_(board), timer_(timer),
         transpos_(transpos), egtb_(egtb), history_(history) {}
 
@@ -76,7 +76,7 @@ private:
   Timer& timer_;
   TranspositionTable& transpos_;
   EGTB* egtb_;
-  int (&history_)[12][64];
+  int (&history_)[2][64][64];
 
   // Maintains list of moves at the root node.
   MoveArray root_move_array_;
@@ -328,7 +328,7 @@ std::string IterativeDeepener<variant>::PV(const Move& root_move) {
 
 template <Variant variant>
 IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
-                   TranspositionTable& transpos, EGTB* egtb, int (&history)[12][64]) {
+                   TranspositionTable& transpos, EGTB* egtb, int (&history)[2][64][64]) {
   return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb, history)
       .Search();
 }
@@ -336,14 +336,14 @@ IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
 template IDSResult IDSearch<Variant::STANDARD>(const IDSParams& ids_params,
                                                Board& board, Timer& timer,
                                                TranspositionTable& transpos,
-                                               EGTB* egtb, int (&history)[12][64]);
+                                               EGTB* egtb, int (&history)[2][64][64]);
 
 template IDSResult IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
                                                 Board& board, Timer& timer,
                                                 TranspositionTable& transpos,
-                                                EGTB* egtb, int (&history)[12][64]);
+                                                EGTB* egtb, int (&history)[2][64][64]);
 
 template IDSResult IDSearch<Variant::SUICIDE>(const IDSParams& ids_params,
                                               Board& board, Timer& timer,
                                               TranspositionTable& transpos,
-                                              EGTB* egtb, int (&history)[12][64]);
+                                              EGTB* egtb, int (&history)[2][64][64]);

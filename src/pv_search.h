@@ -11,7 +11,7 @@
 template <Variant variant>
 class PVSearch {
 public:
-  PVSearch(Board& board, Timer* timer, TranspositionTable& transpos, EGTB* egtb, int (&history)[12][64])
+  PVSearch(Board& board, Timer* timer, TranspositionTable& transpos, EGTB* egtb, int (&history)[2][64][64])
       : board_(board), timer_(timer), transpos_(transpos), egtb_(egtb), history_(history) {}
 
   int Search(int max_depth, int alpha, int beta, SearchStats& search_stats);
@@ -25,7 +25,7 @@ private:
   TranspositionTable& transpos_;
   EGTB* egtb_;
   Move killers_[MAX_DEPTH][2];
-  int (&history_)[12][64];
+  int (&history_)[2][64][64];
 
   void UpdateHistory(const Move& move, int depth, bool is_bonus);
 };
