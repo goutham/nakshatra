@@ -4,6 +4,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
+#include "history.h"
 #include "move.h"
 #include "move_array.h"
 
@@ -49,7 +50,7 @@ struct PrefMoves {
 template <Variant variant>
 MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
                          const PrefMoves* pref_moves,
-                         const int (*history)[64][64] = nullptr);
+                         const HistoryTable* history = nullptr);
 
 template <Variant variant>
 MoveInfoArray OrderMovesByEvalScore(Board& board, EGTB* egtb,

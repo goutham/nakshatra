@@ -4,6 +4,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
+#include "history.h"
 #include "move.h"
 #include "timer.h"
 #include "transpos.h"
@@ -22,15 +23,7 @@ public:
   Player(const Variant variant, Board& board, TranspositionTable& transpos,
          Timer& timer)
       : variant_(variant), board_(board), transpos_(transpos), timer_(timer),
-        egtb_(GetEGTB(variant)) {
-    for (int i = 0; i < 2; ++i) {
-      for (int j = 0; j < 64; ++j) {
-        for (int k = 0; k < 64; ++k) {
-          history_[i][j][k] = 0;
-        }
-      }
-    }
-  }
+        egtb_(GetEGTB(variant)) {}
 
   Move Search(const SearchParams& search_params, long time_for_move_centis);
 
@@ -44,7 +37,7 @@ private:
   TranspositionTable& transpos_;
   Timer& timer_;
   EGTB* egtb_;
-  int history_[2][64][64];
+  HistoryTable history_;
 };
 
 #endif

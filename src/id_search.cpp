@@ -2,6 +2,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
+#include "history.h"
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -60,16 +61,10 @@ class IterativeDeepener {
 public:
   IterativeDeepener(const IDSParams& ids_params, Board& board, Timer& timer,
                     TranspositionTable& transpos, EGTB* egtb,
-                    int (&history)[2][64][64])
+                    HistoryTable& history)
       : ids_params_(ids_params), board_(board), timer_(timer),
         transpos_(transpos), egtb_(egtb), history_(history) {
-    for (int i = 0; i < 2; ++i) {
-      for (int j = 0; j < 64; ++j) {
-        for (int k = 0; k < 64; ++k) {
-          history_[i][j][k] = history_[i][j][k] / 2;
-        }
-      }
-    }
+    history_.Decay();
   }
 
   IDSResult Search();
@@ -85,7 +80,7 @@ private:
   Timer& timer_;
   TranspositionTable& transpos_;
   EGTB* egtb_;
-  int (&history_)[2][64][64];
+  HistoryTable& history_;
 
   // Maintains list of moves at the root node.
   MoveArray root_move_array_;
@@ -211,7 +206,7 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
                     int thread_num,
                     Board board /* copy of board for each thread */,
                     Timer& timer, IterationStat* ret_istat,
-                    int (&history)[2][64][64]) {
+                    HistoryTable& history) {
     int cur_max_depth = max_depth;
     if (thread_num % 2 == 1) {
       ++cur_max_depth;
@@ -286,15 +281,13 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
   threads_timer.Run();
 
   // Snapshot of history for helper threads to read from safely.
-  int history_snapshot[2][64][64];
-  std::memcpy(history_snapshot, history_, sizeof(history_snapshot));
+  HistoryTable history_snapshot = history_;
 
   // Run num_threads - 1 search threads.
   for (int i = 1; i < num_threads; ++i) {
     threads.push_back(std::thread(
         [search, i, board = board_, &threads_timer, &istats, history_snapshot] {
-          int local_history[2][64][64];
-          std::memcpy(local_history, history_snapshot, sizeof(local_history));
+          HistoryTable local_history = history_snapshot;
           search(i, board, std::ref(threads_timer), &istats.at(i),
                  local_history);
         }));
@@ -349,7 +342,7 @@ std::string IterativeDeepener<variant>::PV(const Move& root_move) {
 template <Variant variant>
 IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
                    TranspositionTable& transpos, EGTB* egtb,
-                   int (&history)[2][64][64]) {
+                   HistoryTable& history) {
   return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb,
                                     history)
       .Search();
@@ -359,16 +352,16 @@ template IDSResult IDSearch<Variant::STANDARD>(const IDSParams& ids_params,
                                                Board& board, Timer& timer,
                                                TranspositionTable& transpos,
                                                EGTB* egtb,
-                                               int (&history)[2][64][64]);
+                                               HistoryTable& history);
 
 template IDSResult IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
                                                 Board& board, Timer& timer,
                                                 TranspositionTable& transpos,
                                                 EGTB* egtb,
-                                                int (&history)[2][64][64]);
+                                                HistoryTable& history);
 
 template IDSResult IDSearch<Variant::SUICIDE>(const IDSParams& ids_params,
                                               Board& board, Timer& timer,
                                               TranspositionTable& transpos,
                                               EGTB* egtb,
-                                              int (&history)[2][64][64]);
+                                              HistoryTable& history);

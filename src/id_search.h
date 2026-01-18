@@ -4,6 +4,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
+#include "history.h"
 #include "move.h"
 #include "move_array.h"
 #include "stats.h"
@@ -25,6 +26,6 @@ struct IDSResult {
 
 template <Variant variant>
 IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
-                   TranspositionTable& transpos, EGTB* egtb, int (&history)[2][64][64]);
+                   TranspositionTable& transpos, EGTB* egtb, HistoryTable& history);
 
 #endif

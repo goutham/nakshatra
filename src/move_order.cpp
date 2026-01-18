@@ -12,7 +12,7 @@ template <Variant variant>
   requires(IsStandard(variant))
 MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
                                  const PrefMoves* pref_moves,
-                                 const int (*history)[64][64]) {
+                                 const HistoryTable* history) {
   MoveInfoArray move_info_array;
   move_info_array.size = move_array.size();
   for (size_t i = 0; i < move_array.size(); ++i) {
@@ -38,7 +38,7 @@ MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
       const Piece piece = board.PieceAt(from_sq);
       int score;
       if (history) {
-        score = history[SideIndex(side)][from_sq][to_sq];
+        score = history->Get(side, from_sq, to_sq);
       } else {
         score = standard::PSTVal(side, piece, to_sq) -
                 standard::PSTVal(side, piece, from_sq);
@@ -54,7 +54,7 @@ template <Variant variant>
   requires(IsAntichessLike(variant))
 MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
                                  const PrefMoves* pref_moves,
-                                 const int (*history)[64][64]) {
+                                 const HistoryTable* history) {
   MoveInfoArray move_info_array;
   move_info_array.size = move_array.size();
   for (size_t i = 0; i < move_array.size(); ++i) {
@@ -79,19 +79,19 @@ MoveInfoArray OrderMovesInternal(Board& board, const MoveArray& move_array,
 template <Variant variant>
 MoveInfoArray OrderMoves(Board& board, const MoveArray& move_array,
                          const PrefMoves* pref_moves,
-                         const int (*history)[64][64]) {
+                         const HistoryTable* history) {
   return OrderMovesInternal<variant>(board, move_array, pref_moves, history);
 }
 
 template MoveInfoArray OrderMoves<Variant::STANDARD>(Board&, const MoveArray&,
                                                      const PrefMoves*,
-                                                     const int (*history)[64][64]);
+                                                     const HistoryTable*);
 template MoveInfoArray OrderMoves<Variant::ANTICHESS>(Board&, const MoveArray&,
                                                       const PrefMoves*,
-                                                      const int (*history)[64][64]);
+                                                      const HistoryTable*);
 template MoveInfoArray OrderMoves<Variant::SUICIDE>(Board&, const MoveArray&,
                                                     const PrefMoves*,
-                                                    const int (*history)[64][64]);
+                                                    const HistoryTable*);
 
 template <Variant variant>
 MoveInfoArray OrderMovesByEvalScore(Board& board, EGTB* egtb,

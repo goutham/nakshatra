@@ -1,5 +1,6 @@
 #include "board.h"
 #include "common.h"
+#include "history.h"
 #include "move.h"
 #include "move_array.h"
 #include "move_order.h"
@@ -51,15 +52,14 @@ TEST(StandardMoveOrderer, ComprehensiveOrder) {
   pref_moves.killer2 = killer2;
 
   // Setup History
-  // Dimensions: 2x64x64.
-  int history[2][64][64] = {{{0}}};
+  HistoryTable history;
   // Set history for d1e2 (Queen move).
-  // Side = White (0), From = d1, To = e2.
-  history[SideIndex(Side::WHITE)][INDX("d1")][INDX("e2")] = 10000;
-  history[SideIndex(Side::WHITE)][INDX("d1")][INDX("c2")] = 100;
+  // Side = White, From = d1, To = e2.
+  history.Set(Side::WHITE, INDX("d1"), INDX("e2"), 10000);
+  history.Set(Side::WHITE, INDX("d1"), INDX("c2"), 100);
 
   // Order moves
-  MoveInfoArray result = OrderMoves<Variant::STANDARD>(board, move_array, &pref_moves, history);
+  MoveInfoArray result = OrderMoves<Variant::STANDARD>(board, move_array, &pref_moves, &history);
 
   // Helper to find index in sorted result
   auto get_index = [&](const Move& m) -> int {
