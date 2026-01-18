@@ -59,9 +59,18 @@ template <Variant variant>
 class IterativeDeepener {
 public:
   IterativeDeepener(const IDSParams& ids_params, Board& board, Timer& timer,
-                    TranspositionTable& transpos, EGTB* egtb, int (&history)[2][64][64])
+                    TranspositionTable& transpos, EGTB* egtb,
+                    int (&history)[2][64][64])
       : ids_params_(ids_params), board_(board), timer_(timer),
-        transpos_(transpos), egtb_(egtb), history_(history) {}
+        transpos_(transpos), egtb_(egtb), history_(history) {
+    for (int i = 0; i < 2; ++i) {
+      for (int j = 0; j < 64; ++j) {
+        for (int k = 0; k < 64; ++k) {
+          history_[i][j][k] = history_[i][j][k] / 2;
+        }
+      }
+    }
+  }
 
   IDSResult Search();
 
@@ -198,10 +207,10 @@ template <Variant variant>
 IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
 
   auto search = [max_depth, root_move_array = root_move_array_,
-                 &transpos = transpos_,
-                 egtb = egtb_, &history = history_](int thread_num,
-                               Board board /* copy of board for each thread */,
-                               Timer& timer, IterationStat* ret_istat) mutable {
+                 &transpos = transpos_, egtb = egtb_, &history = history_](
+                    int thread_num,
+                    Board board /* copy of board for each thread */,
+                    Timer& timer, IterationStat* ret_istat) mutable {
     if (thread_num % 2 == 1) {
       ++max_depth;
     }
@@ -328,22 +337,27 @@ std::string IterativeDeepener<variant>::PV(const Move& root_move) {
 
 template <Variant variant>
 IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
-                   TranspositionTable& transpos, EGTB* egtb, int (&history)[2][64][64]) {
-  return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb, history)
+                   TranspositionTable& transpos, EGTB* egtb,
+                   int (&history)[2][64][64]) {
+  return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb,
+                                    history)
       .Search();
 }
 
 template IDSResult IDSearch<Variant::STANDARD>(const IDSParams& ids_params,
                                                Board& board, Timer& timer,
                                                TranspositionTable& transpos,
-                                               EGTB* egtb, int (&history)[2][64][64]);
+                                               EGTB* egtb,
+                                               int (&history)[2][64][64]);
 
 template IDSResult IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
                                                 Board& board, Timer& timer,
                                                 TranspositionTable& transpos,
-                                                EGTB* egtb, int (&history)[2][64][64]);
+                                                EGTB* egtb,
+                                                int (&history)[2][64][64]);
 
 template IDSResult IDSearch<Variant::SUICIDE>(const IDSParams& ids_params,
                                               Board& board, Timer& timer,
                                               TranspositionTable& transpos,
-                                              EGTB* egtb, int (&history)[2][64][64]);
+                                              EGTB* egtb,
+                                              int (&history)[2][64][64]);
