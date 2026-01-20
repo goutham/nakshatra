@@ -175,10 +175,14 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
 
     int value = -INF;
 
+    // Check extension: extend by 1 ply when the move gives check.
+    const bool gives_check = attacks::InCheck(board_, board_.SideToMove());
+    const int extension = gives_check ? 1 : 0;
+
     if constexpr (!IsAntichessLike(variant)) {
       if (!in_check && (max_depth == 1 || max_depth == 2) &&
           !move.is_promotion() && move_info.type == MoveType::QUIET &&
-          !attacks::InCheck(board_, board_.SideToMove())) {
+          !gives_check) {
         const int eval_score = -StaticEval(board_);
         if (eval_score + max_depth * 120 <= alpha) {
           board_.UnmakeLastMove();
@@ -195,18 +199,18 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
     // Apply late move reduction if applicable.
     if (lmr_depth_reduction > 0) {
       value =
-          -PVS(max_depth - lmr_depth_reduction, -alpha - 1, -alpha, ply + 1, true, search_stats);
+          -PVS(max_depth - lmr_depth_reduction + extension, -alpha - 1, -alpha, ply + 1, true, search_stats);
     }
 
     // If LMR was not triggered or LMR search failed high, proceed with normal
     // search.
     if (lmr_depth_reduction == 0 || value > alpha) {
-      value = -PVS(max_depth - 1, -b, -alpha, ply + 1, true, search_stats);
+      value = -PVS(max_depth - 1 + extension, -b, -alpha, ply + 1, true, search_stats);
     }
 
     // Re-search with wider window if null window fails high.
     if (value >= b && value < beta && index > 0 && max_depth > 1) {
-      value = -PVS(max_depth - 1, -beta, -alpha, ply + 1, true, search_stats);
+      value = -PVS(max_depth - 1 + extension, -beta, -alpha, ply + 1, true, search_stats);
     }
 
     board_.UnmakeLastMove();
