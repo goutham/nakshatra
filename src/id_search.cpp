@@ -2,6 +2,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
+#include "history.h"
 #include "move_array.h"
 #include "move_order.h"
 #include "movegen.h"
@@ -59,9 +60,12 @@ template <Variant variant>
 class IterativeDeepener {
 public:
   IterativeDeepener(const IDSParams& ids_params, Board& board, Timer& timer,
-                    TranspositionTable& transpos, EGTB* egtb)
+                    TranspositionTable& transpos, EGTB* egtb,
+                    HistoryTable& history)
       : ids_params_(ids_params), board_(board), timer_(timer),
-        transpos_(transpos), egtb_(egtb) {}
+        transpos_(transpos), egtb_(egtb), history_(history) {
+    history_.Decay();
+  }
 
   IDSResult Search();
 
@@ -76,6 +80,7 @@ private:
   Timer& timer_;
   TranspositionTable& transpos_;
   EGTB* egtb_;
+  HistoryTable& history_;
 
   // Maintains list of moves at the root node.
   MoveArray root_move_array_;
@@ -197,16 +202,18 @@ template <Variant variant>
 IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
 
   auto search = [max_depth, root_move_array = root_move_array_,
-                 &transpos = transpos_,
-                 egtb = egtb_](int thread_num,
-                               Board board /* copy of board for each thread */,
-                               Timer& timer, IterationStat* ret_istat) mutable {
+                 &transpos = transpos_, egtb = egtb_](
+                    int thread_num,
+                    Board board /* copy of board for each thread */,
+                    Timer& timer, IterationStat* ret_istat,
+                    HistoryTable& history) {
+    int cur_max_depth = max_depth;
     if (thread_num % 2 == 1) {
-      ++max_depth;
+      ++cur_max_depth;
     }
-    PVSearch<variant> pv_search(board, &timer, transpos, egtb);
+    PVSearch<variant> pv_search(board, &timer, transpos, egtb, history);
     IterationStat istat;
-    istat.depth = max_depth;
+    istat.depth = cur_max_depth;
     istat.best_move = root_move_array.get(0);
     istat.score = -INF;
     istat.root_moves_covered = 0;
@@ -215,22 +222,22 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
       board.MakeMove(move);
       SearchStats search_stats;
       int score = -INF;
-      if (i == 0 || max_depth < 5) {
+      if (i == 0 || cur_max_depth < 5) {
         score =
-            -pv_search.Search(max_depth - 1, -INF, -istat.score, search_stats);
+            -pv_search.Search(cur_max_depth - 1, -INF, -istat.score, search_stats);
       } else {
         bool lmr_triggered = false;
-        if (i >= 4 && max_depth >= 2) {
-          score = -pv_search.Search(max_depth - 2, -istat.score - 1,
+        if (i >= 4 && cur_max_depth >= 2) {
+          score = -pv_search.Search(cur_max_depth - 2, -istat.score - 1,
                                     -istat.score, search_stats);
           lmr_triggered = true;
         }
         if (!lmr_triggered || score > istat.score) {
-          score = -pv_search.Search(max_depth - 1, -istat.score - 1,
+          score = -pv_search.Search(cur_max_depth - 1, -istat.score - 1,
                                     -istat.score, search_stats);
         }
         if (score > istat.score) {
-          score = -pv_search.Search(max_depth - 1, -INF, -istat.score,
+          score = -pv_search.Search(cur_max_depth - 1, -INF, -istat.score,
                                     search_stats);
         }
       }
@@ -244,7 +251,7 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
       // reporting any moves at all in some extremely time constrained
       // situations. Searching all root moves at depth 1 is very quick
       // (sub-millisecond latency).
-      if (timer.Lapsed() && max_depth > 1) {
+      if (timer.Lapsed() && cur_max_depth > 1) {
         break;
       }
       if (score > istat.score) {
@@ -260,7 +267,7 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
     // the best known move before current iteration, which means any other
     // move found to be better at this depth is at least better than that.
     if (istat.root_moves_covered > 0) {
-      transpos.Put(istat.score, NodeType::EXACT_NODE, max_depth,
+      transpos.Put(istat.score, NodeType::EXACT_NODE, cur_max_depth,
                    board.ZobristKey(), istat.best_move);
     }
     *ret_istat = istat;
@@ -273,14 +280,21 @@ IterationStat IterativeDeepener<variant>::FindBestMove(int max_depth) {
   Timer threads_timer;
   threads_timer.Run();
 
+  // Snapshot of history for helper threads to read from safely.
+  HistoryTable history_snapshot = history_;
+
   // Run num_threads - 1 search threads.
   for (int i = 1; i < num_threads; ++i) {
-    threads.push_back(
-        std::thread(search, i, board_, std::ref(threads_timer), &istats.at(i)));
+    threads.push_back(std::thread(
+        [search, i, board = board_, &threads_timer, &istats, history_snapshot] {
+          HistoryTable local_history = history_snapshot;
+          search(i, board, std::ref(threads_timer), &istats.at(i),
+                 local_history);
+        }));
   }
 
   // Run search in main thread.
-  search(0, board_, timer_, &istats.at(0));
+  search(0, board_, timer_, &istats.at(0), history_);
   threads_timer.Invalidate();
 
   for (auto& thread : threads) {
@@ -327,22 +341,27 @@ std::string IterativeDeepener<variant>::PV(const Move& root_move) {
 
 template <Variant variant>
 IDSResult IDSearch(const IDSParams& ids_params, Board& board, Timer& timer,
-                   TranspositionTable& transpos, EGTB* egtb) {
-  return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb)
+                   TranspositionTable& transpos, EGTB* egtb,
+                   HistoryTable& history) {
+  return IterativeDeepener<variant>(ids_params, board, timer, transpos, egtb,
+                                    history)
       .Search();
 }
 
 template IDSResult IDSearch<Variant::STANDARD>(const IDSParams& ids_params,
                                                Board& board, Timer& timer,
                                                TranspositionTable& transpos,
-                                               EGTB* egtb);
+                                               EGTB* egtb,
+                                               HistoryTable& history);
 
 template IDSResult IDSearch<Variant::ANTICHESS>(const IDSParams& ids_params,
                                                 Board& board, Timer& timer,
                                                 TranspositionTable& transpos,
-                                                EGTB* egtb);
+                                                EGTB* egtb,
+                                                HistoryTable& history);
 
 template IDSResult IDSearch<Variant::SUICIDE>(const IDSParams& ids_params,
                                               Board& board, Timer& timer,
                                               TranspositionTable& transpos,
-                                              EGTB* egtb);
+                                              EGTB* egtb,
+                                              HistoryTable& history);

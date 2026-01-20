@@ -1,6 +1,7 @@
 #include "board.h"
 #include "common.h"
 #include "eval.h"
+#include "history.h"
 #include "move_order.h"
 #include "movegen.h"
 #include "pv_search.h"
@@ -21,7 +22,8 @@ TEST_F(PVSearchTest, Search) {
   const std::string board_str = "8/R7/8/8/8/8/8/7k w - -";
   Board board(Variant::ANTICHESS, board_str);
   TranspositionTable transpos(1U << 20); // 1 MB
-  PVSearch<Variant::ANTICHESS> pv_search(board, nullptr, transpos, nullptr);
+  HistoryTable history;
+  PVSearch<Variant::ANTICHESS> pv_search(board, nullptr, transpos, nullptr, history);
   // Not a win up to depth 6.
   for (int depth = 1; depth <= 6; ++depth) {
     SearchStats search_stats;
@@ -38,7 +40,8 @@ TEST_F(PVSearchTest, Search) {
 TEST_F(PVSearchTest, Repetition) {
   Board board(Variant::STANDARD, "k7/n7/8/8/8/7B/7N/7K w - -");
   TranspositionTable tt(256);
-  PVSearch<Variant::STANDARD> pv_search(board, nullptr, tt, nullptr);
+  HistoryTable history;
+  PVSearch<Variant::STANDARD> pv_search(board, nullptr, tt, nullptr, history);
   SearchStats stats;
   EXPECT_GT(pv_search.Search(1, -INF, INF, stats), 0);
   board.MakeMove(Move("h2f3"));
