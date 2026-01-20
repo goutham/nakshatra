@@ -4,6 +4,7 @@
 #include "board.h"
 #include "common.h"
 #include "egtb.h"
+#include "history.h"
 #include "move.h"
 #include "timer.h"
 #include "transpos.h"
@@ -36,6 +37,7 @@ private:
   TranspositionTable& transpos_;
   Timer& timer_;
   EGTB* egtb_;
+  HistoryTable history_;
 };
 
 #endif
