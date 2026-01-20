@@ -59,6 +59,9 @@ int LMRDepthReduction(int max_depth, int move_index, const MoveInfo& move_info) 
     if (move_index >= 1 && max_depth >= 3 && move_info.type >= MoveType::SEE_BAD_CAPTURE) {
       lmr_depth_reduction = 3;
     }
+    if (move_index >= 8 && max_depth >= 5 && move_info.type >= MoveType::QUIET) {
+      lmr_depth_reduction = 4;
+    }
     return lmr_depth_reduction;
   }
   throw std::logic_error("unsupported variant");
@@ -110,7 +113,7 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
   const bool in_check = attacks::InCheck(board_, board_.SideToMove());
   if constexpr (!IsAntichessLike(variant)) {
     // Are we likely to be too good already to bother searching this position?
-    if (!in_check && (max_depth == 1 || max_depth == 2)) {
+    if (!in_check && max_depth >= 1 && max_depth <= 3) {
       const int eval_score = StaticEval(board_);
       if (eval_score - max_depth * 75 >= beta) {
         return eval_score;
@@ -119,11 +122,11 @@ int PVSearch<variant>::PVS(int max_depth, int alpha, int beta, int ply,
 
     // Decide whether to use null move pruning. Disabled for ANTICHESS where
     // zugzwangs are common.
-    allow_null_move = allow_null_move && max_depth >= 2 && beta < INF &&
+    allow_null_move = allow_null_move && max_depth >= 3 && beta < INF &&
                       PopCount(board_.BitBoard()) > 10 && !in_check;
     if (allow_null_move) {
       board_.MakeNullMove();
-      int value = -PVS(max_depth - 2, -beta, -beta + 1, ply + 1,
+      int value = -PVS(max_depth - 3, -beta, -beta + 1, ply + 1,
                        !allow_null_move, search_stats);
       board_.UnmakeNullMove();
       if (value >= beta) {
